@@ -44,3 +44,11 @@ The following packages were updated:
   com.unity.collab-proxy from version 1.13.5 to 1.15.7
   com.unity.render-pipelines.universal from version 12.1.0 to 12.1.4
   com.unity.timeline from version 1.6.2 to 1.6.3
+
+=== Tue Feb  1 20:57:31 2022
+
+Packages were changed.
+Update Mode: mergeDefaultDependencies
+
+The following packages were added:
+  com.unity.shadergraph@12.1.0
