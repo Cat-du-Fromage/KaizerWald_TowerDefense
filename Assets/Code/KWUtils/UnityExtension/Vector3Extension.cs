@@ -1,6 +1,5 @@
 using System.Collections;
 using System.Collections.Generic;
-using Unity.VisualScripting;
 using UnityEngine;
 
 namespace KWUtils
@@ -15,6 +14,11 @@ namespace KWUtils
         public static Vector3 Flat(this Vector3 coordToFlat)
         {
             return new Vector3(coordToFlat.x, 0, coordToFlat.z);
+        }
+        
+        public static Vector3 SetX(this Vector3 target, float xVal)
+        {
+            return new Vector3(xVal, target.y, target.z);
         }
 
         /// <summary>

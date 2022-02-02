@@ -1,5 +1,6 @@
 using System;
 using KWUtils;
+using Unity.Mathematics;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -29,7 +30,6 @@ namespace KaizerWaldCode.RTTCamera
         
         //UPDATED MOVE SPEED
         private int MoveSpeed => IsSprinting ? cameraData.SprintSpeed : cameraData.baseMoveSpeed;
-
         private void Awake()
         {
             CameraControls ??= new Controls();
@@ -84,18 +84,55 @@ namespace KaizerWaldCode.RTTCamera
 
                 float deltaTime = Time.deltaTime;
                 
-                //if (CameraTransform.localEulerAngles.x <= -60 && -distanceY < 0) return;
-                //Debug.Log(-distanceY);
-                //if (CameraTransform.localEulerAngles.x >= 60 && -distanceY > 0) return;
-                
                 CameraTransform.Rotate(0f,distanceX * deltaTime, 0f, Space.World);
                 
                 CameraTransform.Rotate(-distanceY * deltaTime, 0f, 0f, Space.Self);
-
+                /*
+                float rotationX = CameraTransform.localEulerAngles.x;
+                
+                if (rotationX > 300f)
+                    rotationX -= 360f;
+                
+                
+                float test = ClampAngle(-distanceY * Time.deltaTime);
+                Quaternion rotU = Quaternion.AngleAxis(test, Vector3.right);
+                CameraTransform.rotation = CameraTransform.rotation * rotU;
+                Debug.Log(rotU);
+                */
+                
+                //CameraTransform.rotation = clamp(CameraTransform.rotation * rotU)
+                
+                //Debug.Log(degrees((CameraTransform.rotation * rotU).x));
+                //CameraTransform.rotation = CameraTransform.rotation * rotU;
+                    
+                //Debug.Log(CameraTransform.rotation.x);
+                
                 MouseStartPosition = MouseEndPosition;
             }
         }
-
+        
+        public static float ClampAngle(float _Angle)
+        {
+            float ReturnAngle = _Angle;
+ 
+            if (_Angle < 0f)
+                ReturnAngle = (_Angle + (360f * ((_Angle / 360f) + 1)));
+ 
+            else if (_Angle > 360f)
+                ReturnAngle = (_Angle - (360f * (_Angle / 360f)));
+ 
+            else if (ReturnAngle == 360) //Never use 360, only go from 0 to 359
+                ReturnAngle = 0;
+ 
+            return ReturnAngle;
+        }
+        
+        public static float ComputeXAngle(Quaternion q)
+        {
+            float sinr_cosp = 2 * (q.w * q.x + q.y * q.z);
+            float cosr_cosp = 1 - 2 * (q.x * q.x + q.y * q.y);
+            return atan2(sinr_cosp, cosr_cosp);
+        }
         //EVENTS CALLBACK
         //==============================================================================================================
         
