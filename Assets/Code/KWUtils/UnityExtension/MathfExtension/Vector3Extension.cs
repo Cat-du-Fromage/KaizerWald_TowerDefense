@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -15,12 +16,30 @@ namespace KWUtils
         {
             return new Vector3(coordToFlat.x, 0, coordToFlat.z);
         }
-        
-        public static Vector3 SetX(this Vector3 target, float xVal)
-        {
-            return new Vector3(xVal, target.y, target.z);
-        }
 
+        /// <summary>
+        /// Set wanted axis
+        /// </summary>
+        /// <param name="target"></param>
+        /// <param name="axis">component to change</param>
+        /// <param name="val">value to assign</param>
+        /// <returns>changed axis</returns>
+        public static void SetAxis(ref this Vector3 target, Axis axis, float val)
+        {
+            switch (axis)
+            {
+                case Axis.X:
+                    target.Set(val, target.y, target.z);
+                    break;
+                case Axis.Y:
+                    target.Set(target.x, val, target.z);
+                    break;
+                case Axis.Z:
+                    target.Set(target.x, target.y, val);
+                    break;
+            }
+        }
+        
         /// <summary>
         /// Return normalize direction
         /// </summary>
