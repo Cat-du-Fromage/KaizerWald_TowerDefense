@@ -17,9 +17,9 @@ namespace KaizerWaldCode.RTTCamera
         public int sprint;
         
         [Tooltip("How far in degrees can you move the camera up")]
-        public float topClamp = 70.0f;
+        public float topClamp = 30.0f;
         [Tooltip("How far in degrees can you move the camera down")]
-        public float bottomClamp = -30.0f;
+        public float bottomClamp = -60.0f;
 
         public int SprintSpeed => baseMoveSpeed * sprint;
 

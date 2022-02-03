@@ -16,3 +16,5 @@ MonoBehaviour:
   baseMoveSpeed: 1
   zoomSpeed: 1
   sprint: 3
+  topClamp: 30
+  bottomClamp: -60

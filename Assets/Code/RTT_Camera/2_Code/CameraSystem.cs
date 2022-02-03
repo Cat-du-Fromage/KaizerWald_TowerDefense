@@ -19,8 +19,10 @@ namespace KaizerWaldCode.RTTCamera
         private Vector2 MouseStartPosition, MouseEndPosition;
         private Vector2 MoveAxis;
 
-        private float TargetYaw;
-        private float TargetPitch;
+        private Quaternion currentAngle;
+
+        private float CurrentRotationAngleV = 0;
+        private float CurrentRotationAngleH = 0;
         
         //INPUT ACTIONS
         private InputAction ZoomCameraAction => CameraControls.CameraControl.Zoom;
@@ -83,29 +85,25 @@ namespace KaizerWaldCode.RTTCamera
                 float distanceY = (MouseEndPosition - MouseStartPosition).y * cameraData.rotationSpeed;
 
                 float deltaTime = Time.deltaTime;
+                float deltaVertical = -distanceY * deltaTime;
+
+                CurrentRotationAngleV += deltaVertical;
+                CurrentRotationAngleV = clamp(CurrentRotationAngleV, -60f, cameraData.topClamp);
+                Quaternion rotV = Quaternion.AngleAxis(CurrentRotationAngleV, Vector3.right);
+                //Quaternion rotationV = Quaternion.identity * rotV;
+                float angleX = Quaternion.Angle(Quaternion.identity, rotV);
+                //angleX = angleX is <= -60 or >= 60 ? 0 : deltaVertical;
+
+                Debug.Log($"bot {cameraData.bottomClamp } top {cameraData.topClamp}");
                 
-                CameraTransform.Rotate(0f,distanceX * deltaTime, 0f, Space.World);
+                bool clampTest = angleX <= -60 || angleX >= cameraData.topClamp;
+                angleX = clampTest ? 0 : deltaVertical;
                 
-                CameraTransform.Rotate(-distanceY * deltaTime, 0f, 0f, Space.Self);
-                /*
-                float rotationX = CameraTransform.localEulerAngles.x;
+                //float verticalValue = angleX <= cameraData.bottomClamp || angleX >= cameraData.topClamp ?
+                   // 0 : deltaVertical;
                 
-                if (rotationX > 300f)
-                    rotationX -= 360f;
-                
-                
-                float test = ClampAngle(-distanceY * Time.deltaTime);
-                Quaternion rotU = Quaternion.AngleAxis(test, Vector3.right);
-                CameraTransform.rotation = CameraTransform.rotation * rotU;
-                Debug.Log(rotU);
-                */
-                
-                //CameraTransform.rotation = clamp(CameraTransform.rotation * rotU)
-                
-                //Debug.Log(degrees((CameraTransform.rotation * rotU).x));
-                //CameraTransform.rotation = CameraTransform.rotation * rotU;
-                    
-                //Debug.Log(CameraTransform.rotation.x);
+                CameraTransform.Rotate(angleX, 0f, 0f, Space.Self);
+                CameraTransform.Rotate(0f, distanceX * deltaTime, 0f, Space.World);
                 
                 MouseStartPosition = MouseEndPosition;
             }
