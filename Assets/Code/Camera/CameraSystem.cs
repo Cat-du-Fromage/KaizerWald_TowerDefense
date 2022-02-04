@@ -87,38 +87,6 @@ namespace KaizerWaldCode.RTTCamera
             CameraTransform.position += (xAxisMove + zAxisMove) * (MoveSpeed * heightMultiplier * Time.deltaTime);
         }
         
-        private void CameraRotation()
-        {
-            if (MouseEndPosition != MouseStartPosition)
-            {
-                //Distances mouse on camera view (XY because we got them from camera view!)
-                //2D:X = 3D:Y
-                //2D:Y = 3D:X
-                float distanceX = (MouseEndPosition - MouseStartPosition).x * cameraData.RotationSpeed;
-                float distanceY = (MouseEndPosition - MouseStartPosition).y * cameraData.RotationSpeed;
-                
-                //We keep track of the X axis rotation so we can clamp it! (quaternion make it difficult.. long story)
-                float deltaVertical = distanceY * Time.deltaTime;
-                CurrentVerticalAngle = Mathf.Clamp(CurrentVerticalAngle + deltaVertical, cameraData.MinRotation, cameraData.MaxRotation);
-            
-                //Get rotation from CurrentVerticalAngle on X axis
-                Quaternion verticalRotation = Quaternion.AngleAxis(CurrentVerticalAngle, Vector3.right);
-            
-                //Get Angle from 0->CameraXRotation (Mathf.Sign(CurrentVerticalAngle) so we have negative value when we go down)
-                float angleX = Quaternion.Angle(Quaternion.identity, verticalRotation) * Mathf.Sign(CurrentVerticalAngle);
-            
-                //Check if resulting Angle is still in bounds
-                bool isInRange = angleX >= cameraData.MinRotation && angleX <= cameraData.MaxRotation;
-                float angleToRotate = isInRange ? deltaVertical : 0.0f;
-            
-                //don't forget to Minus X value so we have the right angle
-                CameraTransform.Rotate(-angleToRotate, 0f, 0f, Space.Self);
-                CameraTransform.Rotate(0f, distanceX * Time.deltaTime, 0f, Space.World);
-                    
-                MouseStartPosition = MouseEndPosition;
-            }
-        }
-
         private void CameraZoom(float deltaMouse)
         {
             float zoomValue = deltaMouse * cameraData.ZoomSpeed * Time.deltaTime;
@@ -127,22 +95,45 @@ namespace KaizerWaldCode.RTTCamera
             CameraTransform.position += Vector3.up * (MathF.Log(CameraPosition.y) * zoomValue);
         }
         
+        private void CameraRotation(in Vector2 currentMousePosition)
+        {
+            MouseEndPosition = currentMousePosition;
+            
+            //Distances mouse on camera view (XY because we got them from camera view!)
+            //2D:X = 3D:Y
+            //2D:Y = 3D:X
+            float distanceX = (MouseEndPosition - MouseStartPosition).x * cameraData.RotationSpeed;
+            float distanceY = (MouseEndPosition - MouseStartPosition).y * cameraData.RotationSpeed;
+            
+            //We keep track of the X axis rotation so we can clamp it! (quaternion make it difficult.. long story)
+            float deltaVertical = distanceY * Time.deltaTime;
+            CurrentVerticalAngle = Mathf.Clamp(CurrentVerticalAngle + deltaVertical, cameraData.MinRotation, cameraData.MaxRotation);
+        
+            //Get rotation from CurrentVerticalAngle on X axis
+            Quaternion verticalRotation = Quaternion.AngleAxis(CurrentVerticalAngle, Vector3.right);
+        
+            //Get Angle from 0->CameraXRotation (Mathf.Sign(CurrentVerticalAngle) so we have negative value when we go down)
+            float angleX = Quaternion.Angle(Quaternion.identity, verticalRotation) * Mathf.Sign(CurrentVerticalAngle);
+        
+            //Check if resulting Angle is still in bounds
+            bool isInRange = angleX >= cameraData.MinRotation && angleX <= cameraData.MaxRotation;
+            float angleToRotate = isInRange ? deltaVertical : 0.0f;
+        
+            //don't forget to Minus X value so we have the right angle
+            CameraTransform.Rotate(-angleToRotate, 0f, 0f, Space.Self);
+            CameraTransform.Rotate(0f, distanceX * Time.deltaTime, 0f, Space.World);
+                
+            MouseStartPosition = MouseEndPosition;
+        }
+
 //======================================================================================================================
 //EVENTS CALLBACK
 //======================================================================================================================
         
         //Rotation
         //====================
-        private void StartRotation(InputAction.CallbackContext ctx)
-        {
-            MouseStartPosition = ctx.ReadValue<Vector2>();
-        }
-        
-        private void PerformRotation(InputAction.CallbackContext ctx)
-        {
-            MouseEndPosition = ctx.ReadValue<Vector2>();
-            CameraRotation();
-        }
+        private void StartRotation(InputAction.CallbackContext ctx) => MouseStartPosition = ctx.ReadValue<Vector2>();
+        private void PerformRotation(InputAction.CallbackContext ctx) => CameraRotation(ctx.ReadValue<Vector2>());
 
         //Sprint
         //====================
