@@ -1,5 +1,6 @@
 using System;
 using KWUtils;
+using TowerDefense;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -9,64 +10,57 @@ namespace KaizerWaldCode.RTTCamera
     {
         [SerializeField] private CameraData cameraData;
         private const float StartCameraAngle = 45;
+
+        //INPUT EVENT ACTIONS
+        private CameraControls Controls;
         
         //CAMERA INFO
         private Transform CameraTransform;
         private Vector3 CameraPosition => CameraTransform.position;
         
-        //MOVEMENT
-        private Vector2 MouseStartPosition, MouseEndPosition;
-        private Vector2 MoveAxis;
-
         //ROTATION
         public float CurrentVerticalAngle;
         
         //UPDATED MOVE SPEED
         private int MoveSpeed;
-
-        //INPUT ACTIONS
-        private Controls CameraControls;
-        private InputAction ZoomCameraAction => CameraControls.CameraControl.Zoom;
-        private InputAction MoveAction => CameraControls.CameraControl.Mouvement;
-        private InputAction RotationAction => CameraControls.CameraControl.Rotation;
-        private InputAction SprintAction => CameraControls.CameraControl.Faster;
+        
+        //MOVEMENT
+        private Vector2 MoveAxis;
+        private Vector2 MouseStartPosition;
+        private Vector2 MouseEndPosition;
         
         private void Awake()
         {
-            CameraControls ??= new Controls();
-            CameraControls.Enable();
+            Controls ??= new CameraControls();
+            Controls.Enable();
             
             CameraTransform = transform;
             MoveSpeed = cameraData.BaseMoveSpeed;
-            
-            CameraTransform.rotation = Quaternion.identity;
-            CameraTransform.Rotate(StartCameraAngle,0,0,Space.Self);
-            CurrentVerticalAngle = -StartCameraAngle;
+
+            InitializeCamera();
         }
 
         private void Start()
         {
-            SprintAction.EnableStartCancelEvent(StartSprint, CancelSprint);
-            MoveAction.EnablePerformCancelEvent(PerformMove, CancelMove);
-            
-            ZoomCameraAction.EnablePerformEvent(PerformZoom);
-            RotationAction.EnableStartPerformEvent(StartRotation, PerformRotation);
+            ToggleEvents(true);
         }
 
         private void OnDestroy()
         {
-            SprintAction.DisableStartCancelEvent(StartSprint, CancelSprint);
-            MoveAction.DisablePerformCancelEvent(PerformMove, CancelMove);
-            
-            ZoomCameraAction.DisablePerformEvent(PerformZoom);
-            RotationAction.DisableStartPerformEvent(StartRotation, PerformRotation);
+            ToggleEvents(false);
         }
         
-
         private void Update()
         {
             if (MoveAxis == Vector2.zero) return;
             MoveCamera(CameraTransform.right);
+        }
+
+        private void InitializeCamera()
+        {
+            CameraTransform.rotation = Quaternion.identity;
+            CameraTransform.Rotate(StartCameraAngle,0,0,Space.Self);
+            CurrentVerticalAngle = -StartCameraAngle;
         }
 
         private void MoveCamera(in Vector3 cameraRight)
@@ -129,7 +123,17 @@ namespace KaizerWaldCode.RTTCamera
 //======================================================================================================================
 //EVENTS CALLBACK
 //======================================================================================================================
-        
+
+        private void ToggleEvents(bool toggleState)
+        {
+            CameraControls.CameraActionsActions action = Controls.CameraActions;
+            action.Faster.ToggleStartCancelEvent(StartSprint, CancelSprint, toggleState);
+            action.Mouvement.TogglePerformCancelEvent(PerformMove, CancelMove, toggleState);
+            
+            action.Zoom.TogglePerformEvent(PerformZoom, toggleState);
+            action.Rotation.ToggleStartPerformEvent(StartRotation, PerformRotation, toggleState);
+        }
+
         //Rotation
         //====================
         private void StartRotation(InputAction.CallbackContext ctx) => MouseStartPosition = ctx.ReadValue<Vector2>();

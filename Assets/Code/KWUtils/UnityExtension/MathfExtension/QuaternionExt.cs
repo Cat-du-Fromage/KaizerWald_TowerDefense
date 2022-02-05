@@ -6,10 +6,10 @@ namespace KWUtils
     [Flags]
     public enum Axis
     {
-        X,
-        Y,
-        Z,
-        W
+        X = 1 << 0,
+        Y = 1 << 1,
+        Z = 1 << 2,
+        W = 1 << 3
     }
     
     public static class QuaternionExt

@@ -7,16 +7,23 @@ using UnityEngine.InputSystem;
 
 using static Unity.Mathematics.math;
 
-namespace KaizerWaldCode.PlayerEntityInteractions
+namespace TowerDefense
 {
     public class InteractionInputs : MonoBehaviour
     {
+
         private SelectionInputController Control;
         public SelectionInputController.MouseControlActions MouseCtrl { get; private set; }
         public InputAction SelectionEvents { get; private set; }
         public InputAction PlacementEvents { get; private set; }
-        //Selection Datas
-
+        
+        //Camera Input Event
+        //Move : Vector2
+        //Scroll : float
+        //
+        
+        
+        //Selection Inputs Event
         public bool ShiftPressed{ get; private set; }
         public bool LeftClick{ get; private set; }
         public bool IsDragging{ get; private set; }
@@ -38,14 +45,14 @@ namespace KaizerWaldCode.PlayerEntityInteractions
 
         private void Start()
         {
-            Control.MouseControl.ShiftClick.EnableStartCancelEvent(OnStartShift, OnCancelShift);
-            SelectionEvents.EnableAllEvents(OnStartMouseClick, OnPerformLeftClickMoveMouse, OnCancelMouseClick);
+            Control.MouseControl.ShiftClick.ToggleStartCancelEvent(OnStartShift, OnCancelShift, true);
+            SelectionEvents.ToggleAllEvents(OnStartMouseClick, OnPerformLeftClickMoveMouse, OnCancelMouseClick, true);
         }
 
         private void OnDestroy()
         {
-            Control.MouseControl.ShiftClick.DisableStartCancelEvent(OnStartShift, OnCancelShift);
-            SelectionEvents.DisableAllEvents(OnStartMouseClick, OnPerformLeftClickMoveMouse, OnCancelMouseClick);
+            Control.MouseControl.ShiftClick.ToggleStartCancelEvent(OnStartShift, OnCancelShift, false);
+            SelectionEvents.ToggleAllEvents(OnStartMouseClick, OnPerformLeftClickMoveMouse, OnCancelMouseClick, false);
         }
 
         private void OnStartShift(InputAction.CallbackContext ctx) => ShiftPressed = true;

@@ -21,10 +21,11 @@ namespace KWUtils
         public static void EnableCancelEvent(this InputAction inputAction, Action<InputAction.CallbackContext> cancel) => inputAction.canceled += cancel;
         public static void DisableCancelEvent(this InputAction inputAction, Action<InputAction.CallbackContext> cancel) => inputAction.canceled -= cancel;
 
+
         // 2 ACTIONS
         //==============================================================================================================
         
-        //PERFORM-CANCEL
+        //START-PERFORM
         public static void EnableStartPerformEvent(this InputAction inputAction,
             Action<InputAction.CallbackContext> start,
             Action<InputAction.CallbackContext> perform)
@@ -97,6 +98,124 @@ namespace KWUtils
             inputAction.started -= start;
             inputAction.performed -= performed;
             inputAction.canceled -= cancel;
+        }
+        
+//======================================================================================================================
+//TOGGLE EVENTS
+//======================================================================================================================
+
+
+        //SINGLE ACTION
+        //==============================================================================================================
+        
+        //STARTED EVENT
+        public static void ToggleStartEvent(this InputAction inputAction, Action<InputAction.CallbackContext> start, bool toggleState)
+        {
+            if(toggleState)
+                inputAction.started += start;
+            else
+                inputAction.started -= start;
+        }
+        
+        //PERFORMED EVENT
+        public static void TogglePerformEvent(this InputAction inputAction, Action<InputAction.CallbackContext> perform, bool toggleState)
+        {
+            if(toggleState)
+                inputAction.performed += perform;
+            else
+                inputAction.performed -= perform;
+        }
+        
+        //CANCELED EVENT
+        public static void ToggleCancelEvent(this InputAction inputAction, Action<InputAction.CallbackContext> cancel, bool toggleState)
+        {
+            if(toggleState)
+                inputAction.canceled += cancel;
+            else
+                inputAction.canceled -= cancel;
+        }
+        
+        // 2 ACTIONS
+        //==============================================================================================================
+        
+        //START-PERFORM
+        public static void ToggleStartPerformEvent(this InputAction inputAction,
+            Action<InputAction.CallbackContext> start,
+            Action<InputAction.CallbackContext> perform,
+            bool toggleState)
+        {
+            if (toggleState)
+            {
+                inputAction.started += start;
+                inputAction.performed += perform;
+            }
+            else
+            {
+                inputAction.started -= start;
+                inputAction.performed -= perform;
+            }
+        }
+        
+
+        
+        //PERFORM-CANCEL
+        public static void TogglePerformCancelEvent(this InputAction inputAction,
+            Action<InputAction.CallbackContext> perform,
+            Action<InputAction.CallbackContext> cancel,
+            bool toggleState)
+        {
+            if (toggleState)
+            {
+                inputAction.performed += perform;
+                inputAction.canceled += cancel;
+            }
+            else
+            {
+                inputAction.performed -= perform;
+                inputAction.canceled -= cancel;
+            }
+        }
+        
+        //START-CANCEL
+        public static void ToggleStartCancelEvent(this InputAction inputAction,
+            Action<InputAction.CallbackContext> start,
+            Action<InputAction.CallbackContext> cancel,
+            bool toggleState)
+        {
+            if (toggleState)
+            {
+                inputAction.started += start;
+                inputAction.canceled += cancel;
+            }
+            else
+            {
+                inputAction.started -= start;
+                inputAction.canceled -= cancel;
+            }
+        }
+        
+        // ALL ACTIONS
+        //==============================================================================================================
+        
+        //STARTED-PERFORMED-CANCELED
+        public static void ToggleAllEvents(this InputAction inputAction,
+            Action<InputAction.CallbackContext> start, 
+            Action<InputAction.CallbackContext> performed, 
+            Action<InputAction.CallbackContext> cancel,
+            bool toggleState)
+        {
+            if (toggleState)
+            {
+                inputAction.started += start;
+                inputAction.performed += performed;
+                inputAction.canceled += cancel;
+            }
+            else
+            {
+                inputAction.started -= start;
+                inputAction.performed -= performed;
+                inputAction.canceled -= cancel;
+            }
         }
     }
 }

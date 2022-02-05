@@ -12,6 +12,12 @@ namespace KWUtils
             return gameObject.GetComponent(typeof(I)) as I;
         }
         
+        public static I GetInterfaceComponent<I>(this Component component) 
+        where I : class
+        {
+            return component.gameObject.GetComponent(typeof(I)) as I;
+        }
+
         public static List<I> FindObjectsOfInterface<I>() 
         where I : class
         {

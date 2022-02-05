@@ -1,8 +1,10 @@
+using UnityEngine;
+
 namespace TowerDefense
 {
     public interface IBaseSystem
     {
-        
+        public void Notify(ISubSystem subSystem);
     }
 
     public interface ISubSystem
