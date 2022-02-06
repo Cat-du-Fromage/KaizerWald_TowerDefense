@@ -3,18 +3,9 @@ using UnityEngine;
 
 namespace TowerDefense
 {
-    public enum SelectionEvent
-    {
-        Selection,
-        Clear,
-    }
-    
-    public class SelectionSubSystem : MonoBehaviour, IInteractionSubSystem<SelectionEvent>
+    public class SelectionSubSystem : MonoBehaviour
     {
         [SerializeField] private Camera PlayerCamera;
-        public IBaseSystem MainSystem { get; set; }
-        
-        public SelectionEvent EventType { get; private set; }
         //Need Camera Component
         
         private RaycastHit SingleHit;

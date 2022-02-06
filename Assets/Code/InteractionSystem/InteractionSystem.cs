@@ -7,10 +7,9 @@ using KWUtils;
 
 namespace TowerDefense
 {
-    public class InteractionSystem : MonoBehaviour, IInteractionSystem
+    public class InteractionSystem : MonoBehaviour
     {
         public Camera MainCamera;
-        private List<ISubSystem> test;
         [SerializeField] private SelectionSubSystem selectionSubSystem;
         
         //[SerializeField] private MoveOrderSubSystem selectionSubSystem;
@@ -18,25 +17,11 @@ namespace TowerDefense
         {
             MainCamera ??= Camera.main;
             selectionSubSystem ??= GetComponent<SelectionSubSystem>();
+        }
+
+        public void SelectionNotification()
+        {
             
-            selectionSubSystem.GetInterfaceComponent<ISubSystem>().AttachSubSystemTo(this);
-        }
-
-        public void Notify(ISubSystem subSystem)
-        {
-            if (subSystem is IInteractionSubSystem<SelectionEvent> selection)
-            {
-                SelectionNotification(selection.EventType);
-            }
-        }
-
-        public void SelectionNotification(SelectionEvent eventType)
-        {
-            if (eventType == SelectionEvent.Selection)
-            {
-                //Add Selection
-            }
-            //Clear
         }
     }
 }
