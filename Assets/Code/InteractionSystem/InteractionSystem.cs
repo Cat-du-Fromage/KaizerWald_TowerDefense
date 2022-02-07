@@ -9,19 +9,33 @@ namespace TowerDefense
 {
     public class InteractionSystem : MonoBehaviour
     {
-        public Camera MainCamera;
+        public Camera PlayerCamera;
+        public InteractionInputs InputsControl;
+
         [SerializeField] private SelectionSubSystem selectionSubSystem;
+
+        [SerializeField] private Transform characterSelection;
+        private SelectionTag characterSelectTag;
         
-        //[SerializeField] private MoveOrderSubSystem selectionSubSystem;
         private void Awake()
         {
-            MainCamera ??= Camera.main;
+            PlayerCamera = PlayerCamera == null ? Camera.main : PlayerCamera;
+
+            characterSelection = characterSelection == null ? GameObject.Find("PlayerCharacter").transform : characterSelection;
+            
+            InputsControl ??= GetComponent<InteractionInputs>();
+            
             selectionSubSystem ??= GetComponent<SelectionSubSystem>();
         }
 
-        public void SelectionNotification()
+        private void Start()
         {
-            
+            characterSelectTag = characterSelection.GetComponent<SelectionTag>();
+        }
+
+        public void SelectionNotification(Transform selection = null)
+        {
+            characterSelectTag.ToggleVisible(selection!=null);
         }
     }
 }

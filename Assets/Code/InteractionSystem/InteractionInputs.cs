@@ -12,17 +12,12 @@ namespace TowerDefense
     public class InteractionInputs : MonoBehaviour
     {
 
-        private SelectionInputController Control;
+        public SelectionInputController Control;
         public SelectionInputController.MouseControlActions MouseCtrl { get; private set; }
         public InputAction SelectionEvents { get; private set; }
         public InputAction PlacementEvents { get; private set; }
-        
-        //Camera Input Event
-        //Move : Vector2
-        //Scroll : float
-        //
-        
-        
+
+
         //Selection Inputs Event
         public bool ShiftPressed{ get; private set; }
         public bool LeftClick{ get; private set; }
