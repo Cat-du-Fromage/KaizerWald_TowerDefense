@@ -3,36 +3,35 @@ using System.Collections;
 using System.Collections.Generic;
 using KWUtils;
 using UnityEngine;
-using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
 
+using static Unity.Mathematics.math;
+/*
 namespace TowerDefense
 {
     public class InteractionInputs : MonoBehaviour
     {
-        private InputsEventCallBack inputsEventCallBack;
-        
-        private SelectionInputController Control;
-        private SelectionInputController.MouseControlActions MouseCtrl;
-        private InputAction SelectionEvents;
-        private InputAction PlacementEvents;
 
-        private bool uiEvent;
+        public SelectionInputController Control;
+        public SelectionInputController.MouseControlActions MouseCtrl { get; private set; }
+        public InputAction SelectionEvents { get; private set; }
+        public InputAction PlacementEvents { get; private set; }
+
 
         //Selection Inputs Event
-        public bool ShiftPressed;
-        //public bool LeftClick;
-        //public bool IsDragging;
+        public bool ShiftPressed{ get; private set; }
+        public bool LeftClick{ get; private set; }
+        public bool IsDragging{ get; private set; }
 
-        //public Vector2 StartMouseClick;
-        //public Vector2 EndMouseClick;
+        public Vector2 StartMouseClick{ get; private set; }
+        
+        public readonly Vector2[] EndMouseClick = new Vector2[2];
 
         private void OnEnable() => Control.Enable();
         private void OnDisable() => Control.Disable();
         
         private void Awake()
         {
-            inputsEventCallBack = new InputsEventCallBack(gameObject);
             Control ??= new SelectionInputController();
             MouseCtrl = Control.MouseControl;
             SelectionEvents = Control.MouseControl.SelectionMouseLeftClick;
@@ -53,33 +52,37 @@ namespace TowerDefense
 
         private void OnStartShift(InputAction.CallbackContext ctx) => ShiftPressed = true;
         private void OnCancelShift(InputAction.CallbackContext ctx) => ShiftPressed = false;
-        
+
         //LEFT CLICK + MOUSE MOVE
         //==============================================================================================================
         private void OnStartMouseClick(InputAction.CallbackContext ctx)
         {
-            //StartMouseClick = ctx.ReadValue<Vector2>();
-            uiEvent = EventSystem.current.IsPointerOverGameObject(PointerInputModule.kMouseLeftId);
-            inputsEventCallBack.Dispatch(InputEventType.Press);
-            //Debug.Log($"Is UI event? {uiEvent}");
+            StartMouseClick = ctx.ReadValue<Vector2>();
+            LeftClick = true;
+            //if start is on UI => define eventType.UI
         }
         
         private void OnPerformLeftClickMoveMouse(InputAction.CallbackContext ctx)
         {
-            if (uiEvent) return;
-            //EndMouseClick = ctx.ReadValue<Vector2>();
-            inputsEventCallBack.Dispatch(InputEventType.Move);
+            //if EventType == UI => return;
+            if(EndMouseClick[0] != ctx.ReadValue<Vector2>()) //this way we can compare arr[0] and arr[1] in other systems
+            {
+                EndMouseClick[0] = ctx.ReadValue<Vector2>(); //swap : new current [0]
+                (EndMouseClick[0], EndMouseClick[1]) = (EndMouseClick[1], EndMouseClick[0]); //swap : current become previous 
+            }
+            IsDragging = (EndMouseClick[1] - StartMouseClick).sqrMagnitude > 200;
+            //Send => START + END! ONLY if dragging
         }
         
         private void OnCancelMouseClick(InputAction.CallbackContext ctx)
         {
-            if (uiEvent)
-            {
-                Debug.Log($"Ui Input Event Left Click");
-                return;
-            }
-            inputsEventCallBack.Dispatch(InputEventType.Release);
+            //if start == 
+            //Send => End Position
+            //If dragging = true => notify drag selection
+            LeftClick = false;
+            IsDragging = false;
         }
 
     }
 }
+*/

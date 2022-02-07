@@ -6,8 +6,10 @@ using UnityEngine.InputSystem;
 
 namespace KWUtils
 {
-    public static class InputSystem
+    public static class InputSystemExtension
     {
+        public static Vector2 GetMousePosition => Mouse.current.position.ReadValue();
+        
         // SINGLE ACTIONS
         //==============================================================================================================
         
