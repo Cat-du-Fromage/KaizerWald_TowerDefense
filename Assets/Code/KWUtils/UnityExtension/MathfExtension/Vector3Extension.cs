@@ -16,6 +16,11 @@ namespace KWUtils
         {
             return new Vector3(coordToFlat.x, 0, coordToFlat.z);
         }
+        
+        public static Vector3 GridHMove(this Vector3 coordToMove, Vector3 newPosition)
+        {
+            return new Vector3(newPosition.x, coordToMove.y, newPosition.z);
+        }
 
         /// <summary>
         /// Set wanted axis

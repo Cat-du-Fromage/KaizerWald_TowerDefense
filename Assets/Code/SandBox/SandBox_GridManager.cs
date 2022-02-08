@@ -1,11 +1,15 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using KWUtils;
 using UnityEngine;
 using Unity.Mathematics;
 using UnityEditor;
+
 using UnityEngine.InputSystem;
+using static TowerDefense.TowerDefenseUtils;
 using static KWUtils.KWGrid;
+using static KWUtils.InputSystemExtension;
 
 namespace TowerDefense
 {
@@ -20,47 +24,51 @@ namespace TowerDefense
     {
         public bool GUIDebug;
 
-        public GameObject token;
-        
+        public Transform token;
+        [SerializeField] private Camera PlayerCamera;
         [SerializeField] private TerrainData terrainData;
         //bounds = half extends
         //size = width/height and ???? 600 from what? apparently something about vertices (number decrease/increase)
 
-        private const int cellSize = 2;
+        private const int CellSize = 2;
 
         public int2 widthHeight;
-
         public int2 numCellWidthHeight;
 
         public int TotalNumCells;
         
-        private int[] grid;
         private Vector3[] cellsCenter;
 
         private void Awake()
         {
+            PlayerCamera = PlayerCamera == null ? Camera.main : PlayerCamera;
             widthHeight = new int2((int) terrainData.size.x, (int) terrainData.size.z);
             numCellWidthHeight = new int2(widthHeight >> 1); // == /2
-
             TotalNumCells = numCellWidthHeight.x * numCellWidthHeight.y;
             
-            grid = new int[TotalNumCells];
-            cellsCenter = new Vector3[TotalNumCells];
             Debug.Log($"width {numCellWidthHeight.x}; height {numCellWidthHeight.y}");
         }
 
         private void Start()
         {
+            cellsCenter = new Vector3[TotalNumCells];
             GetCellPosition();
         }
 
         private void Update()
         {
-            if (!Mouse.current.rightButton.wasPressedThisFrame) return;
+            if (!Mouse.current.leftButton.isPressed) return;
+            SnapTowerToGrid();
+        }
 
-            //int index = Camera.main.ScreenToWorldPoint(Mouse.current.position.ReadValue()).GetIndexFromPosition(widthHeight, cellSize);
-            int indexPos = token.transform.position.GetIndexFromPosition(widthHeight, cellSize);
-            Debug.Log($"current {indexPos}");
+        public void SnapTowerToGrid()
+        {
+            Ray ray = PlayerCamera.ScreenPointToRay(GetMousePosition);
+            bool hitTerrain = Physics.Raycast(ray.origin, ray.direction, out RaycastHit hit, TerrainLayerMask);
+            if (!hitTerrain) return;
+            
+            int indexPos = hit.point.GetIndexFromPosition(numCellWidthHeight, CellSize);
+            token.position = token.position.GridHMove(cellsCenter[indexPos]);
         }
 
         /// <summary>
@@ -68,10 +76,10 @@ namespace TowerDefense
         /// </summary>
         public void GetCellPosition()
         {
-            Vector3 cellBounds = new Vector3(cellSize,0,cellSize);
-            Vector3 centerCellOffset = new Vector3(cellSize >> 1, 0, cellSize >> 1);
+            Vector3 cellBounds = new Vector3(CellSize,0,CellSize);
+            Vector3 centerCellOffset = new Vector3(CellSize / 2f, 0, CellSize / 2f);
             
-            for (int index = 0; index < grid.Length; index++)
+            for (int index = 0; index < TotalNumCells; index++)
             {
                 (int x, int z) = index.GetXY(numCellWidthHeight.x);
                 
@@ -86,10 +94,13 @@ namespace TowerDefense
         {
             if (GUIDebug)
             {
-                Vector3 centerCellOffset = new Vector3(cellSize, cellSize, cellSize);
+                Vector3 centerCellOffset = new Vector3(CellSize, CellSize/5f, CellSize);
                 Gizmos.color = Color.green;
-                GUIStyle style = new GUIStyle(GUI.skin.label);
-                style.alignment = TextAnchor.MiddleCenter;
+                
+                GUIStyle style = new GUIStyle(GUI.skin.label)
+                {
+                    alignment = TextAnchor.MiddleCenter
+                };
 
                 int numIteration = numCellWidthHeight.x * 2;
                 
@@ -97,6 +108,7 @@ namespace TowerDefense
                 {
                     Gizmos.DrawWireCube(cellsCenter[i], centerCellOffset);
                     Handles.Label(cellsCenter[i], i.ToString(), style);
+                    //Gizmos.DrawWireSphere(cellsCenter[i], 0.5f);
                 }
             }
         }

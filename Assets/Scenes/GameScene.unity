@@ -38,7 +38,7 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 0}
-  m_IndirectSpecularColor: {r: 0.11614481, g: 0.4237638, b: 0.72999835, a: 1}
+  m_IndirectSpecularColor: {r: 0.11613609, g: 0.42406118, b: 0.73004735, a: 1}
   m_UseRadianceAmbientProbe: 0
 --- !u!157 &3
 LightmapSettings:
@@ -674,7 +674,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   GUIDebug: 0
-  token: {fileID: 1276086922}
+  token: {fileID: 1276086926}
+  PlayerCamera: {fileID: 330585545}
   terrainData: {fileID: 15600000, guid: ad21e10ffa3addb409999fe16fbf0a62, type: 2}
   widthHeight:
     x: 0
@@ -756,7 +757,7 @@ GameObject:
   - component: {fileID: 792069534}
   - component: {fileID: 792069533}
   - component: {fileID: 792069532}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: Terrain
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1217,9 +1218,9 @@ Transform:
     type: 3}
   m_PrefabInstance: {fileID: 6991781485122537906}
   m_PrefabAsset: {fileID: 0}
---- !u!1 &1276086922 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 7560973500978432498, guid: 2346b86d2daf40f4d95cb8138deb624e,
+--- !u!4 &1276086926 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 7560973500978432502, guid: 2346b86d2daf40f4d95cb8138deb624e,
     type: 3}
   m_PrefabInstance: {fileID: 7560973500106244984}
   m_PrefabAsset: {fileID: 0}
