@@ -64,8 +64,29 @@ namespace TowerDefense
 
         private void Update()
         {
-            if (!Mouse.current.leftButton.isPressed) return;
+            if (!Mouse.current.leftButton.wasPressedThisFrame) return;
             SnapTowerToGrid();
+        }
+
+        
+        /// <summary>
+        /// 1/2 BIG CELLS
+        /// Get intdex from Inner Grid! => bigCell => divid in 4 cells
+        /// imagine a square of length one with each intersection of smalls square as center
+        /// </summary>
+        /// <param name="point"></param>
+        /// <returns></returns>
+        private int SnapGridBounds(Vector3 point)
+        {
+            Vector3 clampPoint = new Vector3(point.x - 0.5f, 0, point.z - 0.5f);
+            
+            //float clampAxisX = Mathf.Clamp(clampPoint.x, 0.5f, (float)widthHeight.x - 0.5f);
+            //float clampAxisZ = Mathf.Clamp(clampPoint.z, 0.5f, (float)widthHeight.y - 0.5f);
+            //clampPoint.Set(clampAxisX,0,clampAxisZ);
+            
+            int indexPos = clampPoint.GetIndexFromPosition(widthHeight-(new int2(1)), 1);
+            //Debug.Log($"indexPos = {indexPos}");
+            return indexPos;
         }
 
         public void SnapTowerToGrid()
@@ -74,12 +95,14 @@ namespace TowerDefense
             bool hitTerrain = Physics.Raycast(ray.origin, ray.direction, out RaycastHit hit, TerrainLayerMask);
             if (!hitTerrain) return;
             //Vector3 pointOffset = hit.point + Vector3.one.Flat();
-            int indexPos = hit.point.GetIndexFromPosition(widthHeight, 1);
-            Debug.Log($"indexPos = {indexPos}");
+            
+            //int indexPos = hit.point.GetIndexFromPosition(widthHeight, 1);
+            int indexPos = SnapGridBounds(hit.point);
             token.position = token.position.GridHMove(snapPositions[indexPos]);
         }
 
         /// <summary>
+        /// BIG CELLS
         /// GRID : Construction
         /// </summary>
         public void GetCellPosition()
@@ -107,17 +130,17 @@ namespace TowerDefense
             
             for (int index = 0; index < snapPositions.Length; index++)
             {
-                (int x, int z) = index.GetXY(widthHeight.x);
+                (int x, int z) = index.GetXY(widthHeight.x-1);
                 
                 Vector3 cellPositionOnMesh = new Vector3(x, 0, z);
                 //Vector3 pointPosition = Vector3.Scale(cellPositionOnMesh,Vector3.one) + flatVectorOne;
-                Vector3 pointPosition = cellPositionOnMesh + flatVectorOne;
+                Vector3 pointPosition = cellPositionOnMesh + flatVectorOne; //* cellBound not needed this time since value = Vector3(1,1,1)
                 snapPositions[index] = pointPosition;
             }
         }
 
         /// <summary>
-        /// 
+        /// 1/4 BIG CELLS
         /// </summary>
         public void GetVisualBuildPosition()
         {
@@ -152,10 +175,13 @@ namespace TowerDefense
                 {
                     Gizmos.DrawWireCube(cellsCenter[i], centerCellOffset);
                     Handles.Label(cellsCenter[i], i.ToString(), style);
-                    
-                    
-                    
                     Gizmos.DrawWireSphere(snapPositions[i], 0.25f);
+                }
+                
+                Gizmos.color = Color.red;
+                for (int i = 0; i < numIteration; i++)
+                {
+                    Gizmos.DrawWireCube(snapPositions[i], centerSnapOffset);
                 }
                 
                 Gizmos.color = Color.cyan;
