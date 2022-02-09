@@ -38,6 +38,9 @@ namespace TowerDefense
         public int TotalNumCells;
         
         private Vector3[] cellsCenter;
+        private Vector3[] snapPositions;
+        
+        private Vector3[] visualBuildPositions;
 
         private void Awake()
         {
@@ -52,7 +55,11 @@ namespace TowerDefense
         private void Start()
         {
             cellsCenter = new Vector3[TotalNumCells];
+            snapPositions = new Vector3[(widthHeight.x - 2) * (widthHeight.y - 2)];
+            visualBuildPositions = new Vector3[cellsCenter.Length * 4];
             GetCellPosition();
+            GetSnapPosition();
+            GetVisualBuildPosition();
         }
 
         private void Update()
@@ -66,9 +73,10 @@ namespace TowerDefense
             Ray ray = PlayerCamera.ScreenPointToRay(GetMousePosition);
             bool hitTerrain = Physics.Raycast(ray.origin, ray.direction, out RaycastHit hit, TerrainLayerMask);
             if (!hitTerrain) return;
-            
-            int indexPos = hit.point.GetIndexFromPosition(numCellWidthHeight, CellSize);
-            token.position = token.position.GridHMove(cellsCenter[indexPos]);
+            //Vector3 pointOffset = hit.point + Vector3.one.Flat();
+            int indexPos = hit.point.GetIndexFromPosition(widthHeight, 1);
+            Debug.Log($"indexPos = {indexPos}");
+            token.position = token.position.GridHMove(snapPositions[indexPos]);
         }
 
         /// <summary>
@@ -90,11 +98,47 @@ namespace TowerDefense
             }
         }
 
+        /// <summary>
+        /// Get Snapping grid where turret can be placed
+        /// </summary>
+        public void GetSnapPosition()
+        {
+            Vector3 flatVectorOne = Vector3.one.Flat();
+            
+            for (int index = 0; index < snapPositions.Length; index++)
+            {
+                (int x, int z) = index.GetXY(widthHeight.x);
+                
+                Vector3 cellPositionOnMesh = new Vector3(x, 0, z);
+                //Vector3 pointPosition = Vector3.Scale(cellPositionOnMesh,Vector3.one) + flatVectorOne;
+                Vector3 pointPosition = cellPositionOnMesh + flatVectorOne;
+                snapPositions[index] = pointPosition;
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public void GetVisualBuildPosition()
+        {
+            Vector3 flatOffset = Vector3.one.Flat() * 0.5f;
+            for (int i = 0; i < visualBuildPositions.Length; i++)
+            {
+                (int x, int z) = i.GetXY(widthHeight.x);
+                Vector3 cellPositionOnMesh = new Vector3(x, 0, z);
+                Vector3 pointPosition = cellPositionOnMesh + flatOffset;
+                visualBuildPositions[i] = pointPosition;
+            }
+        }
+
         private void OnDrawGizmos()
         {
             if (GUIDebug)
             {
                 Vector3 centerCellOffset = new Vector3(CellSize, CellSize/5f, CellSize);
+                
+                Vector3 centerSnapOffset = new Vector3(1, 1/4f, 1);
+                
                 Gizmos.color = Color.green;
                 
                 GUIStyle style = new GUIStyle(GUI.skin.label)
@@ -102,13 +146,22 @@ namespace TowerDefense
                     alignment = TextAnchor.MiddleCenter
                 };
 
-                int numIteration = numCellWidthHeight.x * 2;
+                int numIteration = numCellWidthHeight.x * 4;
                 
                 for (int i = 0; i < numIteration; i++)
                 {
                     Gizmos.DrawWireCube(cellsCenter[i], centerCellOffset);
                     Handles.Label(cellsCenter[i], i.ToString(), style);
-                    //Gizmos.DrawWireSphere(cellsCenter[i], 0.5f);
+                    
+                    
+                    
+                    Gizmos.DrawWireSphere(snapPositions[i], 0.25f);
+                }
+                
+                Gizmos.color = Color.cyan;
+                for (int i = 0; i < numIteration; i++)
+                {
+                    Gizmos.DrawWireCube(visualBuildPositions[i], centerSnapOffset);
                 }
             }
         }

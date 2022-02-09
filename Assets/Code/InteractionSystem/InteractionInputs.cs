@@ -59,14 +59,14 @@ namespace TowerDefense
         private void OnStartMouseClick(InputAction.CallbackContext ctx)
         {
             //StartMouseClick = ctx.ReadValue<Vector2>();
-            uiEvent = EventSystem.current.IsPointerOverGameObject(PointerInputModule.kMouseLeftId);
+            //uiEvent = EventSystem.current.IsPointerOverGameObject(PointerInputModule.kMouseLeftId);
             inputsEventCallBack.Dispatch(InputEventType.Press);
             //Debug.Log($"Is UI event? {uiEvent}");
         }
         
         private void OnPerformLeftClickMoveMouse(InputAction.CallbackContext ctx)
         {
-            if (uiEvent) return;
+            //if (uiEvent) return;
             //EndMouseClick = ctx.ReadValue<Vector2>();
             inputsEventCallBack.Dispatch(InputEventType.Move);
         }
