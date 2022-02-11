@@ -66,15 +66,18 @@ namespace TowerDefense
                 (int x, int y) = i.GetXY(3);
                 int baseTriIndex = Mathf.Max(0,i * 6 - 1);
                 Debug.Log(baseTriIndex);
-                int vertexIndex = i + math.select(y,1 + y, x > 3);
-                int4 trianglesVertex = new int4(vertexIndex, vertexIndex + 3, vertexIndex + 3-1, vertexIndex + 1);
+                //int vertexIndex = i + math.select(y,1 + y, x > 3);
+                int vertexIndex = y * 3 + x;
+                Debug.Log($"vertexIndex at {i} = {vertexIndex}");
+                int4 trianglesVertex = new int4(vertexIndex, vertexIndex + 1, vertexIndex + 3, vertexIndex + 3 + 1);
                 triangles[baseTriIndex] = trianglesVertex.z;
                 triangles[baseTriIndex + 1] = trianglesVertex.y;
                 triangles[baseTriIndex + 2] = trianglesVertex.x;
                 //Debug.Log($"tri at {baseTriIndex} = {triangles[baseTriIndex]}; {triangles[baseTriIndex + 1]}; {triangles[baseTriIndex + 2]}");
                 baseTriIndex += 3;
-                triangles[baseTriIndex] = trianglesVertex.w;
-                triangles[baseTriIndex + 1] = trianglesVertex.x;
+                Debug.Log(baseTriIndex);
+                triangles[baseTriIndex] = trianglesVertex.z;
+                triangles[baseTriIndex + 1] = trianglesVertex.w;
                 triangles[baseTriIndex + 2] = trianglesVertex.y;
                // Debug.Log($"tri at {baseTriIndex} = {triangles[baseTriIndex]}; {triangles[baseTriIndex + 1]}; {triangles[baseTriIndex + 2]}");
             }

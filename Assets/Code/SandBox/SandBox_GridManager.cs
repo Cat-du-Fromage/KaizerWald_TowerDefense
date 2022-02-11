@@ -68,6 +68,15 @@ namespace TowerDefense
             SnapTowerToGrid();
         }
 
+        public void ToggleBlueprint(bool state)
+        {
+            token.gameObject.SetActive(state);
+            if (state)
+            {
+                
+            }
+        }
+
         
         /// <summary>
         /// 1/2 BIG CELLS
