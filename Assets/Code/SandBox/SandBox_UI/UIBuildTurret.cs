@@ -5,13 +5,15 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
 using UnityEngine.UI;
+using KWUtils;
 
 namespace TowerDefense
 {
     public class UIBuildTurret : MonoBehaviour
     {
+        [SerializeField] private Button BasicTurretBuild;
+        
         [SerializeField] private SandBox_GridManager gridManager;
-        [SerializeField] private GameObject uiCanvas;
         private GraphicRaycaster uiRaycaster;
         
         private PointerEventData clickData;
@@ -19,15 +21,29 @@ namespace TowerDefense
 
         private void Awake()
         {
-            uiCanvas = gameObject;
+            //gridManager
+            gridManager = gridManager == null ? FindObjectOfType<SandBox_GridManager>() : gridManager;
+            BasicTurretBuild = BasicTurretBuild == null ? gameObject.GetComponentInChildrenFrom<TagBasicTurret, Button>() : BasicTurretBuild;
         }
 
         private void Start()
         {
-            uiRaycaster = uiCanvas.GetComponent<GraphicRaycaster>();
+            uiRaycaster = gameObject.GetComponent<GraphicRaycaster>();
             clickData = new PointerEventData(EventSystem.current);
+            
+            BasicTurretBuild.onClick.AddListener(OnBasicTurretClick);
         }
-        
+
+        private void OnDestroy()
+        {
+            BasicTurretBuild.onClick.RemoveListener(OnBasicTurretClick);
+        }
+
+        private void OnBasicTurretClick() => gridManager.ToggleBlueprint();
+    }
+}
+
+/*
         private void Update()
         {
             // use isPressed if you wish to ray cast every frame:
@@ -52,10 +68,4 @@ namespace TowerDefense
                 Debug.Log(uiElement.name);
             }
         }
-
-        private void EnableBuild()
-        {
-            
-        }
-    }
-}
+        */

@@ -32,5 +32,12 @@ namespace KWUtils
             }
             return list;
         }
+
+        public static T2 GetComponentInChildrenFrom<T1,T2>(this GameObject gameObject) 
+        where T1 : Component
+        where T2 : Component
+        {
+            return gameObject.GetComponentInChildren(typeof(T1)).transform.GetComponent<T2>();
+        }
     }
 }

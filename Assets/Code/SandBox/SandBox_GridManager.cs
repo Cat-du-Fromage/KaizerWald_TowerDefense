@@ -5,7 +5,7 @@ using KWUtils;
 using UnityEngine;
 using Unity.Mathematics;
 using UnityEditor;
-
+using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
 using static TowerDefense.TowerDefenseUtils;
 using static KWUtils.KWGrid;
@@ -23,8 +23,9 @@ namespace TowerDefense
     public class SandBox_GridManager : MonoBehaviour
     {
         public bool GUIDebug;
-
-        public Transform token;
+        public bool IsBuilding;
+        public Transform TurretBlueprint;
+        [SerializeField] private GameObject TurretPrefab;
         [SerializeField] private Camera PlayerCamera;
         [SerializeField] private TerrainData terrainData;
         //bounds = half extends
@@ -41,43 +42,64 @@ namespace TowerDefense
         private Vector3[] snapPositions;
         
         private Vector3[] visualBuildPositions;
+        
+        private RaycastHit[] Hits = new RaycastHit[1];
 
         private void Awake()
         {
+            TurretBlueprint.gameObject.SetActive(false);
+            
             PlayerCamera = PlayerCamera == null ? Camera.main : PlayerCamera;
             widthHeight = new int2((int) terrainData.size.x, (int) terrainData.size.z);
             numCellWidthHeight = new int2(widthHeight >> 1); // == /2
             TotalNumCells = numCellWidthHeight.x * numCellWidthHeight.y;
-            
-            Debug.Log($"width {numCellWidthHeight.x}; height {numCellWidthHeight.y}");
         }
 
         private void Start()
         {
             cellsCenter = new Vector3[TotalNumCells];
-            snapPositions = new Vector3[(widthHeight.x - 2) * (widthHeight.y - 2)];
+            snapPositions = new Vector3[(widthHeight.x - 1) * (widthHeight.y - 1)];
             visualBuildPositions = new Vector3[cellsCenter.Length * 4];
-            GetCellPosition();
+            //GetCellPosition();
             GetSnapPosition();
             GetVisualBuildPosition();
         }
 
         private void Update()
         {
-            if (!Mouse.current.leftButton.wasPressedThisFrame) return;
+            if (!IsBuilding) return;
             SnapTowerToGrid();
-        }
 
-        public void ToggleBlueprint(bool state)
-        {
-            token.gameObject.SetActive(state);
-            if (state)
+            if (Keyboard.current.rKey.wasPressedThisFrame)
             {
-                
+                TurretBlueprint.rotation *= Quaternion.Euler(0, 90, 0);
+            }
+            
+            if (Keyboard.current.escapeKey.wasReleasedThisFrame)
+            {
+                ToggleBlueprint();
+            }
+
+            //so we dont create a turret when clicking on a build icon
+            if (EventSystem.current.IsPointerOverGameObject()) return;
+            
+            if (Mouse.current.leftButton.wasPressedThisFrame)
+            {
+                Instantiate(TurretPrefab, TurretBlueprint.position, TurretBlueprint.rotation);
             }
         }
 
+        //FROM USE CASE
+        //Create Turret Blueprint => true
+        //Destroy Turret Blueprint => false
+        public void ToggleBlueprint()
+        {
+            IsBuilding = !IsBuilding;
+            TurretBlueprint.gameObject.SetActive(IsBuilding);
+        }
+
         
+
         /// <summary>
         /// 1/2 BIG CELLS
         /// Get intdex from Inner Grid! => bigCell => divid in 4 cells
@@ -88,26 +110,23 @@ namespace TowerDefense
         private int SnapGridBounds(Vector3 point)
         {
             Vector3 clampPoint = new Vector3(point.x - 0.5f, 0, point.z - 0.5f);
-            
-            //float clampAxisX = Mathf.Clamp(clampPoint.x, 0.5f, (float)widthHeight.x - 0.5f);
-            //float clampAxisZ = Mathf.Clamp(clampPoint.z, 0.5f, (float)widthHeight.y - 0.5f);
-            //clampPoint.Set(clampAxisX,0,clampAxisZ);
-            
             int indexPos = clampPoint.GetIndexFromPosition(widthHeight-(new int2(1)), 1);
-            //Debug.Log($"indexPos = {indexPos}");
             return indexPos;
         }
 
         public void SnapTowerToGrid()
         {
             Ray ray = PlayerCamera.ScreenPointToRay(GetMousePosition);
-            bool hitTerrain = Physics.Raycast(ray.origin, ray.direction, out RaycastHit hit, TerrainLayerMask);
-            if (!hitTerrain) return;
-            //Vector3 pointOffset = hit.point + Vector3.one.Flat();
             
-            //int indexPos = hit.point.GetIndexFromPosition(widthHeight, 1);
-            int indexPos = SnapGridBounds(hit.point);
-            token.position = token.position.GridHMove(snapPositions[indexPos]);
+            //bool hitTerrain = Physics.Raycast(ray.origin, ray.direction, out RaycastHit hit, TerrainLayerMask);
+            //Debug.Log(hitTerrain);
+            //for some reason basic raycast can't go through turrets
+            int numHits = Physics.RaycastNonAlloc(ray.origin, ray.direction, Hits,Mathf.Infinity, TerrainLayerMask);
+            if(numHits != 0)
+            {
+                int indexPos = SnapGridBounds(Hits[0].point);
+                TurretBlueprint.position = TurretBlueprint.position.GridHMove(snapPositions[indexPos]);
+            }
         }
 
         /// <summary>
@@ -135,15 +154,15 @@ namespace TowerDefense
         /// </summary>
         public void GetSnapPosition()
         {
-            Vector3 flatVectorOne = Vector3.one.Flat();
+            Vector3 cellOffset = Vector3.one.Flat();
             
             for (int index = 0; index < snapPositions.Length; index++)
             {
-                (int x, int z) = index.GetXY(widthHeight.x-1);
+                (int x, int z) = index.GetXY(widthHeight.x-1); //we offset by 1,0,1 so we just remove the last one
                 
                 Vector3 cellPositionOnMesh = new Vector3(x, 0, z);
                 //Vector3 pointPosition = Vector3.Scale(cellPositionOnMesh,Vector3.one) + flatVectorOne;
-                Vector3 pointPosition = cellPositionOnMesh + flatVectorOne; //* cellBound not needed this time since value = Vector3(1,1,1)
+                Vector3 pointPosition = cellPositionOnMesh + cellOffset; //* cellBound not needed this time since value = Vector3(1,1,1)
                 snapPositions[index] = pointPosition;
             }
         }
@@ -182,17 +201,17 @@ namespace TowerDefense
                 
                 for (int i = 0; i < numIteration; i++)
                 {
-                    Gizmos.DrawWireCube(cellsCenter[i], centerCellOffset);
+                    //Gizmos.DrawWireCube(cellsCenter[i], centerCellOffset);
                     Handles.Label(cellsCenter[i], i.ToString(), style);
                     Gizmos.DrawWireSphere(snapPositions[i], 0.25f);
                 }
-                
+                /*
                 Gizmos.color = Color.red;
                 for (int i = 0; i < numIteration; i++)
                 {
                     Gizmos.DrawWireCube(snapPositions[i], centerSnapOffset);
                 }
-                
+                */
                 Gizmos.color = Color.cyan;
                 for (int i = 0; i < numIteration; i++)
                 {
