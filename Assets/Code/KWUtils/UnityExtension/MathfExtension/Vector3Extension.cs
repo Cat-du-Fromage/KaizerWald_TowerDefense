@@ -29,7 +29,8 @@ namespace KWUtils
         /// <param name="axis">component to change</param>
         /// <param name="val">value to assign</param>
         /// <returns>changed axis</returns>
-        public static void SetAxis(ref this Vector3 target, Axis axis, float val)
+        /*
+        public static void SetAxis(this Vector3 target, Axis axis, float val)
         {
             switch (axis)
             {
@@ -43,6 +44,24 @@ namespace KWUtils
                     target.Set(target.x, target.y, val);
                     break;
             }
+        }
+        */
+        public static Vector3 SetAxis(this Vector3 target, Axis axis, float val)
+        {
+            Vector3 newPos = Vector3.zero;
+            switch (axis)
+            {
+                case Axis.X:
+                    newPos = new Vector3(val, target.y, target.z);
+                    break;
+                case Axis.Y:
+                    newPos = new Vector3(target.x, val, target.z);
+                    break;
+                case Axis.Z:
+                    newPos = new Vector3(target.x, target.y, val);
+                    break;
+            }
+            return newPos;
         }
         
         /// <summary>
