@@ -11,13 +11,11 @@ namespace TowerDefense
 {
     public class UIBuildTurret : MonoBehaviour
     {
+        [SerializeField] private GameObject[] TurretsBlueprint;
+        
         [SerializeField] private Button BasicTurretBuild;
         
         [SerializeField] private SandBox_GridManager gridManager;
-        private GraphicRaycaster uiRaycaster;
-        
-        private PointerEventData clickData;
-        private readonly List<RaycastResult> clickResults = new List<RaycastResult>();
 
         private void Awake()
         {
@@ -28,9 +26,6 @@ namespace TowerDefense
 
         private void Start()
         {
-            uiRaycaster = gameObject.GetComponent<GraphicRaycaster>();
-            clickData = new PointerEventData(EventSystem.current);
-            
             BasicTurretBuild.onClick.AddListener(OnBasicTurretClick);
         }
 
@@ -42,30 +37,3 @@ namespace TowerDefense
         private void OnBasicTurretClick() => gridManager.ToggleBlueprint();
     }
 }
-
-/*
-        private void Update()
-        {
-            // use isPressed if you wish to ray cast every frame:
-            //if(Mouse.current.leftButton.isPressed)
-        
-            // use wasReleasedThisFrame if you wish to ray cast just once per click:
-            if (!Mouse.current.leftButton.wasReleasedThisFrame) return;
-            GetUiElementsClicked();
-        }
- 
-        private void GetUiElementsClicked()
-        {
-            clickData.position = Mouse.current.position.ReadValue();
-            clickResults.Clear();
- 
-            uiRaycaster.Raycast(clickData, clickResults);
- 
-            foreach(RaycastResult result in clickResults)
-            {
-                GameObject uiElement = result.gameObject;
- 
-                Debug.Log(uiElement.name);
-            }
-        }
-        */

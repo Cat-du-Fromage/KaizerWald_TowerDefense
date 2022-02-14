@@ -14,9 +14,9 @@ namespace TowerDefense
 
         private Vector3 spawn;
 
-        private List<EnemyComponent> enemies = new List<EnemyComponent>(10);
+        public List<EnemyComponent> enemies = new List<EnemyComponent>(10);
 
-        private Queue<EnemyComponent> enemiesGone = new Queue<EnemyComponent>(10);
+        private HashSet<EnemyComponent> enemiesGone = new HashSet<EnemyComponent>(10);
         
         private EnemyComponent ToRemove = null;
         // Start is called before the first frame update
@@ -46,10 +46,9 @@ namespace TowerDefense
             for (int i = 0; i < enemies.Count; i++)
             {
                 enemies[i].SetMove();
-                
                 if (enemies[i].CheckDestinationEnd())
                 {
-                    enemiesGone.Enqueue(enemies[i]);
+                    enemiesGone.Add(enemies[i]);
                 }
             }
         }
@@ -57,14 +56,14 @@ namespace TowerDefense
         private void LateUpdate()
         {
             if (enemiesGone.Count == 0) return;
-            
-            for (int i = 0; i < enemiesGone.Count; i++)
+            foreach (EnemyComponent gone in enemiesGone)
             {
-                ToRemove = enemiesGone.Dequeue();
+                ToRemove = gone;
                 enemies.Remove(ToRemove);
                 Destroy(ToRemove.gameObject);
                 ToRemove = null;
             }
+            enemiesGone.Clear();
         }
     }
 }
