@@ -1,8 +1,11 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using KWUtils;
 using Unity.Mathematics;
 using UnityEngine;
+using UnityEngine.EventSystems;
+using UnityEngine.InputSystem;
 using static TowerDefense.TowerDefenseUtils;
 using static KWUtils.KWGrid;
 using static KWUtils.InputSystemExtension;
@@ -14,21 +17,24 @@ namespace TowerDefense
         public bool IsBuilding;
         
         //Blueprint has the reference of their turret prefab?
-        [SerializeField] private GameObject[] TurretsBlueprint;
+        //[SerializeField] private GameObject[] TurretsBlueprint;
         
         //[SerializeField] private GameObject[] TurretsPrefab;
         
         [SerializeField] private Camera PlayerCamera;
         [SerializeField] private TerrainData terrainData;
 
+        private GameObject currentTurret;
         private Transform currentBlueprint;
         
         private int2 terrainWidthHeight;
         private Vector3[] snapPositions;
         
+        private RaycastHit[] hits = new RaycastHit[1];
+        private Ray ray;
+        
         private void Awake()
         {
-            for (int i = 0; i < TurretsBlueprint.Length; i++) TurretsBlueprint[i].SetActive(false);
             PlayerCamera = PlayerCamera == null ? Camera.main : PlayerCamera;
             terrainWidthHeight = new int2((int) terrainData.size.x, (int) terrainData.size.z);
         }
@@ -38,26 +44,42 @@ namespace TowerDefense
             snapPositions = new Vector3[(terrainWidthHeight.x - 1) * (terrainWidthHeight.y - 1)];
             GetSnapPosition();
         }
-        
+
+        private void Update()
+        {
+            if (!IsBuilding) return;
+            
+            SnapTowerToGrid();
+            
+            //Rotate Turret
+            if (Keyboard.current.rKey.wasPressedThisFrame)
+            {
+                currentBlueprint.rotation *= Quaternion.Euler(0, 90, 0);
+            }
+            
+            //so we dont create a turret when clicking on a build icon
+            if (EventSystem.current.IsPointerOverGameObject()) return;
+            
+            //Build Turret
+            if (Mouse.current.leftButton.wasPressedThisFrame)
+            {
+                Instantiate(currentTurret, currentBlueprint.position, currentBlueprint.rotation);
+            }
+        }
+
         /// <summary>
         /// Will activate "construction mode"
         /// Must deactivate all blueprint except the one selected
         /// </summary>
         /// <param name="turretBlueprint"></param>
-        public void ToggleBlueprint(GameObject turretBlueprint)
+        public void ToggleBuildMode(GameObject turretBlueprint)
         {
-            IsBuilding = !IsBuilding;
-            for (int i = 0; i < TurretsBlueprint.Length; i++)
-            {
-                if (TurretsBlueprint[i] != turretBlueprint)
-                {
-                    TurretsBlueprint[i].SetActive(false);
-                    continue;
-                }
-                TurretsBlueprint[i].SetActive(true);
-                currentBlueprint = TurretsBlueprint[i].transform;
-            }
+            IsBuilding = true;
+            currentBlueprint = turretBlueprint.transform;
+            currentTurret = currentBlueprint.GetComponent<BlueprintComponent>().GetTurretPrefab;
         }
+        public void ToggleBuildMode() => IsBuilding = !IsBuilding;
+        
 
         /// <summary>
         /// Get Snapping grid where turret can be placed
@@ -88,6 +110,19 @@ namespace TowerDefense
             Vector3 clampPoint = new Vector3(point.x - 0.5f, 0, point.z - 0.5f);
             int indexPos = clampPoint.GetIndexFromPosition(terrainWidthHeight - new int2(1), 1);
             return indexPos;
+        }
+        
+        private void SnapTowerToGrid()
+        {
+            ray = PlayerCamera.ScreenPointToRay(GetMousePosition);
+            
+            //for some reason basic raycast can't go through turrets
+            int numHits = Physics.RaycastNonAlloc(ray.origin, ray.direction, hits,Mathf.Infinity, TerrainLayerMask);
+            if(numHits != 0)
+            {
+                int indexPos = SnapGridBounds(hits[0].point);
+                currentBlueprint.position = currentBlueprint.position.GridHMove(snapPositions[indexPos]);
+            }
         }
     }
 }

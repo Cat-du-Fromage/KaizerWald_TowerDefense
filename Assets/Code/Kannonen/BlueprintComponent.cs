@@ -7,5 +7,6 @@ namespace TowerDefense
     public class BlueprintComponent : MonoBehaviour
     {
         [SerializeField] private GameObject OriginalTurretPrefab;
+        public GameObject GetTurretPrefab => OriginalTurretPrefab;
     }
 }
