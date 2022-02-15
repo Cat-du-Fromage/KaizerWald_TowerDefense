@@ -15,12 +15,8 @@ namespace TowerDefense
     public class BuildManager : MonoBehaviour
     {
         public bool IsBuilding;
-        
-        //Blueprint has the reference of their turret prefab?
-        //[SerializeField] private GameObject[] TurretsBlueprint;
-        
-        //[SerializeField] private GameObject[] TurretsPrefab;
-        
+
+        [SerializeField] private TurretManager TurretManager;
         [SerializeField] private Camera PlayerCamera;
         [SerializeField] private TerrainData terrainData;
 
@@ -35,6 +31,7 @@ namespace TowerDefense
         
         private void Awake()
         {
+            TurretManager ??= FindObjectOfType<TurretManager>();
             PlayerCamera = PlayerCamera == null ? Camera.main : PlayerCamera;
             terrainWidthHeight = new int2((int) terrainData.size.x, (int) terrainData.size.z);
         }
@@ -63,7 +60,7 @@ namespace TowerDefense
             //Build Turret
             if (Mouse.current.leftButton.wasPressedThisFrame)
             {
-                Instantiate(currentTurret, currentBlueprint.position, currentBlueprint.rotation);
+                TurretManager.CreateTurret(currentTurret, currentBlueprint.position, currentBlueprint.rotation);
             }
         }
 
