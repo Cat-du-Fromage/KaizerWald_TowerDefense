@@ -12,8 +12,6 @@ namespace TowerDefense
     public class UIBuilding : MonoBehaviour
     {
         [SerializeField] private GameObject[] TurretsBlueprint;
-        
-        //[SerializeField] private Button BasicTurretBuild;
 
         [SerializeField] private Button[] buttons;
         
@@ -23,7 +21,6 @@ namespace TowerDefense
         {
             buttons = GetComponentsInChildren<Button>();
             BuildManager = BuildManager == null ? FindObjectOfType<BuildManager>() : BuildManager;
-            //BasicTurretBuild = BasicTurretBuild == null ? gameObject.GetComponentInChildrenFrom<TagBasicTurret, Button>() : BasicTurretBuild;
         }
 
         private void Start()

@@ -7,8 +7,14 @@ using KWUtils;
 
 namespace TowerDefense
 {
-    public class EnemyComponent : MonoBehaviour
+    public class EnemyComponent : MonoBehaviour, ISpatialEntity
     {
+        //SPATIAL PARTITION
+        public uint EntityIndex { get; set; }
+        public uint CurrentCellIndex { get; set; }
+        public uint PreviousCellIndex { get; set; }
+        public Vector3 Position { get; set; }
+        
         //ANIMATION
         //=====================================
         // animation IDs
@@ -66,5 +72,7 @@ namespace TowerDefense
             animator.SetFloat(animIDSpeed, animationBlend);
             animator.SetFloat(animIDMotionSpeed, 1);
         }
+
+        
     }
 }

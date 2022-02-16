@@ -8,6 +8,8 @@ namespace TowerDefense
 {
     public class EnemyManager : MonoBehaviour
     {
+        [SerializeField] private SandBox_SpatialPartition spatialPartition;
+        
         [SerializeField] private Transform SpawnPoint;
         [SerializeField] private Transform EndPoint;
         [SerializeField] private GameObject EnemyPrefab;
