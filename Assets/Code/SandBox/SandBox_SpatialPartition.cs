@@ -2,14 +2,19 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using KWUtils;
+using Unity.Collections;
+using Unity.Jobs;
 using Unity.Mathematics;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
+using static KWUtils.NativeCollectionExt;
+
 namespace TowerDefense
 {
-    public interface ISpatialEntity
+    //SOA
+    public interface IEntity
     {
         public uint EntityIndex { get; set; }
         public uint CurrentCellIndex { get; set; }
@@ -17,15 +22,28 @@ namespace TowerDefense
         public Vector3 Position { get; set; }
     }
     
+    //AOT Prefered this one if possible
+    public interface IEntityManager
+    {
+        public uint[] Indices { get; set; }
+        public uint[] CurrentCellIndices { get; set; }
+        public uint[] PreviousCellIndices { get; set; }
+        public float3[] Positions { get; set; }
+    }
+    
     public struct SpCell
     {
         private uint index;
-        public List<uint> entitiesId;
+        public bool IsTrigger;
+        public List<uint> EntitiesId;
+        public List<uint> TriggeredEntitiesId;
 
         public SpCell(uint id)
         {
             index = id;
-            entitiesId = new List<uint>(4);
+            IsTrigger = false;
+            EntitiesId = new List<uint>(4);
+            TriggeredEntitiesId = new List<uint>(4);
         }
     }
 
@@ -86,20 +104,46 @@ namespace TowerDefense
         //=====================
         
         //Very first spawn we don't have a "previous index"
-        public void OnNotifyFirstSpawn(ISpatialEntity entity)
+        public void OnNotifyFirstSpawn(IEntity entity)
         {
             //Spawn Enemy
-            cells[entity.CurrentCellIndex].entitiesId.Add(entity.EntityIndex);
+            cells[entity.CurrentCellIndex].EntitiesId.Add(entity.EntityIndex);
         }
         
-        public void OnNotifyUpdate(ISpatialEntity entity)
+        public void OnNotifyUpdate(IEntity entity)
         {
             //Spawn Enemy
-            cells[entity.PreviousCellIndex].entitiesId.Remove(entity.EntityIndex);
-            cells[entity.CurrentCellIndex].entitiesId.Add(entity.EntityIndex);
+            cells[entity.PreviousCellIndex].EntitiesId.Remove(entity.EntityIndex);
+            cells[entity.CurrentCellIndex].EntitiesId.Add(entity.EntityIndex);
             
             int index = GetCellIndexFromPosition(entity.Position);
             //cells[index] = 
+        }
+        
+        /// <summary>
+        /// Check
+        /// Index in Grid(position) == current Cell index ??
+        /// if not update shits
+        /// </summary>
+        public void CheckEntitiesCell(IEntityManager entityManager, uint[] movedEntities)
+        {
+            int totalNumEntities = entityManager.Indices.Length;
+            //Get Changed Entities (uint: id?)
+            NativeArray<uint> currentCell = entityManager.CurrentCellIndices.ToNativeArray();
+            NativeArray<uint> previousCell = entityManager.PreviousCellIndices.ToNativeArray();
+            NativeArray<float3> positions = entityManager.Positions.ToNativeArray();
+            
+            
+
+        }
+        
+        public struct JCheckEntitiesCell : IJobFor
+        {
+            private NativeArray<SpCell> cells;
+            public void Execute(int index)
+            {
+                
+            }
         }
         
 //======================================================================================================================

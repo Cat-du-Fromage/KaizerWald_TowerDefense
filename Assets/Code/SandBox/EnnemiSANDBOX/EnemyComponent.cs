@@ -7,14 +7,8 @@ using KWUtils;
 
 namespace TowerDefense
 {
-    public class EnemyComponent : MonoBehaviour, ISpatialEntity
+    public class EnemyComponent : MonoBehaviour
     {
-        //SPATIAL PARTITION
-        public uint EntityIndex { get; set; }
-        public uint CurrentCellIndex { get; set; }
-        public uint PreviousCellIndex { get; set; }
-        public Vector3 Position { get; set; }
-        
         //ANIMATION
         //=====================================
         // animation IDs
