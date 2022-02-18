@@ -33,7 +33,12 @@ namespace TowerDefense
             this.AddToRegister(turret.transform);
         }
         
-        private void GetTargetsInRange()
+
+    }
+}
+
+/*
+         private void GetTargetsInRange()
         {
             //return array of transform
         }
@@ -74,5 +79,4 @@ namespace TowerDefense
             distances.Dispose();
             return indexClosestEnemy;
         }
-    }
-}
+ */

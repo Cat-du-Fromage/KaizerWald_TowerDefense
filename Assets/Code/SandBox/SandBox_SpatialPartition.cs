@@ -4,46 +4,48 @@ using System.Collections.Generic;
 using KWUtils;
 using Unity.Collections;
 using Unity.Jobs;
+using Unity.Jobs.LowLevel.Unsafe;
 using Unity.Mathematics;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
 using static KWUtils.NativeCollectionExt;
+using static KWUtils.KWGrid;
 
 namespace TowerDefense
 {
     //SOA
     public interface IEntity
     {
-        public uint EntityIndex { get; set; }
-        public uint CurrentCellIndex { get; set; }
-        public uint PreviousCellIndex { get; set; }
+        public int EntityIndex { get; set; }
+        public int CurrentCellIndex { get; set; }
+        public int PreviousCellIndex { get; set; }
         public Vector3 Position { get; set; }
     }
     
     //AOT Prefered this one if possible
     public interface IEntityManager
     {
-        public uint[] Indices { get; set; }
-        public uint[] CurrentCellIndices { get; set; }
-        public uint[] PreviousCellIndices { get; set; }
+        public int[] Indices { get; set; }
+        public int[] CurrentCellIndices { get; set; }
+        public int[] PreviousCellIndices { get; set; }
         public float3[] Positions { get; set; }
     }
     
     public struct SpCell
     {
-        private uint index;
+        private int index;
         public bool IsTrigger;
-        public List<uint> EntitiesId;
-        public List<uint> TriggeredEntitiesId;
+        public List<int> EntitiesId;
+        public List<int> TriggeredEntitiesId;
 
-        public SpCell(uint id)
+        public SpCell(int id)
         {
             index = id;
             IsTrigger = false;
-            EntitiesId = new List<uint>(4);
-            TriggeredEntitiesId = new List<uint>(4);
+            EntitiesId = new List<int>(4);
+            TriggeredEntitiesId = new List<int>(4);
         }
     }
 
@@ -61,7 +63,7 @@ namespace TowerDefense
         
         private SpCell[] cells;
 
-        private Vector3[] DebugCellPosition;
+        public Vector3[] DebugCellPosition;
         
         private int TotalNumCell => numCellX * numCellY;
 
@@ -76,7 +78,7 @@ namespace TowerDefense
         private void InitializeCells()
         {
             cells = new SpCell[TotalNumCell];
-            for (uint i = 0; i < cells.Length; i++)
+            for (int i = 0; i < cells.Length; i++)
             {
                 cells[i] = new SpCell(i);
             }
@@ -125,24 +127,64 @@ namespace TowerDefense
         /// Index in Grid(position) == current Cell index ??
         /// if not update shits
         /// </summary>
-        public void CheckEntitiesCell(IEntityManager entityManager, uint[] movedEntities)
+        public void CheckEntitiesCell(ref IEntityManager entityManager, int[] movedEntities)
         {
-            int totalNumEntities = entityManager.Indices.Length;
             //Get Changed Entities (uint: id?)
-            NativeArray<uint> currentCell = entityManager.CurrentCellIndices.ToNativeArray();
-            NativeArray<uint> previousCell = entityManager.PreviousCellIndices.ToNativeArray();
-            NativeArray<float3> positions = entityManager.Positions.ToNativeArray();
-            
-            
+            using NativeArray<SpCell> jobCells     = cells.ToNativeArray();
+            using NativeArray<int> registeredCell  = entityManager.PreviousCellIndices.ToNativeArray();
+            using NativeArray<float3> positions    = entityManager.Positions.ToNativeArray();
 
+            using NativeArray<int> entityToCheck   = movedEntities.ToNativeArray();
+            
+            //Update triggered
+            
+            using NativeList<int> triggeredCells   = new NativeList<int>(entityToCheck.Length, Allocator.TempJob);
+
+            JCheckEntitiesCell job = new JCheckEntitiesCell
+            {
+                CellSize = cellSize,
+                MapSize = mapWidthHeight,
+                Cells = jobCells,
+                Positions = positions,
+                EntityToCheck = entityToCheck,
+                RegisteredCell = registeredCell,
+                TriggeredCell = triggeredCells.AsParallelWriter()
+            };
+            JobHandle jobHandle = job.ScheduleParallel(movedEntities.Length, JobsUtility.JobWorkerCount - 1, default);
+            jobHandle.Complete();
+            
+            registeredCell.CopyTo(entityManager.CurrentCellIndices);
         }
         
-        public struct JCheckEntitiesCell : IJobFor
+        private struct JCheckEntitiesCell : IJobFor
         {
-            private NativeArray<SpCell> cells;
+            [ReadOnly] public int CellSize;
+            [ReadOnly] public int2 MapSize;
+            
+            [NativeDisableParallelForRestriction]
+            [ReadOnly] public NativeArray<SpCell> Cells;
+            
+            [NativeDisableParallelForRestriction]
+            [ReadOnly] public NativeArray<float3> Positions;
+
+            [NativeDisableParallelForRestriction]
+            [ReadOnly] public NativeArray<int> EntityToCheck;
+            
+            [NativeDisableParallelForRestriction]
+            public NativeArray<int> RegisteredCell;
+            
+            [NativeDisableParallelForRestriction]
+            [WriteOnly] public NativeList<int>.ParallelWriter TriggeredCell;
+            
             public void Execute(int index)
             {
-                
+                int entityIndex = EntityToCheck[index];
+                int updatedCellIndex = Positions[entityIndex].GetIndexFromPosition(MapSize, CellSize);
+                if (RegisteredCell[entityIndex] != updatedCellIndex)
+                {
+                    RegisteredCell[entityIndex] = updatedCellIndex;
+                    TriggeredCell.AddNoResizeIf(Cells[updatedCellIndex].IsTrigger, updatedCellIndex);
+                }
             }
         }
         
@@ -183,6 +225,10 @@ namespace TowerDefense
         private void OnDrawGizmos()
         {
             if (!DrawDebug) return;
+            if (DebugCellPosition.Length == 0)
+            {
+                GetCellCenter();
+            }
             Gizmos.color = Color.red;
             Vector3 cellBounds = new Vector3(cellSize,cellSize,cellSize);
             
