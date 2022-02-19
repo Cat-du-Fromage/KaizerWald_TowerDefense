@@ -10,7 +10,7 @@ namespace TowerDefense
 {
     public class TurretManager : MonoBehaviour
     {
-        private List<GameObject> turrets = new List<GameObject>(2);
+        private List<TurretComponent> turrets = new List<TurretComponent>(2);
 
         private void Awake()
         {
@@ -18,18 +18,21 @@ namespace TowerDefense
         }
 
         // Update is called once per frame
-        void Update()
+        private void Update()
         {
-            //If(!RoundHasBegin) return;
-            
+            if (turrets.Count == 0) return;
+            for (int i = 0; i < turrets.Count; i++)
+            {
+                turrets[i].TurretUpdate();
+            }
         }
 
-        public void AddTurret(GameObject turret) => turrets.Add(turret);
+        public void AddTurret(TurretComponent turret) => turrets.Add(turret);
         
         public void CreateTurret(GameObject turretPrefab, Vector3 position, Quaternion rotation)
         {
             GameObject turret = Instantiate(turretPrefab, position, rotation);
-            turrets.Add(turret);
+            turrets.Add(turret.GetComponent<TurretComponent>());
             this.AddToRegister(turret.transform);
         }
         

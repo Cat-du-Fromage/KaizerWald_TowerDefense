@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using Unity.Mathematics;
 using UnityEngine;
 
 namespace KWUtils
@@ -84,6 +85,26 @@ namespace KWUtils
         public static float DistanceTo(this Vector3 source, Vector3 destination)
         {
             return Vector3.Magnitude(destination - source);
+        }
+
+        public static Vector2 xy(this Vector3 source)
+        {
+            return new Vector2(source.x, source.y);
+        }
+
+        public static Vector2 xz(this Vector3 source)
+        {
+            return new Vector2(source.x, source.z);
+        }
+        
+        public static float2 XY(this Vector3 source)
+        {
+            return new float2(source.x, source.y);
+        }
+        
+        public static float2 XZ(this Vector3 source)
+        {
+            return new float2(source.x, source.z);
         }
     }
 }
