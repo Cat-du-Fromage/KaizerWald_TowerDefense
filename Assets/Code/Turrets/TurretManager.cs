@@ -10,8 +10,14 @@ namespace TowerDefense
 {
     public class TurretManager : MonoBehaviour
     {
+        [SerializeField]private AudioClip shootClip;
+        
+        //Temporary
+        [SerializeField] private GameObject BulletPrefab;
+        
         private List<TurretComponent> turrets = new List<TurretComponent>(2);
-
+        private Rigidbody[] bullets;
+        
         private void Awake()
         {
             TowerDefenseRegister.InitializeTurrets();
@@ -27,16 +33,39 @@ namespace TowerDefense
             }
         }
 
+        private void LateUpdate()
+        {
+            if (turrets.Count == 0) return;
+            for (int i = 0; i < turrets.Count; i++)
+            {
+                turrets[i].GetAim();
+            }
+        }
+
+        private void FixedUpdate()
+        {
+            if (turrets.Count == 0) return;
+            for (int i = 0; i < turrets.Count; i++)
+            {
+                turrets[i].ShootAt(shootClip);
+            }
+        }
+
         public void AddTurret(TurretComponent turret) => turrets.Add(turret);
         
         public void CreateTurret(GameObject turretPrefab, Vector3 position, Quaternion rotation)
         {
-            GameObject turret = Instantiate(turretPrefab, position, rotation);
-            turrets.Add(turret.GetComponent<TurretComponent>());
-            this.AddToRegister(turret.transform);
-        }
-        
+            //Objects/Components
+            GameObject turretObject = Instantiate(turretPrefab, position, rotation);
+            TurretComponent turretComponent = turretObject.GetComponent<TurretComponent>();
 
+            //Initializations triggered
+            turretComponent.InitializeBullet(BulletPrefab);
+            
+            //Registration
+            AddTurret(turretComponent);
+            this.AddToRegister(turretObject.transform);
+        }
     }
 }
 

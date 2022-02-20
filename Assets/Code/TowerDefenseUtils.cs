@@ -19,6 +19,7 @@ namespace TowerDefense
         
         public static readonly LayerMask TerrainLayerMask = 1 << 8;
         public static readonly LayerMask UnitLayer = 1 << 9;
-        public static readonly LayerMask ObstacleLayer = 1 << 10;
+        public static readonly LayerMask EnemyLayer = 1 << 10;
+        public static readonly LayerMask BulletLayer = 1 << 10;
     }
 }

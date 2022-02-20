@@ -15,9 +15,9 @@ TagManager:
   - 
   - 
   - Terrain
-  - PlayerCharacter
+  - Turret
   - Enemi
-  - 
+  - Bullet
   - 
   - 
   - 

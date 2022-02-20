@@ -19,6 +19,7 @@ namespace TowerDefense
         public bool EnableDebugger;
         
         public TerrainData terrainData;
+        public TerrainCollider collider;
         [SerializeField] private int ChunkSize = 16;
         
         private Dictionary<int, int[]> grid;
@@ -54,6 +55,7 @@ namespace TowerDefense
         
         private void Awake()
         {
+            //Debug.Log($"trigger terrain? {collider.isTrigger}");
             InitializeFields();
             Debug.Log($"num chunk = {numChunkXY}");
         }
