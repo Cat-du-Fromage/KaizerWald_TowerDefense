@@ -43487,10 +43487,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 188ad1daff578dc46bab74c9e6a12434, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  range: 16
+  Turret: {fileID: 11400000, guid: c2d7d96588d4aa24b9d72630c210c455, type: 2}
   currentTarget: {fileID: 0}
   MuzzleFlash: {fileID: 476174753}
-  BulletPosition: {fileID: 8103393615219188721}
+  BulletPositionInTurret: {fileID: 8103393615219188721}
 --- !u!82 &-2772222240393310028
 AudioSource:
   m_ObjectHideFlags: 0

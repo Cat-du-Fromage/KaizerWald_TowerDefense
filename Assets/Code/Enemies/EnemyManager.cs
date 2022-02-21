@@ -16,13 +16,13 @@ namespace TowerDefense
 
         private Vector3 spawn;
 
-        private HashSet<EnemyComponent> enemies = new HashSet<EnemyComponent>(16);
-
-        private HashSet<EnemyComponent> enemiesGone = new HashSet<EnemyComponent>(16);
+        private HashSet<EnemyComponent> enemies;
+        private HashSet<EnemyComponent> enemiesGone;
 
         private void Awake()
         {
-            TowerDefenseRegister.InitializeEnemies();
+            enemies = new HashSet<EnemyComponent>(16);
+            enemiesGone = new HashSet<EnemyComponent>(16);
         }
 
         private void Start()
@@ -54,6 +54,11 @@ namespace TowerDefense
             CheckEnemyArrived();
         }
 
+        public void EnemyKilled(EnemyComponent enemy)
+        {
+            enemiesGone.Add(enemy);
+        }
+
         private void CreateEnemy()
         {
             GameObject go = Instantiate(EnemyPrefab, spawn, Quaternion.identity);
@@ -61,7 +66,6 @@ namespace TowerDefense
             
             enemy.SetDestination(EndPoint.position);
             enemies.Add(enemy);
-            this.AddToRegister(enemy);
         }
 
         private void MoveToDestination()
@@ -80,12 +84,10 @@ namespace TowerDefense
         {
             foreach (EnemyComponent gone in enemiesGone)
             {
+                if (gone == null) continue;
                 Destroy(gone.gameObject);
             }
-            
             enemies.ExceptWith(enemiesGone);
-            this.RemoveFromRegister(enemiesGone);
-            
             enemiesGone.Clear();
         }
     }

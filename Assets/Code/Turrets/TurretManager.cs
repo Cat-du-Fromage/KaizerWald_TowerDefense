@@ -15,44 +15,69 @@ namespace TowerDefense
         //Temporary
         [SerializeField] private GameObject BulletPrefab;
         
-        private List<TurretComponent> turrets = new List<TurretComponent>(2);
-        private Rigidbody[] bullets;
+        //private List<TurretComponent> turrets = new List<TurretComponent>(2);
+
+        //TEST
+        public List<TurretComponent> noTargetTurrets;
+        public List<TurretComponent> withTargetTurrets;
         
         private void Awake()
         {
-            TowerDefenseRegister.InitializeTurrets();
+            noTargetTurrets = new List<TurretComponent>(2);
+            withTargetTurrets = new List<TurretComponent>(2);
         }
 
         // Update is called once per frame
         private void Update()
         {
-            if (turrets.Count == 0) return;
-            for (int i = 0; i < turrets.Count; i++)
-            {
-                turrets[i].TurretUpdate();
-            }
+            UpdateInactiveTurret();
+            UpdateActiveTurret();
         }
 
         private void LateUpdate()
         {
-            if (turrets.Count == 0) return;
-            for (int i = 0; i < turrets.Count; i++)
+            if (withTargetTurrets.Count == 0) return;
+            for (int i = 0; i < withTargetTurrets.Count; i++)
             {
-                turrets[i].GetAim();
+                withTargetTurrets[i].GetAim();
             }
         }
 
         private void FixedUpdate()
         {
-            if (turrets.Count == 0) return;
-            for (int i = 0; i < turrets.Count; i++)
+            if (withTargetTurrets.Count == 0) return;
+            for (int i = 0; i < withTargetTurrets.Count; i++)
             {
-                turrets[i].ShootAt(shootClip);
+                withTargetTurrets[i].ShootAt(shootClip);
             }
         }
 
-        public void AddTurret(TurretComponent turret) => turrets.Add(turret);
+        private void UpdateActiveTurret()
+        {
+            if (withTargetTurrets.Count == 0) return;
+            for (int i = 0; i < withTargetTurrets.Count; i++)
+            {
+                if(!withTargetTurrets[i].WithTargetUpdate()) continue;
+                
+                noTargetTurrets.Add(withTargetTurrets[i]);
+                withTargetTurrets.Remove(withTargetTurrets[i]);
+            }
+        }
+
+        private void UpdateInactiveTurret()
+        {
+            if (noTargetTurrets.Count == 0) return;
+            for (int i = 0; i < noTargetTurrets.Count; i++)
+            {
+                if(!noTargetTurrets[i].NoTargetUpdate()) continue;
+                
+                withTargetTurrets.Add(noTargetTurrets[i]);
+                noTargetTurrets.Remove(noTargetTurrets[i]);
+            }
+        }
         
+        
+
         public void CreateTurret(GameObject turretPrefab, Vector3 position, Quaternion rotation)
         {
             //Objects/Components
@@ -60,55 +85,11 @@ namespace TowerDefense
             TurretComponent turretComponent = turretObject.GetComponent<TurretComponent>();
 
             //Initializations triggered
-            turretComponent.InitializeBullet(BulletPrefab);
+            BulletComponent newBullet = turretComponent.InitializeBullet(BulletPrefab);
+            this.Notify(newBullet, EventType.Register);
             
             //Registration
-            AddTurret(turretComponent);
-            this.AddToRegister(turretObject.transform);
+            noTargetTurrets.Add(turretComponent);
         }
     }
 }
-
-/*
-         private void GetTargetsInRange()
-        {
-            //return array of transform
-        }
-
-        private void GetTargets()
-        {
-            EnemyComponent[] enemies = new EnemyComponent[TowerDefenseRegister.EnemiesCount];
-            TowerDefenseRegister.GetEnemies.CopyTo(enemies);
-            
-            for (int i = 0; i < turrets.Count; i++)
-            {
-                FindNearestEnemy(turrets[i], enemies);
-            }
-        }
-
-        private int FindNearestEnemy(GameObject turret, EnemyComponent[] enemies)
-        {
-            NativeArray<float> distances = new NativeArray<float>(enemies.Length, Allocator.Temp, NativeArrayOptions.UninitializedMemory);
-
-            Vector3 turretPosition = turret.transform.position;
-            
-            float minDistances = Single.MaxValue;
-            int indexClosestEnemy = 0;
-            
-            for (int i = 0; i < enemies.Length; i++)
-            {
-                distances[i] = (enemies[i].transform.position - turretPosition).sqrMagnitude;
-                
-                if (distances[i] > turret.GetComponent<TurretComponent>().GetRange) continue;
-                
-                if (distances[i] < minDistances)
-                {
-                    minDistances = distances[i];
-                    indexClosestEnemy = i;
-                }
-            }
-
-            distances.Dispose();
-            return indexClosestEnemy;
-        }
- */
