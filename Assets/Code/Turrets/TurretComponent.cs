@@ -7,11 +7,14 @@ using UnityEditor;
 using UnityEngine;
 
 using static UnityEngine.Physics;
+using static Unity.Mathematics.math;
 
 namespace TowerDefense
 {
     public class TurretComponent : MonoBehaviour
     {
+        [SerializeField] private TurretType Turret;
+        
         //May want to make scriptable object for this
         //or enum to differenciate range by turret type
         [SerializeField] private float range = 16; //scriptable object
@@ -31,7 +34,8 @@ namespace TowerDefense
         private float reloadTime = 2f; //scriptable object
         private bool isReloading;
 
-        private AudioSource shootSound;
+        private AudioSource shootSound; //scriptable object
+        [SerializeField] private ParticleSystem MuzzleFlash; //scriptable object
         
         //Bullets
         private BulletComponent bullet;
@@ -50,14 +54,13 @@ namespace TowerDefense
 
         private void Awake()
         {
+            if(MuzzleFlash != null) MuzzleFlash.Stop(true);
             shootSound = GetComponent<AudioSource>();
             BaseRotation = transform.rotation;
             offsetRotation = Quaternion.Euler(0, 90, 0);
             colliders = new Collider[10];
             turretTransform = transform;
         }
-        private void OnDestroy() => StopCoroutine(Reload());
-        private void OnDisable() => StopCoroutine(Reload());
 
         public void TurretUpdate()
         {
@@ -96,27 +99,23 @@ namespace TowerDefense
         public void ShootAt(AudioClip clip)
         {
             if (currentTarget == null || isReloading) return;
-            //StartCoroutine(PlaySound(clip));
-            shootSound.PlayOneShot(clip, 0.1f);
+            
+            shootSound.PlayOneShot(clip, UnityEngine.Random.value);
             bullet.Shoot(shootDirection);
+            
+            if (MuzzleFlash != null)
+            {
+                MuzzleFlash.Play(true);
+            }
+            
             StartCoroutine(Reload());
         }
-
-        private IEnumerator PlaySound(AudioClip clip)
-        {
-            Unity.Mathematics.Random rand = new Unity.Mathematics.Random(23u);
-            rand.InitState();
-            float sec = rand.NextFloat(0.1f, 1f);
-            yield return new WaitForSeconds(sec);
-            shootSound.PlayOneShot(clip, 0.1f);
-        }
-        
 
         private IEnumerator Reload()
         {
             isReloading = true;
-            Debug.Log($"Is Reloading");
-            yield return new WaitForSeconds(reloadTime);
+            float reload = UnityEngine.Random.value;
+            yield return new WaitForSeconds(reloadTime+reload);
             bullet.Fade();
             isReloading = false;
         }
@@ -145,7 +144,7 @@ namespace TowerDefense
                 Vector3 forward = turretTransform.TransformDirection(Vector3.left);
                 Vector3 toOther = (colliders[i].transform.position - TurretPosition);
                 
-                if (!(math.dot(forward, toOther) > 0)) continue;
+                if (!(dot(forward, toOther) > 0)) continue;
                 currentTarget = colliders[i].transform;
                 return true;
             }
@@ -164,16 +163,30 @@ namespace TowerDefense
             Quaternion rotation = Quaternion.LookRotation(direction.Flat()) * offsetRotation;
             turretTransform.rotation = Quaternion.Lerp(TurretRotation, rotation, 2 * Time.deltaTime);
         }
-
+        
+#if UNITY_EDITOR
+        
         private void OnDrawGizmos()
         {
-            if (currentTarget == null) return;
-           Gizmos.color = Color.green;
-           Gizmos.DrawWireSphere(GetBulletPosition, 0.2f);
-           Gizmos.color = Color.yellow;
-           Gizmos.DrawWireSphere(TargetShootPosition, 0.2f);
-           Gizmos.color = Color.magenta;
-           Gizmos.DrawLine(GetBulletPosition, TargetShootPosition);
+            return;
         }
+
+        private void DebugForwardTurret()
+        {
+            Gizmos.color = Color.red;
+            Gizmos.DrawLine(turretTransform.position, turretTransform.forward * 10);
+        }
+
+        private void DebugTargetShoot()
+        {
+            if (currentTarget == null) return;
+            Gizmos.color = Color.green;
+            Gizmos.DrawWireSphere(GetBulletPosition, 0.2f);
+            Gizmos.color = Color.yellow;
+            Gizmos.DrawWireSphere(TargetShootPosition, 0.2f);
+            Gizmos.color = Color.magenta;
+            Gizmos.DrawLine(GetBulletPosition, TargetShootPosition);
+        }
+#endif
     }
 }

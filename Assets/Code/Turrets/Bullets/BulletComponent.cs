@@ -18,7 +18,6 @@ namespace TowerDefense
 
         public void Shoot(Vector3 direction)
         {
-            Debug.DrawRay(initialPosition, direction * 16, Color.red, 3f);
             bulletRigidBody.velocity = direction * 3;
             bulletRigidBody.AddForce(bulletRigidBody.velocity * 1f, ForceMode.Impulse);
         }
@@ -33,7 +32,7 @@ namespace TowerDefense
         {
             if (other.gameObject.layer == 10)
             {
-                Debug.Log($"Hit smthg");
+                Fade();
             }
         }
 
