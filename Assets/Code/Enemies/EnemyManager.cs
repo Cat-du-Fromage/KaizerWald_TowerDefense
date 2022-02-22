@@ -8,10 +8,13 @@ namespace TowerDefense
 {
     public class EnemyManager : MonoBehaviour
     {
+        //References to Grids
         [SerializeField] private SandBox_SpatialPartition spatialPartition;
         [SerializeField] private PathfindingGrid PathfindingGrid;
         
-        [SerializeField] private Transform SpawnPoint;
+        //Reference to FlockManager
+        
+        //Prefabs
         [SerializeField] private Transform EndPoint;
         [SerializeField] private GameObject EnemyPrefab;
 
@@ -27,23 +30,13 @@ namespace TowerDefense
             enemies = new HashSet<EnemyComponent>(16);
             enemiesGone = new HashSet<EnemyComponent>(16);
         }
-
-        private void Start()
-        {
-            spawn = new Vector3
-            (
-                SpawnPoint.position.x, 
-                EnemyPrefab.transform.position.y, 
-                SpawnPoint.position.z
-            );
-        }
+        
 
         // Update is called once per frame
         private void Update()
         {
             if (!Keyboard.current.spaceKey.wasPressedThisFrame) return;
-            CreateWave(16);
-            //CreateEnemy();
+            CreateFlockWave(16);
         }
 
         private void FixedUpdate()
@@ -62,29 +55,38 @@ namespace TowerDefense
         {
             enemiesGone.Add(enemy);
         }
-
-        private void CreateEnemy()
-        {
-            GameObject go = Instantiate(EnemyPrefab, spawn, Quaternion.identity);
-            EnemyComponent enemy = go.GetComponent<EnemyComponent>();
-            
-            enemy.SetDestination(EndPoint.position);
-            enemies.Add(enemy);
-        }
-
-        private void CreateWave(int numToSpawn)
+        
+/*
+        public void CreateWave(int numToSpawn) //temporary public
         {
             Vector3[] spawnPoints = PathfindingGrid.GetSpawnPoints(numToSpawn, 2);
             for (int i = 0; i < numToSpawn; i++)
             {
                 GameObject go = Instantiate(EnemyPrefab, spawnPoints[i], Quaternion.identity);
+                go.name = $"Agent_{i}";
                 EnemyComponent enemy = go.GetComponent<EnemyComponent>();
                 
                 enemy.SetDestination(EndPoint.position);
                 enemies.Add(enemy);
             }
-            
-            
+        }
+        */
+        public List<FlockAgent> CreateFlockWave(int numToSpawn) //temporary public
+        {
+            List<FlockAgent> agents = new List<FlockAgent>(numToSpawn);
+            Vector3[] spawnPoints = PathfindingGrid.GetSpawnPoints(numToSpawn, 2);
+            for (int i = 0; i < numToSpawn; i++)
+            {
+                GameObject go = Instantiate(EnemyPrefab, spawnPoints[i], Quaternion.identity);
+                go.name = $"Agent_{i}";
+                EnemyComponent enemy = go.GetComponent<EnemyComponent>();
+                
+                enemy.SetDestination(EndPoint.position);
+                enemies.Add(enemy);
+                agents.Add(go.GetComponent<FlockAgent>());
+            }
+
+            return agents;
         }
 
         private void MoveToDestination()

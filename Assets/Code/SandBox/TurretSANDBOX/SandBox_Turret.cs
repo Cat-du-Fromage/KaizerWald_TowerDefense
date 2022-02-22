@@ -12,7 +12,7 @@ namespace TowerDefense
     public class SandBox_Turret : MonoBehaviour
     {
         //DOUBLE REFERENCE WITH TURRET!!!!!!
-        [SerializeField] private EnemySpawnManager EnemiesManager;
+        //[SerializeField] private EnemySpawnManager EnemiesManager;
         
         private List<Transform> enemies;
 

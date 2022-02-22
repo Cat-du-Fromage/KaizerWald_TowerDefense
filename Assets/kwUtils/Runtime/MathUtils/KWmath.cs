@@ -43,11 +43,13 @@ namespace KWUtils
         /// <param name="v">value to multiple by itself</param>
         /// <returns>(v * v)</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static int sq(in int v)
-        {
-            return v * v;
-        }
+        public static int Sq(int v) => v * v;
         
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static float Sq(float v) => v * v;
+
+
+
         // Line Segment Intersection (line1 is p1-p2 and line2 is p3-p4)
         public static bool LineSegmentIntersection(float2 p1, float2 p2, float2 p3, float2 p4, ref float2 result)
         {
@@ -98,7 +100,7 @@ namespace KWUtils
         /// <param name="v2"></param>
         /// <returns></returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static float Det(in float v1x, in float v1y, in float v2x, in float v2y)
+        public static float Det(float v1x, float v1y, float v2x, float v2y)
         {
             return (v1x * v2y) - (v1y * v2x);
         }
