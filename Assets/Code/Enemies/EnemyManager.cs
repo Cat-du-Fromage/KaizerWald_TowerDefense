@@ -11,9 +11,7 @@ namespace TowerDefense
         //References to Grids
         [SerializeField] private SandBox_SpatialPartition spatialPartition;
         [SerializeField] private PathfindingGrid PathfindingGrid;
-        
-        //Reference to FlockManager
-        
+
         //Prefabs
         [SerializeField] private Transform EndPoint;
         [SerializeField] private GameObject EnemyPrefab;
@@ -36,7 +34,7 @@ namespace TowerDefense
         private void Update()
         {
             if (!Keyboard.current.spaceKey.wasPressedThisFrame) return;
-            CreateFlockWave(16);
+            CreateWave(16);
         }
 
         private void FixedUpdate()
@@ -56,7 +54,7 @@ namespace TowerDefense
             enemiesGone.Add(enemy);
         }
         
-/*
+
         public void CreateWave(int numToSpawn) //temporary public
         {
             Vector3[] spawnPoints = PathfindingGrid.GetSpawnPoints(numToSpawn, 2);
@@ -70,7 +68,7 @@ namespace TowerDefense
                 enemies.Add(enemy);
             }
         }
-        */
+        /*
         public List<FlockAgent> CreateFlockWave(int numToSpawn) //temporary public
         {
             List<FlockAgent> agents = new List<FlockAgent>(numToSpawn);
@@ -88,7 +86,7 @@ namespace TowerDefense
 
             return agents;
         }
-
+*/
         private void MoveToDestination()
         {
             foreach (EnemyComponent enemy in enemies)

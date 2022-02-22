@@ -1768,7 +1768,6 @@ GameObject:
   - component: {fileID: 7083332253228637747}
   - component: {fileID: 6106900015429201749}
   - component: {fileID: 8776664263268854800}
-  - component: {fileID: -2242540858210752268}
   m_Layer: 10
   m_Name: Enemi
   m_TagString: Player
@@ -1856,18 +1855,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   speed: 5
---- !u!114 &-2242540858210752268
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6534436768689163358}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 4dda5caf2b2a27d41a78484aac4ae7f9, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!1 &6603064177044297357
 GameObject:
   m_ObjectHideFlags: 0

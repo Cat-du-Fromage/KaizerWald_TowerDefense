@@ -2,12 +2,16 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using KWUtils;
+using Unity.Collections;
+using Unity.Jobs;
+using Unity.Jobs.LowLevel.Unsafe;
 using Unity.Mathematics;
 using Unity.VisualScripting;
 using UnityEditor;
 using UnityEngine;
 
 using static Unity.Mathematics.math;
+using float2 = Unity.Mathematics.float2;
 
 #if UNITY_EDITOR
 using UnityEditor;
@@ -23,7 +27,6 @@ namespace TowerDefense
         public bool EnableDebugger;
         
         public TerrainData terrainData;
-        public TerrainCollider collider;
         [SerializeField] private int ChunkSize = 16;
         
         private Dictionary<int, int[]> grid;
@@ -32,6 +35,10 @@ namespace TowerDefense
         private int2 numChunkXY;
         
         private int totalChunk;
+
+        //private byte[] costField;
+        //private short[] integrationField;
+        private Vector2[] directionField;
 
 #if UNITY_EDITOR   
         //SPAWNING POINT
@@ -70,10 +77,15 @@ namespace TowerDefense
             InitializeFields();
         }
 
+        private void Start()
+        {
+            GetCostField();
+        }
+
         private void InitializeFields()
         {
             gridSize = (int2)terrainData.size.XZ();
-            ChunkSize = math.ceilpow2(ChunkSize);
+            ChunkSize = ceilpow2(ChunkSize);
             numChunkXY = (int2)(terrainData.size.XZ() / new int2(ChunkSize));
             totalChunk = numChunkXY.x * numChunkXY.y;
         }
@@ -112,12 +124,71 @@ namespace TowerDefense
         
         //FlowField
         //==============================================================================================================
+        
+        //1) Go through all the cells!
+        //2) Set Basic Cost(1/255) use Short(255 may be to small depending on the terrain size)
+        //2) Make Integration
+        
         public void GetCostField()
         {
             int totalNumCells = gridSize.x * gridSize.y;
+            /*
             for (int i = 0; i < totalNumCells; i++)
             {
                 int chunkIndex = GetChunkIndex(i);
+            }
+
+            JCostField job = new JCostField
+            {
+                MapSize = gridSize,
+                ChunkSize = this.ChunkSize,
+                WalkableChunk = default,
+                CostField = default
+            };
+            JobHandle jobHandle = job.ScheduleParallel(totalNumCells, JobsUtility.JobWorkerCount - 1, default);
+            jobHandle.Complete();
+            */
+        }
+
+        /// <summary>
+        /// CAREFUL FOR BLENDING
+        /// NEED TO KNOW which cell is directly near an unwalkable chunk
+        /// So we can set a value of 2 for the costfield
+        /// </summary>
+        public struct JCostField : IJobFor
+        {
+            [ReadOnly] public int2 MapSize;
+            [ReadOnly] public int ChunkSize;
+            [ReadOnly] public NativeArray<int> WalkableChunk;
+
+            [NativeDisableParallelForRestriction]
+            [WriteOnly] public NativeArray<byte> CostField;
+            public void Execute(int index)
+            {
+                int2 coord = index.GetXY2(MapSize.x);
+                
+                float2 currentCellCenter = coord + new float2(0.5f);
+                
+                int chunkIndex = GetChunkIndex(currentCellCenter);
+                
+                //Check if is in walkableChunk : if not => CostField[index] = Byte.MaxValue (0-255 is more than enough for cost field)
+                
+                /*
+                if (index < 4096)
+                {
+                    Debug.Log($"at cell {index}; coord : {coord}; Chunk = {chunkIndex}");
+                }
+                */
+                //CHECK IF TRUE! OK checked!
+
+            }
+
+            private int GetChunkIndex(float2 pointPos)
+            {
+                float2 percents = pointPos / (MapSize * ChunkSize);
+                percents = clamp(percents, float2.zero, float2(1f));
+                int2 xy =  clamp((int2)floor(MapSize * percents), 0, MapSize - 1);
+                return mad(xy.y, MapSize.x/ChunkSize, xy.x);
             }
         }
         

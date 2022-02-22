@@ -21,6 +21,9 @@ namespace TowerDefense
         public void Move(Vector3 velocity)
         {
             agentTransform.forward = velocity;
+            //Debug.DrawRay(agentTransform.position, agentTransform.forward, Color.red, 2f);
+            //Debug.Log(velocity * Time.deltaTime);
+            //agentTransform.Translate(velocity * Time.deltaTime);
             agentTransform.position += velocity * Time.deltaTime;
         }
     }
