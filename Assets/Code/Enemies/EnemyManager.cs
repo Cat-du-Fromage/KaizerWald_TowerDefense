@@ -9,6 +9,7 @@ namespace TowerDefense
     public class EnemyManager : MonoBehaviour
     {
         [SerializeField] private SandBox_SpatialPartition spatialPartition;
+        [SerializeField] private PathfindingGrid PathfindingGrid;
         
         [SerializeField] private Transform SpawnPoint;
         [SerializeField] private Transform EndPoint;
@@ -21,6 +22,8 @@ namespace TowerDefense
 
         private void Awake()
         {
+            PathfindingGrid ??= FindObjectOfType<PathfindingGrid>();
+            
             enemies = new HashSet<EnemyComponent>(16);
             enemiesGone = new HashSet<EnemyComponent>(16);
         }
@@ -39,7 +42,8 @@ namespace TowerDefense
         private void Update()
         {
             if (!Keyboard.current.spaceKey.wasPressedThisFrame) return;
-            CreateEnemy();
+            CreateWave(16);
+            //CreateEnemy();
         }
 
         private void FixedUpdate()
@@ -66,6 +70,21 @@ namespace TowerDefense
             
             enemy.SetDestination(EndPoint.position);
             enemies.Add(enemy);
+        }
+
+        private void CreateWave(int numToSpawn)
+        {
+            Vector3[] spawnPoints = PathfindingGrid.GetSpawnPoints(numToSpawn, 2);
+            for (int i = 0; i < numToSpawn; i++)
+            {
+                GameObject go = Instantiate(EnemyPrefab, spawnPoints[i], Quaternion.identity);
+                EnemyComponent enemy = go.GetComponent<EnemyComponent>();
+                
+                enemy.SetDestination(EndPoint.position);
+                enemies.Add(enemy);
+            }
+            
+            
         }
 
         private void MoveToDestination()

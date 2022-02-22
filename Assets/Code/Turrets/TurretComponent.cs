@@ -52,7 +52,7 @@ namespace TowerDefense
         private Vector3 TurretPosition => turretTransform.position;
         private Vector3 TargetPosition => currentTarget.position;
         
-        private Vector3 TargetShootPosition => currentTarget.position + Vector3.up;
+        private Vector3 TargetShootPosition => currentTarget.position + Vector3.up * 0.75f;
 
         private CancellationTokenSource soundToken;
 

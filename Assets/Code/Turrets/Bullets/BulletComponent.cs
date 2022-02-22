@@ -26,8 +26,8 @@ namespace TowerDefense
         {
             trail.emitting = true;
             
-            bulletRigidBody.velocity = direction * 3;
-            bulletRigidBody.AddForce(bulletRigidBody.velocity * 1f, ForceMode.Impulse);
+            bulletRigidBody.velocity = direction * 1;
+            bulletRigidBody.AddForce(bulletRigidBody.velocity * 10f, ForceMode.Impulse);
         }
         
         public void Fade()
