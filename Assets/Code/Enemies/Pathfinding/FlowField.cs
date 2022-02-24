@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using KWUtils;
@@ -11,6 +12,42 @@ using static KWUtils.NativeCollectionExt;
 
 namespace TowerDefense
 {
+    public enum Road : byte
+    {
+        Vertical,
+        Horizontal,
+
+        //I = Input(Enter)
+        //O = Output(Exit)
+        
+        //Configuration : x : inverse (9, 8, 7, .., 0) | y : normal (0, 1, 2, .., 9)
+        //  ________
+        // |       |
+        // |       O
+        // |___I___|
+        BotRight, //use MAX(x,y)
+        //  ___O___
+        // |       |
+        // I       |
+        // |_______|
+        TopLeft, //use MIN(x,y)
+        
+        //Configuration : x : y : normal (0, 1, 2, .., 9) | y : normal (0, 1, 2, .., 9)
+        
+        //  ________
+        // |       |
+        // O       |
+        // |___I___|
+        BotLeft, //use MAX(x,y)
+        //  ___O___
+        // |       |
+        // |       I
+        // |_______|
+        TopRight, //use MIN(x,y)
+        
+        None,
+    }
+    
     public class FlowField
     {
         private readonly int2 gridSize;
@@ -20,6 +57,8 @@ namespace TowerDefense
         //CostField
         private NativeArray<int> nativeWalkableChunk;
         private NativeArray<byte> nativeCostField;
+
+        private NativeArray<Road> nativeRoadConfig;
 
         //IntegrationField
         private NativeArray<int> nativeBestCostField;
@@ -42,24 +81,31 @@ namespace TowerDefense
             //Cost Field
             nativeWalkableChunk = walkableChunk.ToNativeArray();
             nativeCostField = AllocNtvAry<byte>(totalNumCells);
+            JobHandle jHCostField = GetCostField();
             
-            JobHandle jHCostField = GetCostField(walkableChunk);
-            jHCostField.Complete();
+            //Smooth Cost Field
+            /*
+            byte test = 0;
+            if ((Road)test == Road.Vertical)
+            {
+                
+            }
+            */
+            nativeRoadConfig = new NativeArray<Road>(walkableChunk.Length, Allocator.TempJob, NativeArrayOptions.UninitializedMemory);
+            Debug.Log($"Size = {sizeof(byte)}");
+            //NEED : NativeArray<enum>
+            //JobHandle jHSmoothCostField = GetSmoothCostField(jHCostField);
 
             //Integration Field
             nativeBestCostField = AllocFillNtvAry<int>(totalNumCells, ushort.MaxValue);
-            
-            
             JobHandle jHIntegrationField = GetIntegrationField(targetCell, jHCostField);
-            jHIntegrationField.Complete();
-            BestCostField = new int[totalNumCells];
-            nativeBestCostField.CopyTo(BestCostField);
-            //Direction Field
             
+            //Direction Field
             nativeBestDirection = AllocNtvAry<float3>(totalNumCells);
             JobHandle jHDirectionField = GetDirectionField(jHIntegrationField);
             jHDirectionField.Complete();
 
+            //Return value
             nativeBestDirection.Reinterpret<Vector3>().CopyTo(directionField);
             DisposeAll();
             return directionField;
@@ -69,16 +115,30 @@ namespace TowerDefense
         {
             if (nativeWalkableChunk.IsCreated) nativeWalkableChunk.Dispose();
             if (nativeCostField.IsCreated)     nativeCostField.Dispose();
+            if (nativeRoadConfig.IsCreated)    nativeRoadConfig.Dispose();
             if (nativeBestCostField.IsCreated) nativeBestCostField.Dispose();
             if (nativeBestDirection.IsCreated) nativeBestDirection.Dispose();
         }
         
-        public JobHandle GetCostField(int[] walkableChunk, JobHandle dependency = default)
+        public JobHandle GetCostField(JobHandle dependency = default)
         {
             JCostField job = new JCostField
             {
                 MapSize = gridSize,
                 ChunkSize = chunkSize,
+                WalkableChunk = nativeWalkableChunk,
+                CostField = nativeCostField
+            };
+            return job.ScheduleParallel(totalNumCells, JobWorkerCount - 1, dependency);
+        }
+
+        public JobHandle GetSmoothCostField(JobHandle dependency = default)
+        {
+            JSmoothCostField job = new JSmoothCostField
+            {
+                MapSize = gridSize,
+                ChunkSize = chunkSize,
+                RoadConfig = default, //TO DO!!
                 WalkableChunk = nativeWalkableChunk,
                 CostField = nativeCostField
             };

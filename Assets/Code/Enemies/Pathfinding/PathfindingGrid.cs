@@ -30,6 +30,7 @@ namespace TowerDefense
 
         private GridData gridData;
         private Dictionary<int, int[]> grid;
+        private Dictionary<int, Vector3[]> directionGrid;
         
         private int2 gridSize;
         private int2 numChunkXY;
@@ -135,8 +136,8 @@ namespace TowerDefense
             destinationGridCell = destinationChunk.GetCellIndexFromChunkEnterPoint(ChunkEnterPoint.Right, gridData);
             
             FlowField flowField = new FlowField(gridSize, ChunkSize);
-            flowField.GetFlowField(destinationGridCell, walkableChunk);
-            grid = KWChunk.GetCellIndicesOrderedByChunk(flowField.BestCostField, gridData);
+            directionGrid = KWChunk.GetCellDirectionOrderedByChunk(flowField.GetFlowField(destinationGridCell, walkableChunk), gridData);
+            //grid = KWChunk.GetCellIndicesOrderedByChunk(flowField.BestCostField, gridData);
         }
 
 
@@ -181,12 +182,13 @@ namespace TowerDefense
                 alignment = TextAnchor.MiddleCenter
             };
 
-            DisplayChunkGrid(style);
+            //DisplayChunkGrid(style);
 
             //if (grid != null) BestCostDebug(style);
 
+            if (directionGrid != null) FlowFieldDebug();
 
-            DisplayDestination();
+            //DisplayDestination();
         }
 
         private void DisplayChunkGrid(GUIStyle style)
@@ -223,7 +225,7 @@ namespace TowerDefense
 
         private void BestCostDebug(GUIStyle style)
         {
-            for (int i = 0; i < 3; i++)
+            for (int i = 0; i < 2; i++)
             {
                 int chunkIndex = i; //;
                 for (int j = 0; j < grid[chunkIndex].Length; j++)
@@ -232,8 +234,25 @@ namespace TowerDefense
                         
                     int2 coord = realIndex.GetXY2(gridSize.x);
                     Vector3 cellPos = new Vector3(coord.x + 0.5f, 0, coord.y + 0.5f);
-                    Gizmos.DrawWireCube(cellPos, Vector3.one);
-                    Handles.Label(cellPos, grid[chunkIndex][j].ToString(), style);
+                    //Gizmos.DrawWireCube(cellPos, Vector3.one);
+                    Handles.Label(cellPos, directionGrid[chunkIndex][j].ToString(), style);
+                }
+            }
+
+        }
+
+        private void FlowFieldDebug()
+        {
+            for (int i = 0; i < 2; i++)
+            {
+                int chunkIndex = i; //;
+                for (int j = 0; j < directionGrid[chunkIndex].Length; j++)
+                {
+                    int realIndex = chunkIndex.GetGridCellIndexFromChunkCellIndex(gridData, j);
+                        
+                    int2 coord = realIndex.GetXY2(gridSize.x);
+                    Vector3 cellPos = new Vector3(coord.x + 0.5f, 0, coord.y + 0.5f);
+                    KWUtils.Debug.DrawArrow.ForGizmo(cellPos, directionGrid[chunkIndex][j]/2f);
                 }
             }
 

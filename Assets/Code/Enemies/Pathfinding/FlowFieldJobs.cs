@@ -47,6 +47,119 @@ namespace TowerDefense
         }
     }
     
+    public struct JSmoothCostField : IJobFor
+    {
+        [ReadOnly] public int2 MapSize;
+        [ReadOnly] public int ChunkSize;
+        
+        [NativeDisableParallelForRestriction]
+        [ReadOnly] public NativeArray<Road> RoadConfig;
+        [NativeDisableParallelForRestriction]
+        [ReadOnly] public NativeArray<int> WalkableChunk;
+
+
+        [NativeDisableParallelForRestriction]
+        [WriteOnly] public NativeArray<byte> CostField;
+        public void Execute(int index)
+        {
+            int2 cellCoord = index.GetXY2(ChunkSize);
+            int chunkIndex = GetChunkIndex(cellCoord);
+            int2 chunkCoord = chunkIndex.GetXY2(MapSize.x);
+
+            int2 cellChunkCoord = cellCoord - (chunkCoord * ChunkSize);
+
+            int walkChunk = WalkableChunk.IndexOf(chunkIndex);
+            if (walkChunk != -1)
+            {
+                int value = CostField[index];
+                int oddOffset = (ChunkSize & 1);
+                Road config = RoadConfig[walkChunk];
+
+                if (config == Road.None) return;
+
+                value = config switch
+                {
+                    Road.Horizontal => (int)ceil(cellChunkCoord.y - (ChunkSize / 2f)),
+                    Road.Vertical => (int)ceil(cellChunkCoord.x - (ChunkSize / 2f)),
+                    _ => value
+                };
+/*
+                if (config == Road.Horizontal)
+                {
+                    value = (int)ceil(cellChunkCoord.y - (ChunkSize / 2f)); //PROBLEM!!! NEED INDEX INSIDE CHUNK
+                }
+                else if (config == Road.Vertical)
+                {
+                    value = (int)ceil(cellChunkCoord.x - (ChunkSize / 2f));
+                }
+                */
+                value += value >= 0 ? 1 : 0; //readjust this on the Half Top (see Excel Graph)
+                value = value < 0 ? abs(value) + oddOffset : value; //negative Value are made positiv and if ChunkSize is Odd => + 1 (see Excel Graph)
+            
+                CostField[index] = (byte)value;
+            }
+        }
+
+        private int GetChunkIndex(in float2 pointPos)
+        {
+            float2 percents = pointPos / (MapSize * ChunkSize);
+            percents = clamp(percents, float2.zero, float2(1f));
+            int2 xy =  clamp((int2)floor(MapSize * percents), 0, MapSize - 1);
+            return mad(xy.y, MapSize.x/ChunkSize, xy.x);
+        }
+    }
+    /*
+    public struct JSmoothCostField : IJobFor
+    {
+        [ReadOnly] public int ChunkIndex;
+        
+        [ReadOnly] public int2 MapSize;
+        [ReadOnly] public int ChunkSize;
+        
+        [ReadOnly] public Road RoadConfig;
+        
+        [NativeDisableParallelForRestriction]
+        [ReadOnly] public NativeArray<int> WalkableChunk;
+
+
+        [NativeDisableParallelForRestriction]
+        [WriteOnly] public NativeArray<byte> CostField;
+        public void Execute(int index)
+        {
+            int2 cellCoordInChunk = index.GetXY2(ChunkSize);
+            
+            //On a le Chunk
+            int gridCellIndex = ChunkIndex.GetGridCellIndexFromChunkCellIndex(MapSize.x, ChunkSize, index);
+            int value = CostField[gridCellIndex];
+            //=> on a la config
+            
+            //Check IfOdd
+            int oddOffset = (ChunkSize & 1); // add when number are negativ
+
+            if (RoadConfig == Road.Horizontal)
+            {
+                value = (int)ceil(cellCoordInChunk.y - (ChunkSize / 2f));
+                //int negativCheck = value <= 0 ? (int)floor(value) : (int)ceil(value); //NEED CHECK
+            }
+            else if (RoadConfig == Road.Vertical)
+            {
+                value = (int)ceil(cellCoordInChunk.x - (ChunkSize / 2f));
+            }
+            value += value >= 0 ? 1 : 0; //readjust this on the Half Top (see Excel Graph)
+            value = value < 0 ? abs(value) + oddOffset : value; //negative Value are made positiv and if ChunkSize is Odd => + 1 (see Excel Graph)
+            
+            CostField[gridCellIndex] = (byte)value;
+        }
+
+        private int GetChunkIndex(in float2 pointPos)
+        {
+            float2 percents = pointPos / (MapSize * ChunkSize);
+            percents = clamp(percents, float2.zero, float2(1f));
+            int2 xy =  clamp((int2)floor(MapSize * percents), 0, MapSize - 1);
+            return mad(xy.y, MapSize.x/ChunkSize, xy.x);
+        }
+    }
+    */
     //[BurstCompile(CompileSynchronously = true)]
     public struct JIntegrationField : IJob
     {
