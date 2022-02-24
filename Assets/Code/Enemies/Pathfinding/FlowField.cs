@@ -26,7 +26,7 @@ namespace TowerDefense
         // |       O
         // |___I___|
         BotRight, //use MAX(x,y)
-        //  ___O___
+        //  ___O____
         // |       |
         // I       |
         // |_______|
@@ -38,12 +38,12 @@ namespace TowerDefense
         // |       |
         // O       |
         // |___I___|
-        BotLeft, //use MAX(x,y)
-        //  ___O___
+        BotLeft, //use MIN(x,y)
+        //  ___O____
         // |       |
         // |       I
         // |_______|
-        TopRight, //use MIN(x,y)
+        TopRight, //use MAX(x,y)
         
         None,
     }
@@ -62,10 +62,12 @@ namespace TowerDefense
 
         //IntegrationField
         private NativeArray<int> nativeBestCostField;
-        public int[] BestCostField;
+        //public int[] BestCostField;
         
         //FlowField
         private NativeArray<float3> nativeBestDirection;
+
+        //public byte[] CostField;
 
         public FlowField(int2 gridSize, int chunkSize)
         {
@@ -74,7 +76,7 @@ namespace TowerDefense
             totalNumCells = gridSize.x * gridSize.y;
         }
         
-        public Vector3[] GetFlowField(int targetCell, int[] walkableChunk)
+        public Vector3[] GetFlowField(int targetCell, int[] walkableChunk, Road[] walkableRoad)
         {
             Vector3[] directionField = new Vector3[totalNumCells];
 
@@ -84,26 +86,20 @@ namespace TowerDefense
             JobHandle jHCostField = GetCostField();
             
             //Smooth Cost Field
-            /*
-            byte test = 0;
-            if ((Road)test == Road.Vertical)
-            {
-                
-            }
-            */
-            nativeRoadConfig = new NativeArray<Road>(walkableChunk.Length, Allocator.TempJob, NativeArrayOptions.UninitializedMemory);
-            Debug.Log($"Size = {sizeof(byte)}");
-            //NEED : NativeArray<enum>
-            //JobHandle jHSmoothCostField = GetSmoothCostField(jHCostField);
+            nativeRoadConfig = walkableRoad.ToNativeArray();
+            JobHandle jHSmoothCostField = GetSmoothCostField(jHCostField);
 
             //Integration Field
             nativeBestCostField = AllocFillNtvAry<int>(totalNumCells, ushort.MaxValue);
-            JobHandle jHIntegrationField = GetIntegrationField(targetCell, jHCostField);
+            JobHandle jHIntegrationField = GetIntegrationField(targetCell, jHSmoothCostField);
             
             //Direction Field
             nativeBestDirection = AllocNtvAry<float3>(totalNumCells);
             JobHandle jHDirectionField = GetDirectionField(jHIntegrationField);
             jHDirectionField.Complete();
+
+            //CostField = new byte[nativeCostField.Length];
+            //nativeCostField.CopyTo(CostField);
 
             //Return value
             nativeBestDirection.Reinterpret<Vector3>().CopyTo(directionField);
@@ -138,7 +134,7 @@ namespace TowerDefense
             {
                 MapSize = gridSize,
                 ChunkSize = chunkSize,
-                RoadConfig = default, //TO DO!!
+                RoadConfig = nativeRoadConfig,
                 WalkableChunk = nativeWalkableChunk,
                 CostField = nativeCostField
             };

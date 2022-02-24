@@ -8,6 +8,7 @@ using Unity.Jobs.LowLevel.Unsafe;
 using Unity.Mathematics;
 
 using static Unity.Mathematics.math;
+using static Unity.Jobs.LowLevel.Unsafe.JobsUtility;
 using Debug = UnityEngine.Debug;
 
 namespace KWUtils
@@ -137,6 +138,33 @@ namespace KWUtils
             {
                 int start = i * totalChunkCell;
                 chunkCells.Add(i, orderedIndices.GetSubArray(start, totalChunkCell).Reinterpret<Vector3>().ToArray());
+            }
+            return chunkCells;
+        }
+        
+        public static Dictionary<int, byte[]> GetCellCostOrderedByChunk(byte[] unorderedIndices, in GridData gridData)
+        {
+            int totalChunk = gridData.NumChunkXY.x * gridData.NumChunkXY.y;
+            
+            using NativeArray<byte> unOrderedIndices = unorderedIndices.ToNativeArray(); 
+            using NativeArray<byte> orderedIndices = new (unorderedIndices.Length, Allocator.TempJob, NativeArrayOptions.UninitializedMemory);
+            JOrderArrayByChunkIndex<byte> job = new JOrderArrayByChunkIndex<byte>
+            {
+                MapSizeX = gridData.MapSize.x,
+                ChunkSize = gridData.ChunkSize,
+                NumChunkX = gridData.NumChunkXY.x,
+                UnsortedArray = unOrderedIndices,
+                SortedArray = orderedIndices
+            };
+            job.ScheduleParallel(totalChunk, JobWorkerCount - 1, default).Complete();
+            
+            Dictionary<int, byte[]> chunkCells = new Dictionary<int, byte[]>(totalChunk);
+            int totalChunkCell = (gridData.ChunkSize * gridData.ChunkSize);
+            //int offsetChunk = startOffset - 1;
+            for (int i = 0; i < totalChunk; i++)
+            {
+                int start = i * totalChunkCell;
+                chunkCells.Add(i, orderedIndices.GetSubArray(start, totalChunkCell).ToArray());
             }
             return chunkCells;
         }

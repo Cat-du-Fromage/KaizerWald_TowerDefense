@@ -203,6 +203,7 @@ MonoBehaviour:
   SpawningChunkIndex: 1
   terrainData: {fileID: 15600000, guid: ad21e10ffa3addb409999fe16fbf0a62, type: 2}
   ChunkSize: 32
+  CostField: 
   walkableChunkPrefab: {fileID: 341127143433970674, guid: de3b70522e20291459d3f20a685796e2,
     type: 3}
   SpawnArea: {fileID: 394186010}

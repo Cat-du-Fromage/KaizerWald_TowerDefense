@@ -66,7 +66,5 @@ namespace TowerDefense
             animator.SetFloat(animIDSpeed, animationBlend);
             animator.SetFloat(animIDMotionSpeed, 1);
         }
-
-        
     }
 }

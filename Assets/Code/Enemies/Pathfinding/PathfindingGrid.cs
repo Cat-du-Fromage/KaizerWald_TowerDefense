@@ -28,16 +28,23 @@ namespace TowerDefense
         [SerializeField] private TerrainData terrainData;
         [SerializeField] private int ChunkSize = 16;
 
-        private GridData gridData;
-        private Dictionary<int, int[]> grid;
         private Dictionary<int, Vector3[]> directionGrid;
-        
+
         private int2 gridSize;
         private int2 numChunkXY;
         
         private int totalChunk;
 
         private int[] walkableChunk = new[] { 1, 9, 10, 11, 19, 27, 33, 34, 35, 41, 49, 50, 51, 52, 53, 54 };
+
+        private Road[] walkableRoad = new[]
+        {
+            Road.Vertical, Road.BotRight, Road.Horizontal, Road.TopLeft,
+            Road.Vertical, Road.Vertical, Road.BotLeft, Road.Horizontal,
+            Road.TopRight, Road.Vertical, Road.BotRight, Road.Horizontal,
+            Road.Horizontal, Road.Horizontal, Road.Horizontal, Road.Horizontal,
+        };
+        
         private int destinationChunk = 54;
         
         private int destinationGridCell = -1;
@@ -45,6 +52,12 @@ namespace TowerDefense
 //======================================================================================================================
 //DEBUG PURPOSES
 //======================================================================================================================
+        private Dictionary<int, int[]> grid;//DEBUG ONLY
+        private Dictionary<int, byte[]> costGrid; //DEBUG ONLY
+        
+        private GridData debugGridData;
+        
+        public byte[] CostField; 
         [SerializeField] private GameObject walkableChunkPrefab;
         private GameObject[] walkableChunkObj;
 #if UNITY_EDITOR   
@@ -80,7 +93,7 @@ namespace TowerDefense
 
         private void Start()
         {
-            gridData = new GridData(ChunkSize, gridSize);
+            //gridData = new GridData(ChunkSize, gridSize);
             
             //DEBUG
             walkableChunkObj = new GameObject[walkableChunk.Length];
@@ -126,18 +139,17 @@ namespace TowerDefense
         
         //FlowField
         //==============================================================================================================
-        
-        //1) Go through all the cells!
-        //2) Set Basic Cost(1/255) use Short(255 may be to small depending on the terrain size)
-        //3) Make Integration
-
         private void GetFlowField()
         {
+            GridData gridData = new GridData(ChunkSize, gridSize);
             destinationGridCell = destinationChunk.GetCellIndexFromChunkEnterPoint(ChunkEnterPoint.Right, gridData);
             
             FlowField flowField = new FlowField(gridSize, ChunkSize);
-            directionGrid = KWChunk.GetCellDirectionOrderedByChunk(flowField.GetFlowField(destinationGridCell, walkableChunk), gridData);
+            directionGrid = KWChunk.GetCellDirectionOrderedByChunk(flowField.GetFlowField(destinationGridCell, walkableChunk, walkableRoad), gridData);
             //grid = KWChunk.GetCellIndicesOrderedByChunk(flowField.BestCostField, gridData);
+            //CostField = flowField.CostField;
+
+            //costGrid = KWChunk.GetCellCostOrderedByChunk(CostField, gridData);
         }
 
 
@@ -171,6 +183,7 @@ namespace TowerDefense
         private void OnDrawGizmos()
         {
             if (!EnableDebugger) return;
+            debugGridData = new GridData(ChunkSize, gridSize);
             if (chunksPosition.Length == 0)
             {
                 chunksPosition = new Vector3[totalChunk];
@@ -184,9 +197,10 @@ namespace TowerDefense
 
             //DisplayChunkGrid(style);
 
-            //if (grid != null) BestCostDebug(style);
+            //CostDebug(style, true);
+            //BestCostDebug(style);
 
-            if (directionGrid != null) FlowFieldDebug();
+            FlowFieldDebug(true);
 
             //DisplayDestination();
         }
@@ -223,32 +237,50 @@ namespace TowerDefense
             }
         }
 
-        private void BestCostDebug(GUIStyle style)
+        private void BestCostDebug(GUIStyle style, bool walkableOnly)
         {
+            if (grid == null) return;
             for (int i = 0; i < 2; i++)
             {
-                int chunkIndex = i; //;
+                int chunkIndex = walkableOnly ? walkableChunk[i] : i;
                 for (int j = 0; j < grid[chunkIndex].Length; j++)
                 {
-                    int realIndex = chunkIndex.GetGridCellIndexFromChunkCellIndex(gridData, j);
+                    int realIndex = chunkIndex.GetGridCellIndexFromChunkCellIndex(debugGridData, j);
                         
                     int2 coord = realIndex.GetXY2(gridSize.x);
                     Vector3 cellPos = new Vector3(coord.x + 0.5f, 0, coord.y + 0.5f);
                     //Gizmos.DrawWireCube(cellPos, Vector3.one);
-                    Handles.Label(cellPos, directionGrid[chunkIndex][j].ToString(), style);
+                    Handles.Label(cellPos, grid[chunkIndex][j].ToString(), style);
                 }
             }
-
+        }
+        
+        private void CostDebug(GUIStyle style, bool walkableOnly)
+        {
+            if (costGrid == null) return;
+            for (int i = 4; i < 9; i++)
+            {
+                int chunkIndex = walkableOnly ? walkableChunk[i] : i;
+                for (int j = 0; j < costGrid[chunkIndex].Length; j++)
+                {
+                    int realIndex = chunkIndex.GetGridCellIndexFromChunkCellIndex(debugGridData, j);
+                        
+                    int2 coord = realIndex.GetXY2(gridSize.x);
+                    Vector3 cellPos = new Vector3(coord.x + 0.5f, 0, coord.y + 0.5f);
+                    Handles.Label(cellPos, costGrid[chunkIndex][j].ToString(), style);
+                }
+            }
         }
 
-        private void FlowFieldDebug()
+        private void FlowFieldDebug(bool walkableOnly)
         {
-            for (int i = 0; i < 2; i++)
+            if (directionGrid == null) return;
+            for (int i = 0; i < 4; i++)
             {
-                int chunkIndex = i; //;
+                int chunkIndex = walkableOnly ? walkableChunk[i] : i;
                 for (int j = 0; j < directionGrid[chunkIndex].Length; j++)
                 {
-                    int realIndex = chunkIndex.GetGridCellIndexFromChunkCellIndex(gridData, j);
+                    int realIndex = chunkIndex.GetGridCellIndexFromChunkCellIndex(debugGridData, j);
                         
                     int2 coord = realIndex.GetXY2(gridSize.x);
                     Vector3 cellPos = new Vector3(coord.x + 0.5f, 0, coord.y + 0.5f);
