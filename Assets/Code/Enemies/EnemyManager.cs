@@ -57,7 +57,7 @@ namespace TowerDefense
 
         public void CreateWave(int numToSpawn) //temporary public
         {
-            Vector3[] spawnPoints = PathfindingGrid.GetSpawnPoints(numToSpawn, 2);
+            Vector3[] spawnPoints = PathfindingGrid.GetSpawnPointsForEntities(numToSpawn, 2);
             for (int i = 0; i < numToSpawn; i++)
             {
                 GameObject go = Instantiate(EnemyPrefab, spawnPoints[i], Quaternion.identity);

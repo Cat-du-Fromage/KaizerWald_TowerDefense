@@ -69,7 +69,7 @@ namespace TowerDefense
         public List<FlockAgent> CreateFlockWave(int numToSpawn) //temporary public
         {
             List<FlockAgent> agents = new List<FlockAgent>(numToSpawn);
-            Vector3[] spawnPoints = grid.GetSpawnPoints(numToSpawn, 2);
+            Vector3[] spawnPoints = grid.GetSpawnPointsForEntities(numToSpawn, 2);
             for (int i = 0; i < numToSpawn; i++)
             {
                 GameObject go = Instantiate(AgentPrefab, spawnPoints[i] + Vector3.up, Quaternion.identity);

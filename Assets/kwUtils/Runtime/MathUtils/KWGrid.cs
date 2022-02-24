@@ -16,14 +16,14 @@ namespace KWUtils
     [Flags]
     public enum AdjacentCell : int
     {
-        Top = 1 << 0,
-        Right = 1 << 1,
-        Left = 1 << 2,
-        Bottom = 1 << 3,
-        TopLeft = 1 << 4,
-        TopRight = 1 << 5,
+        Top         = 1 << 0,
+        Right       = 1 << 1,
+        Left        = 1 << 2,
+        Bottom      = 1 << 3,
+        TopLeft     = 1 << 4,
+        TopRight    = 1 << 5,
         BottomRight = 1 << 6,
-        BottomLeft = 1 << 7,
+        BottomLeft  = 1 << 7,
     }
     public static class KWGrid
     {
@@ -96,22 +96,6 @@ namespace KWUtils
             }
             return index;
         }
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static int IndexMin(in NativeArray<double> dis, in NativeArray<int> cellIndex)
-        {
-            double val = double.MaxValue;
-            int index = 0;
-
-            for (int i = 0; i < dis.Length; i++)
-            {
-                if (dis[i] < val)
-                {
-                    index = cellIndex[i];
-                    val = dis[i];
-                }
-            }
-            return index;
-        }
         //=====================================
         // END : MIN INDEX
         //=====================================
@@ -122,6 +106,10 @@ namespace KWUtils
         //may need either : NativeArray<Position> PointInsideHashGrid OR NativeArray<ID> CellId containing the point
         //=====================================
         
+        /// <summary>
+        /// NEED A HUGE CLEAN UP THIS IS A MESS!!
+        /// </summary>
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static int2 GetCoordFromPosition(this float3 pointPos, int gridSize, float spacing)
         {
@@ -152,7 +140,7 @@ namespace KWUtils
  
             int x = clamp((int)floor(gridSize * percentX), 0, gridSize - 1);
             int y = clamp((int)floor(gridSize * percentY), 0, gridSize - 1);
-            return mad(y, gridSize, x);
+            return mad(y, (int)(gridSize/spacing), x);
         }
         
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -196,6 +184,7 @@ namespace KWUtils
             return mad(y, gridSize.x/cellSize, x);
         }
         
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static int GetIndexFromPosition(this Vector3 pointPos, int2 numCellsOnAxis, int cellSize)
         {
             float percentX = pointPos.x / (numCellsOnAxis.x * cellSize);
@@ -207,22 +196,7 @@ namespace KWUtils
             int x = Clamp(FloorToInt(numCellsOnAxis.x * percentX), 0, numCellsOnAxis.x-1);
             int y = Clamp(FloorToInt(numCellsOnAxis.y * percentY), 0, numCellsOnAxis.y-1);
 
-            return (y * numCellsOnAxis.x) + x;
-        }
-        
-        public static int GetIndexFromPosition(this Vector3 pointPos, int gridSize, float spacing)
-        {
-            float mapOffset = gridSize * 0.5f;
-            
-            float percentX = (pointPos.x + mapOffset) / (gridSize * spacing);
-            float percentY = (pointPos.z + mapOffset) / (gridSize * spacing);
-            
-            percentX = Mathf.Clamp01(percentX); //CAREFUL NEED ABS!
-            percentY = Mathf.Clamp01(percentY); //CAREFUL NEED ABS!
- 
-            int x = Mathf.Clamp(Mathf.FloorToInt(gridSize * percentX), 0, gridSize - 1);
-            int y = Mathf.Clamp(Mathf.FloorToInt(gridSize * percentY), 0, gridSize - 1);
-            return (y * gridSize) + x;
+            return y * (numCellsOnAxis.x/cellSize) + x;
         }
 
         /// <summary>
@@ -280,20 +254,20 @@ namespace KWUtils
         /// Use to check around a cell (1 tile around with diagonal)
         /// </summary>
         /// <param name="cellId"></param>
-        /// <param name="numCellGrid"></param>
+        /// <param name="gridWidth"></param>
         /// <returns>number of cell to check; X Range; Y Range</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static (int numCell, int2 xRange, int2 yRange) CellGridRanges(this int cellId, int numCellGrid)
+        public static (int numCell, int2 xRange, int2 yRange) CellGridRanges(this int cellId, int gridWidth)
         {
-            int y = (int)floor((float)cellId / numCellGrid);
-            int x = cellId - (y * numCellGrid);
+            int y = (int)floor((float)cellId / gridWidth);
+            int x = cellId - (y * gridWidth);
 
             bool corner = (x == 0 && y == 0) 
-                          || (x == 0 && y == numCellGrid - 1) 
-                          || (x == numCellGrid - 1 && y == 0) 
-                          || (x == numCellGrid - 1 && y == numCellGrid - 1);
-            bool yOnEdge = y == 0 || y == numCellGrid - 1;
-            bool xOnEdge = x == 0 || x == numCellGrid - 1;
+                          || (x == 0 && y == gridWidth - 1) 
+                          || (x == gridWidth - 1 && y == 0) 
+                          || (x == gridWidth - 1 && y == gridWidth - 1);
+            bool yOnEdge = y == 0 || y == gridWidth - 1;
+            bool xOnEdge = x == 0 || x == gridWidth - 1;
 
             //check if on edge 0 : int2(0, 1) ; if not NumCellJob - 1 : int2(-1, 0)
             int2 OnEdge(int e) => select(int2(-1, 0), int2(0, 1), e == 0);
@@ -304,33 +278,42 @@ namespace KWUtils
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static bool IsCellOnCorner(int x, int y, int numCellGrid)
+        public static bool IsCellOnCorner(int x, int y, int gridWidth)
         {
             return (x == 0 && y == 0) 
-                   || (x == 0 && y == numCellGrid - 1) 
-                   || (x == numCellGrid - 1 && y == 0) 
-                   || (x == numCellGrid - 1 && y == numCellGrid - 1);
+                   || (x == 0 && y == gridWidth - 1) 
+                   || (x == gridWidth - 1 && y == 0) 
+                   || (x == gridWidth - 1 && y == gridWidth - 1);
         }
         
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static bool IsCellOnCorner(this int2 xy, int numCellGrid)
+        public static bool IsCellOnCorner(this int2 xy, int gridWidth)
         {
             int x = xy.x;
             int y = xy.y;
             return (x == 0 && y == 0) 
-                   || (x == 0 && y == numCellGrid - 1) 
-                   || (x == numCellGrid - 1 && y == 0) 
-                   || (x == numCellGrid - 1 && y == numCellGrid - 1);
+                   || (x == 0 && y == gridWidth - 1) 
+                   || (x == gridWidth - 1 && y == 0) 
+                   || (x == gridWidth - 1 && y == gridWidth - 1);
         }
         
         /// <summary>
         /// Get if a cell is on a chosen Edge (X or Y)
         /// </summary>
         /// <param name="coord">coord (X or Y) you want to check</param>
-        /// <param name="numCellGrid"></param>
+        /// <param name="gridWidth"></param>
         /// <returns></returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static bool IsCellOnEdge(int coord, int numCellGrid) => coord == 0 || coord == numCellGrid - 1;
+        public static bool IsCellOnEdge(int coord, int gridWidth) => coord == 0 || coord == gridWidth - 1;
+
+        
+        
+        
+        
+///=====================================================================================================================
+/// Methods Below are used for :
+/// Get the Index of any cells around them
+///=====================================================================================================================
 
         /// <summary>
         /// Get Left Index of a point in a grid
@@ -340,7 +323,7 @@ namespace KWUtils
         /// <returns>index of the left point, -1 means point is on corner</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static int GetLeftIndex(this int2 coords, int width) => select(-1,mad(coords.y, width, coords.x) - 1, coords.x > 0);
-
+        
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static int GetRightIndex(this int2 coords, int width) => select(-1,mad(coords.y, width, coords.x) + 1, coords.x < width - 1);
 
@@ -363,8 +346,8 @@ namespace KWUtils
         public static int GetBottomRightIndex(this int2 coords, int width) => select(-1,mad(coords.y, width, coords.x) - width + 1, coords.y > 0 && coords.x < width - 1);
         
         /// <summary>
-        /// CAREFUL BURST COMPILER DONT UNDERSTAND SWITCH CASE YET
         /// this will replace individual functions (see functions above) when burst will be switch friendly
+        /// NOW SUPPORTED SINCE Burst 1.3!
         /// </summary>
         /// <param name="adjCell">adjacent cell you want the index</param>
         /// <param name="index">index of the cell you are checking from</param>

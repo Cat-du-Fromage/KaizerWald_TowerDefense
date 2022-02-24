@@ -1,0 +1,151 @@
+using System.Collections.Generic;
+using UnityEngine;
+using System.Runtime.CompilerServices;
+using Unity.Burst;
+using Unity.Collections;
+using Unity.Jobs;
+using Unity.Jobs.LowLevel.Unsafe;
+using Unity.Mathematics;
+
+using static Unity.Mathematics.math;
+using Debug = UnityEngine.Debug;
+
+namespace KWUtils
+{
+    public readonly struct GridData
+    {
+        public readonly int ChunkSize;
+        public readonly int2 MapSize;
+        public readonly int2 NumChunkXY;
+
+        public GridData(int chunkSize, int2 mapSize)
+        {
+            ChunkSize = chunkSize;
+            MapSize = mapSize;
+            NumChunkXY = MapSize / ChunkSize;
+        }
+    }
+
+    public enum ChunkEnterPoint
+    {
+        Left,
+        Right,
+        Top,
+        Bottom,
+    }
+    
+    public static class KWChunk
+    {
+        /// <summary>
+        /// Cell is at the constant size of 1!
+        /// chunk can only be a square, meaning : width = height
+        /// </summary>
+        /// <param name="chunkSize">Size of the chunk in your grid</param>
+        /// <param name="chunkCoord">(x, y) position of the chunk in your map</param>
+        /// <param name="cellInChunkCoord">(x, y) position of the cell Inside the chunk</param>
+        /// <returns></returns>
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static int2 GetGridCellCoordFromChunkCellCoord(this in int2 cellInChunkCoord,  int chunkSize, in int2 chunkCoord)
+        {
+            return (chunkCoord * chunkSize) + cellInChunkCoord;
+        }
+        
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static int GetGridCellIndexFromChunkCellIndex(this int chunkIndex, in GridData gridData, int cellIndexInsideChunk)
+        {
+            int2 chunkCoord = chunkIndex.GetXY2(gridData.NumChunkXY.x);
+            int2 cellCoordInChunk = cellIndexInsideChunk.GetXY2(gridData.ChunkSize);
+            int2 cellGridCoord = cellCoordInChunk.GetGridCellCoordFromChunkCellCoord(gridData.ChunkSize, chunkCoord);
+            return (cellGridCoord.y * gridData.MapSize.x) + cellGridCoord.x;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)] //May be useful if we dont want to create a gridData
+        public static int GetGridCellIndexFromChunkCellIndex(in int2 mapSize, in int2 numChunkXY, int chunkSize, int chunkIndex, int cellIndexInsideChunk)
+        {
+            int2 chunkCoord = chunkIndex.GetXY2(numChunkXY.x);
+            int2 cellCoordInChunk = cellIndexInsideChunk.GetXY2(chunkSize);
+            int2 cellGridCoord = cellCoordInChunk.GetGridCellCoordFromChunkCellCoord(chunkSize, chunkCoord);
+            return (cellGridCoord.y * mapSize.x) + cellGridCoord.x;
+        }
+        
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static int GetChunkEnterPoint(ChunkEnterPoint point, in GridData gridData) =>
+        point switch
+        {
+            ChunkEnterPoint.Left      => (int)floor((gridData.ChunkSize - 1) / 2f) * gridData.ChunkSize,
+            ChunkEnterPoint.Right     => (int)floor((gridData.ChunkSize - 1) / 2f) * gridData.ChunkSize + (int)floor(gridData.ChunkSize - 1),
+            ChunkEnterPoint.Top       => (int)floor(gridData.ChunkSize - 1) * gridData.ChunkSize + (int)floor((gridData.ChunkSize - 1) / 2f),
+            ChunkEnterPoint.Bottom    => (int)floor((gridData.ChunkSize - 1) / 2f),
+            _                         => -1,
+        };
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static int GetCellIndexFromChunkEnterPoint(this int chunkIndex, ChunkEnterPoint point, in GridData gridData)
+        {
+            //int chunkEnterPointIndex = GetChunkEnterPoint(point, gridData);
+            return chunkIndex.GetGridCellIndexFromChunkCellIndex(gridData, GetChunkEnterPoint(point, gridData));
+        }
+
+        public static Dictionary<int, int[]> GetCellIndicesOrderedByChunk(int[] unorderedIndices, in GridData gridData)
+        {
+            int totalChunk = gridData.NumChunkXY.x * gridData.NumChunkXY.y;
+            
+            using NativeArray<int> unOrderedIndices = unorderedIndices.ToNativeArray(); 
+            using NativeArray<int> orderedIndices = new (unorderedIndices.Length, Allocator.TempJob, NativeArrayOptions.UninitializedMemory);
+            JOrderArrayByChunkIndex job = new JOrderArrayByChunkIndex
+            {
+                MapSizeX = gridData.MapSize.x,
+                ChunkSize = gridData.ChunkSize,
+                NumChunkX = gridData.NumChunkXY.x,
+                UnsortedArray = unOrderedIndices,
+                SortedArray = orderedIndices
+            };
+            job.ScheduleParallel(totalChunk, JobsUtility.JobWorkerCount - 1, default).Complete();
+            
+            Dictionary<int, int[]> chunkCells = new Dictionary<int, int[]>(totalChunk);
+            int totalChunkCell = (gridData.ChunkSize * gridData.ChunkSize);
+            //int offsetChunk = startOffset - 1;
+            for (int i = 0; i < totalChunk; i++)
+            {
+                int start = i * totalChunkCell;
+                chunkCells.Add(i, orderedIndices.GetSubArray(start, totalChunkCell).ToArray());
+            }
+            return chunkCells;
+        }
+        
+        
+    }
+    
+    //[BurstCompile(CompileSynchronously = true)]
+    public struct JOrderArrayByChunkIndex : IJobFor
+    {
+        [ReadOnly] public int MapSizeX;
+        [ReadOnly] public int ChunkSize;
+        [ReadOnly] public int NumChunkX;
+        
+        [ReadOnly] public NativeArray<int> UnsortedArray;
+        
+        [NativeDisableParallelForRestriction]
+        [WriteOnly] public NativeArray<int> SortedArray;
+        public void Execute(int index)
+        {
+            int chunkPosY = (int)floor(index / (float)NumChunkX);
+            int chunkPosX = index - (chunkPosY * NumChunkX);
+            
+            for (int z = 0; z < ChunkSize; z++) // z axis
+            {
+                int startY = (chunkPosY * MapSizeX) * ChunkSize; //*chunksPoint-1 because of the height of the chunk; -1 because we need the vertice before
+                int startX = chunkPosX * ChunkSize;
+                int startYChunk = z * MapSizeX; // y point relative to chunk (NOT CHUNK to MAP)
+                int start = startY + startX + startYChunk;
+
+                for (int x = 0; x < ChunkSize; x++) // x axis
+                {
+                    int sliceIndex = mad(z, ChunkSize, x) + (index * (ChunkSize * ChunkSize));
+                    SortedArray[sliceIndex] = UnsortedArray[start + x];
+                }
+            }
+        }
+    }
+}
