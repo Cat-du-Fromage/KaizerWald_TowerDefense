@@ -29,6 +29,7 @@ namespace KWUtils
         
         //GENERIC ARRAY
         public static T[] Concat<T>(this T[] x, T[] y)
+        where T : struct
         {
             int oldLen = x.Length;
             Array.Resize<T>(ref x, x.Length + y.Length);
@@ -37,6 +38,7 @@ namespace KWUtils
         }
         
         public static T[] GetFromMerge<T>(this T[] x, T[] y, T[] z)
+        where T : struct
         {
             int oldLen = x.Length;
             Array.Copy(y, 0, x, 0, y.Length);
@@ -45,7 +47,7 @@ namespace KWUtils
         }
         
         public static NativeArray<T> ToNativeArray<T>(this T[] array, Allocator a = Allocator.TempJob , NativeArrayOptions nao = NativeArrayOptions.UninitializedMemory) 
-            where T : struct
+        where T : struct
         {
             NativeArray<T> nA = new NativeArray<T>(array.Length, a, nao);
             nA.CopyFrom(array);
@@ -76,7 +78,7 @@ namespace KWUtils
         }
         
         public static NativeArray<T> ToNativeArray<T>(this HashSet<T> hashSet)
-            where T : unmanaged
+        where T : unmanaged
         {
             T[] arr = new T[hashSet.Count];
             hashSet.CopyTo(arr);
@@ -86,7 +88,7 @@ namespace KWUtils
         }
         
         public static T[] RemoveDuplicates<T>(this T[] s) 
-            where T : struct
+        where T : struct
         {
             HashSet<T> set = new HashSet<T>(s);
             T[] result = new T[set.Count];
@@ -95,8 +97,8 @@ namespace KWUtils
         }
         
         public static U[] ReinterpretArray<T,U>(this T[] array) 
-            where T : struct //from
-            where U : struct //to
+        where T : struct //from
+        where U : struct //to
         {
             using NativeArray<T> temp = new NativeArray<T>(array.Length, Allocator.Temp, NativeArrayOptions.UninitializedMemory);
             temp.CopyFrom(array);
@@ -104,7 +106,7 @@ namespace KWUtils
         }
         
         public static bool IsNullOrEmpty<T>(this T[] array)
-            where T : struct
+        where T : struct
         {
             return array == null || array.Length == 0;
         }

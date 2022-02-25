@@ -44,7 +44,10 @@ namespace TowerDefense
         //Bullet Notify => Enemy : remove(EnemyComponent)
         public void BulletNotification(EnemyComponent enemy)
         {
-            Enemy.EnemyKilled(enemy);
+            if (enemy != null)
+            {
+                Enemy.EnemyKilled(enemy.UniqueID);
+            }
         }
         
         //Turret Notify => Bullet : Add/Remove

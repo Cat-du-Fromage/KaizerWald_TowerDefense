@@ -19,7 +19,9 @@ namespace TowerDefense
             for (int i = 0; i < bullets.Count; i++)
             {
                 if (!bullets[i].Hit) continue;
+                
                 this.Notify(bullets[i].enemyHit);
+                bullets[i].ResetValues();
             }
         }
 

@@ -41,18 +41,15 @@ namespace TowerDefense
             {
                 withTargetTurrets[i].GetAim();
             }
-        }
-//CAREFULE! MUST INTRODUCE ANTICIPATION
-//When enemies are faster, the physics is too slow to shoot in time!
-        private void FixedUpdate()
-        {
-            if (withTargetTurrets.Count == 0) return;
+            
             for (int i = 0; i < withTargetTurrets.Count; i++)
             {
                 withTargetTurrets[i].ShootAt(shootClip);
             }
         }
-
+        
+//CAREFULE! MUST INTRODUCE ANTICIPATION
+//When enemies are faster, the physics is too slow to shoot in time!
         private void UpdateActiveTurret()
         {
             if (withTargetTurrets.Count == 0) return;
@@ -76,8 +73,6 @@ namespace TowerDefense
                 noTargetTurrets.Remove(noTargetTurrets[i]);
             }
         }
-        
-        
 
         public void CreateTurret(GameObject turretPrefab, Vector3 position, Quaternion rotation)
         {

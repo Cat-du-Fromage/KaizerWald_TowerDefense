@@ -19,7 +19,7 @@ namespace TowerDefense
     /// NEED TO KNOW which cell is directly near an unwalkable chunk
     /// So we can set a value of 2 for the costfield
     /// </summary>
-    //[BurstCompile(CompileSynchronously = true)]
+    [BurstCompile]
     public struct JCostField : IJobFor
     {
         [ReadOnly] public int2 MapSize;
@@ -124,7 +124,7 @@ namespace TowerDefense
         }
     }
     
-    //[BurstCompile(CompileSynchronously = true)]
+    [BurstCompile]
     public struct JIntegrationField : IJob
     {
         [ReadOnly] public int DestinationCellIndex;
@@ -178,7 +178,7 @@ namespace TowerDefense
         }
     }
     
-    //[BurstCompile(CompileSynchronously = true)]
+    [BurstCompile]
     public struct JBestDirection : IJobFor
     {
         [ReadOnly] public int MapSizeX;

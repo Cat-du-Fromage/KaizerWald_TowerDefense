@@ -38,6 +38,12 @@ namespace TowerDefense
             transform.position = initialPosition;
         }
 
+        public void ResetValues()
+        {
+            Hit = false;
+            enemyHit = null;
+        }
+        
         private void OnTriggerEnter(Collider other)
         {
             if (other.gameObject.layer is 10 or 8)
@@ -47,7 +53,5 @@ namespace TowerDefense
                 Fade();
             }
         }
-
-        
     }
 }

@@ -21,20 +21,20 @@ using UnityEngine.Rendering.VirtualTexturing;
 
 namespace TowerDefense
 {
-    public class PathfindingGrid : MonoBehaviour
+    public partial class PathfindingGrid : MonoBehaviour
     {
-        public bool EnableDebugger;
         [SerializeField] private int SpawningChunkIndex;
         [SerializeField] private TerrainData terrainData;
         [SerializeField] private int ChunkSize = 16;
 
-        private Dictionary<int, Vector3[]> directionGrid;
+        private Vector3[] directionsGrid;
+        private Dictionary<int, Vector3[]> directionChunkGrid;
 
         private int2 gridSize;
         private int2 numChunkXY;
-        
-        private int totalChunk;
 
+        //Path Data
+        //=====================
         private int[] walkableChunk = new[] { 1, 9, 10, 11, 19, 27, 33, 34, 35, 41, 49, 50, 51, 52, 53, 54 };
 
         private Road[] walkableRoad = new[]
@@ -46,45 +46,12 @@ namespace TowerDefense
         };
         
         private int destinationChunk = 54;
-        
         private int destinationGridCell = -1;
         
-//======================================================================================================================
-//DEBUG PURPOSES
-//======================================================================================================================
-        private Dictionary<int, int[]> grid;//DEBUG ONLY
-        private Dictionary<int, byte[]> costGrid; //DEBUG ONLY
-        
-        private GridData debugGridData;
-        
-        public byte[] CostField; 
-        [SerializeField] private GameObject walkableChunkPrefab;
-        private GameObject[] walkableChunkObj;
-#if UNITY_EDITOR   
-        //SPAWNING POINT
-        [SerializeField] private GameObject SpawnArea;
-        public bool ShowSpawnChunk;
-        
-        [HideInInspector]
-        [SerializeField]private Vector3[] chunksPosition;
-#endif
-//======================================================================================================================
-//DEBUG PURPOSES
-//======================================================================================================================
-
-
-        private void OnValidate()
-        {
-            InitializeFields();
-            if (chunksPosition.Length == 0 || chunksPosition.Length != totalChunk)
-            {
-                chunksPosition = new Vector3[totalChunk];
-            }
-            InitializeChunkGrid();
-            SpawningChunkIndex = Mathf.Clamp(SpawningChunkIndex, 0, totalChunk - 1);
-            MoveSpawnArea();
-            ShowHideSpawnArea(ShowSpawnChunk);
-        }
+        //Accessors
+        //=====================
+        public int2 GridSize => gridSize;
+        public Vector3[] DirectionsGrid => directionsGrid;
         
         private void Awake()
         {
@@ -93,8 +60,6 @@ namespace TowerDefense
 
         private void Start()
         {
-            //gridData = new GridData(ChunkSize, gridSize);
-            
             //DEBUG
             walkableChunkObj = new GameObject[walkableChunk.Length];
             ShowWalkableArea();
@@ -107,7 +72,6 @@ namespace TowerDefense
             gridSize = (int2)terrainData.size.XZ();
             ChunkSize = ceilpow2(ChunkSize);
             numChunkXY = (int2)(terrainData.size.XZ() / new int2(ChunkSize));
-            totalChunk = numChunkXY.x * numChunkXY.y;
         }
         
         //Spawn Point
@@ -145,152 +109,12 @@ namespace TowerDefense
             destinationGridCell = destinationChunk.GetCellIndexFromChunkEnterPoint(ChunkEnterPoint.Right, gridData);
             
             FlowField flowField = new FlowField(gridSize, ChunkSize);
-            directionGrid = KWChunk.GetCellDirectionOrderedByChunk(flowField.GetFlowField(destinationGridCell, walkableChunk, walkableRoad), gridData);
+            directionsGrid = flowField.GetFlowField(destinationGridCell, walkableChunk, walkableRoad);
+            directionChunkGrid = KWChunk.GetCellDirectionOrderedByChunk(directionsGrid, gridData);
             //grid = KWChunk.GetCellIndicesOrderedByChunk(flowField.BestCostField, gridData);
             //CostField = flowField.CostField;
 
             //costGrid = KWChunk.GetCellCostOrderedByChunk(CostField, gridData);
         }
-
-
-
-//======================================================================================================================
-//DEBUG PURPOSES
-//======================================================================================================================
-#if UNITY_EDITOR
-        private Vector3 GetPosition(int2 xyPos) => new Vector3((xyPos.x * ChunkSize) + ChunkSize / 2f, 0.05f, (xyPos.y * ChunkSize) + ChunkSize / 2f);
-        private void ShowWalkableArea()
-        {
-            for (int i = 0; i < walkableChunk.Length; i++)
-            {
-                int2 xyPos = walkableChunk[i].GetXY2(numChunkXY.x);
-                Vector3 position = GetPosition(xyPos);
-                walkableChunkObj[i] = Instantiate(walkableChunkPrefab, position, Quaternion.identity);
-                walkableChunkObj[i].name = $"Chunk_Id_{walkableChunk[i]}_Coord_({xyPos.x},{xyPos.y})";
-            }
-            
-        }
-
-        /// <summary>
-        /// Move the spawning area (Green Square)
-        /// </summary>
-        private void MoveSpawnArea() => SpawnArea.transform.position = GetPosition(SpawningChunkIndex.GetXY2(numChunkXY.x));
-        private void ShowHideSpawnArea(bool state) => SpawnArea.GetComponent<MeshRenderer>().enabled = state;
-
-
-
-        [ExecuteInEditMode]
-        private void OnDrawGizmos()
-        {
-            if (!EnableDebugger) return;
-            debugGridData = new GridData(ChunkSize, gridSize);
-            if (chunksPosition.Length == 0)
-            {
-                chunksPosition = new Vector3[totalChunk];
-                InitializeChunkGrid();
-            }
-            
-            GUIStyle style = new GUIStyle(GUI.skin.label)
-            {
-                alignment = TextAnchor.MiddleCenter
-            };
-
-            //DisplayChunkGrid(style);
-
-            //CostDebug(style, true);
-            //BestCostDebug(style);
-
-            FlowFieldDebug(true);
-
-            //DisplayDestination();
-        }
-
-        private void DisplayChunkGrid(GUIStyle style)
-        {
-            Vector3 cubeBounds = new Vector3(ChunkSize, 0, ChunkSize);
-            for (int i = 0; i < totalChunk; i++)
-            {
-                Handles.DrawWireCube(chunksPosition[i], cubeBounds);
-                Handles.Label(chunksPosition[i] + new Vector3(-(ChunkSize/4f),0,ChunkSize), i.GetXY2(numChunkXY.x).ToString(), style);
-            }
-        }
-
-        private void DisplayDestination()
-        {
-            if (destinationGridCell == -1) return;
-            int2 xy = destinationGridCell.GetXY2(gridSize.x);
-            Vector3 destPos = new Vector3(xy.x + 0.5f, 0, xy.y + 0.5f);
-            Handles.DrawWireCube(destPos, Vector3.one);
-        }
-        
-        private void InitializeChunkGrid()
-        {
-            int halfChunk = ChunkSize/2;
-            for (int i = 0; i < totalChunk; i++)
-            {
-                int2 chunkCoord = i.GetXY2(numChunkXY.x);
-                
-                float chunkX = (chunkCoord.x * ChunkSize) + halfChunk;
-                float chunkY = (chunkCoord.y * ChunkSize) + halfChunk;
-
-                chunksPosition[i] = new Vector3(chunkX, 0, chunkY);
-            }
-        }
-
-        private void BestCostDebug(GUIStyle style, bool walkableOnly)
-        {
-            if (grid == null) return;
-            for (int i = 0; i < 2; i++)
-            {
-                int chunkIndex = walkableOnly ? walkableChunk[i] : i;
-                for (int j = 0; j < grid[chunkIndex].Length; j++)
-                {
-                    int realIndex = chunkIndex.GetGridCellIndexFromChunkCellIndex(debugGridData, j);
-                        
-                    int2 coord = realIndex.GetXY2(gridSize.x);
-                    Vector3 cellPos = new Vector3(coord.x + 0.5f, 0, coord.y + 0.5f);
-                    //Gizmos.DrawWireCube(cellPos, Vector3.one);
-                    Handles.Label(cellPos, grid[chunkIndex][j].ToString(), style);
-                }
-            }
-        }
-        
-        private void CostDebug(GUIStyle style, bool walkableOnly)
-        {
-            if (costGrid == null) return;
-            for (int i = 4; i < 9; i++)
-            {
-                int chunkIndex = walkableOnly ? walkableChunk[i] : i;
-                for (int j = 0; j < costGrid[chunkIndex].Length; j++)
-                {
-                    int realIndex = chunkIndex.GetGridCellIndexFromChunkCellIndex(debugGridData, j);
-                        
-                    int2 coord = realIndex.GetXY2(gridSize.x);
-                    Vector3 cellPos = new Vector3(coord.x + 0.5f, 0, coord.y + 0.5f);
-                    Handles.Label(cellPos, costGrid[chunkIndex][j].ToString(), style);
-                }
-            }
-        }
-
-        private void FlowFieldDebug(bool walkableOnly)
-        {
-            if (directionGrid == null) return;
-            for (int i = 0; i < 4; i++)
-            {
-                int chunkIndex = walkableOnly ? walkableChunk[i] : i;
-                for (int j = 0; j < directionGrid[chunkIndex].Length; j++)
-                {
-                    int realIndex = chunkIndex.GetGridCellIndexFromChunkCellIndex(debugGridData, j);
-                        
-                    int2 coord = realIndex.GetXY2(gridSize.x);
-                    Vector3 cellPos = new Vector3(coord.x + 0.5f, 0, coord.y + 0.5f);
-                    KWUtils.Debug.DrawArrow.ForGizmo(cellPos, directionGrid[chunkIndex][j]/2f);
-                }
-            }
-
-        }
-        
-#endif
-        
     }
 }

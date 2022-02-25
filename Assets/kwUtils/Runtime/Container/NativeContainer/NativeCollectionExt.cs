@@ -14,19 +14,19 @@ namespace KWUtils
 {
     public static class NativeCollectionExt
     {
-        public static NativeArray<T> AllocNtvAry<T>(in int size, in Allocator a = Allocator.TempJob) 
+        public static NativeArray<T> AllocNtvAry<T>(int size, Allocator a = Allocator.TempJob) 
         where T : struct
         {
             return new NativeArray<T>(size, a, NativeArrayOptions.UninitializedMemory);
         }
         
-        public static NativeArray<T> AllocNtvAryOpt<T>(in int size, in NativeArrayOptions nao = NativeArrayOptions.UninitializedMemory) 
+        public static NativeArray<T> AllocNtvAryOpt<T>(int size, NativeArrayOptions nao = NativeArrayOptions.UninitializedMemory) 
         where T : struct
         {
             return new NativeArray<T>(size, Allocator.TempJob, nao);
         }
 
-        public static NativeArray<T> AllocFillNtvAry<T>(in int size, in T val) 
+        public static NativeArray<T> AllocFillNtvAry<T>(int size, T val) 
         where T : struct
         {
             NativeArray<T> a = new NativeArray<T>(size, Allocator.TempJob, NativeArrayOptions.UninitializedMemory);
@@ -74,6 +74,39 @@ namespace KWUtils
         {
             if (flag) { list.AddNoResize(obj); }
         }
+        
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static unsafe void NativeAddRange<T>(this List<T> list, NativeArray<T> dynamicBuffer)
+            where T : struct
+        {
+            NativeAddRange(list, dynamicBuffer.GetUnsafePtr(), dynamicBuffer.Length);
+        }
+     
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static unsafe void NativeAddRange<T>(List<T> list, void* arrayBuffer, int length)
+            where T : struct
+        {
+            int index = list.Count;
+            int newLength = index + length;
+     
+            // Resize our list if we require
+            if (list.Capacity < newLength)
+            {
+                list.Capacity = newLength;
+            }
+     
+            T[] items = NoAllocHelpers.ExtractArrayFromListT(list);
+            int size = UnsafeUtility.SizeOf<T>();
+     
+            // Get the pointer to the end of the list
+            IntPtr bufferStart = (IntPtr) UnsafeUtility.AddressOf(ref items[0]);
+            byte* buffer = (byte*)(bufferStart + (size * index));
+     
+            UnsafeUtility.MemCpy(buffer, arrayBuffer, length * (long) size);
+     
+            NoAllocHelpers.ResizeList(list, newLength);
+        }
+
 
     }
 }
