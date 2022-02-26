@@ -83,9 +83,9 @@ namespace TowerDefense
                 if (config == Road.None) return;
                 
                 int value = CostField[index];
-                int oddOffset = ChunkSize & 1;
+                int oddOffset = ChunkSize & 1; // use to offset in case chunkSize is Odd
                 float halfChunk = ChunkSize / 2f;
-
+                
                 if (config is Road.BotRight or Road.TopLeft)
                 {
                     cellChunkCoord = abs(cellChunkCoord - new int2(ChunkSize - 1, 0));
@@ -101,9 +101,9 @@ namespace TowerDefense
                     Road.TopRight   => (int)ceil(cmax(cellChunkCoord) - ChunkSize + halfChunk),
                     _               => value
                 };
-                
                 value += value >= 0 ? 1 : 0; //readjust this on the Half Top (see Excel Graph)
                 value = value < 0 ? abs(value) + oddOffset : value; //negative Value are made positiv and if ChunkSize is Odd => + 1 (see Excel Graph)
+                
                 CostField[index] = (byte)value;
             }
         }

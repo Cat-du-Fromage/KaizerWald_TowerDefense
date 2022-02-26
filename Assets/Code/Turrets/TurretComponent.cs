@@ -20,7 +20,8 @@ namespace TowerDefense
     public class TurretComponent : MonoBehaviour
     {
         [SerializeField] private TurretType Turret;
-
+        public TurretType GetTurretData => Turret;
+        
         //Rotation
         private Quaternion BaseRotation;
 
@@ -34,6 +35,7 @@ namespace TowerDefense
         private Collider[] colliders;
         
         //Shooting variables
+        private float currentReload;
         private float randomOffset;
         private Vector3 shootDirection;
 
@@ -47,11 +49,9 @@ namespace TowerDefense
         private Vector3 GetBulletPosition => BulletPositionInTurret.position;
 
         //Convenient helper method
-        private bool IsCurrentTargetInRange => currentTarget.position.DistanceTo(TurretPosition) <= Turret.Range;
-        private Quaternion TurretRotation => turretTransform.rotation;
-        private Vector3 TurretPosition => turretTransform.position;
-        private Vector3 TargetPosition => currentTarget.position;
-        
+        private bool IsCurrentTargetInRange => currentTarget.position.DistanceTo(turretTransform.position) <= Turret.Range;
+
+        //Keep this though
         private Vector3 TargetShootPosition => currentTarget.position + Vector3.up * 0.75f;
 
         private CancellationTokenSource soundToken;
@@ -63,8 +63,8 @@ namespace TowerDefense
         {
             if(MuzzleFlash != null) MuzzleFlash.Stop(true);
             
-            shootSound = GetComponent<AudioSource>();
-            
+            shootSound = gameObject.GetOrAddComponent<AudioSource>();
+
             turretTransform = transform;
             BaseRotation = turretTransform.rotation;
             
@@ -83,6 +83,7 @@ namespace TowerDefense
         }
 
         //Update For turrets with no Targets
+        //MUST introduce a system where the check is only made if enemies are in the chunk the turret is targeting
         public bool NoTargetUpdate()
         {
             IsPlayingSound = shootSound.isPlaying;
@@ -112,7 +113,7 @@ namespace TowerDefense
                 return true;
             }
             
-            if (!IsCurrentTargetInRange && currentTarget != null)
+            if (!IsCurrentTargetInRange && currentTarget != null) //ADD Check if target is behind!
             {
                 DisableAudioSource(soundToken.Token).Forget();
                 currentTarget = null;
@@ -138,21 +139,21 @@ namespace TowerDefense
             if (currentTarget == null || isReloading) return;
             
             shootSound.PlayOneShot(clip, randomOffset);
-            bullet.Shoot(shootDirection);
+            bullet.Shoot(shootDirection); //IS THIS CORRECT?
             
             if (MuzzleFlash != null)
             {
                 MuzzleFlash.Play(true);
             }
             
-            Turret.CurrentReload = randomOffset + Turret.ReloadTime;
+            currentReload = randomOffset + Turret.ReloadTime;
             Reload().Forget();
         }
         
         private async UniTaskVoid Reload()
         {
             isReloading = true;
-            await UniTask.Delay(TimeSpan.FromSeconds(Turret.CurrentReload));
+            await UniTask.Delay(TimeSpan.FromSeconds(currentReload));
             bullet.Fade();
             isReloading = false;
         }
@@ -169,6 +170,7 @@ namespace TowerDefense
             {
                 await UniTask.Yield(token);
             }
+            shootSound.enabled = false;
         }
         
         public BulletComponent InitializeBullet(GameObject bulletPrefab)
@@ -180,6 +182,15 @@ namespace TowerDefense
         //==============================================================================================================
         //SEARCH TARGET
         //==============================================================================================================
+
+        //Use this when refactoring shooting!
+        private bool CheckCone(Vector3 candidate)
+        {
+            float visionAngle = 45;
+            float cosAngle = Vector3.Dot((candidate - turretTransform.position).normalized, turretTransform.forward);
+            float angle = Mathf.Acos(cosAngle) * Mathf.Rad2Deg;
+            return angle < visionAngle;
+        }
         
         private bool CheckIfValidTarget()
         {
@@ -189,7 +200,7 @@ namespace TowerDefense
             {
                 if (colliders[i] == null) continue;
                 
-                Vector3 toOther = (colliders[i].transform.position - TurretPosition);
+                Vector3 toOther = (colliders[i].transform.position - turretTransform.position);
                 
                 if (!(dot(forward, toOther) > 0)) continue;
                 currentTarget = colliders[i].transform;
@@ -202,13 +213,13 @@ namespace TowerDefense
         //==============================================================================================================
         //ROTATION BEHAVIOUR
         //==============================================================================================================
-        private void ToBaseRotation() => turretTransform.rotation = Quaternion.Lerp(TurretRotation, BaseRotation, Turret.RotationSpeed * Time.deltaTime);
+        private void ToBaseRotation() => turretTransform.rotation = Quaternion.Lerp(turretTransform.rotation, BaseRotation, Turret.RotationSpeed * Time.deltaTime);
         
         private void RotateTowardsTarget()
         {
-            Vector3 direction = (TargetPosition - TurretPosition).Flat();
+            Vector3 direction = (currentTarget.position - turretTransform.position).Flat();
             Quaternion rotation = Quaternion.LookRotation(direction) * Turret.OffsetRotation;
-            turretTransform.rotation = Quaternion.Lerp(TurretRotation, rotation, Turret.RotationSpeed * Time.deltaTime);
+            turretTransform.rotation = Quaternion.Lerp(turretTransform.rotation, rotation, Turret.RotationSpeed * Time.deltaTime);
         }
         
 #if UNITY_EDITOR

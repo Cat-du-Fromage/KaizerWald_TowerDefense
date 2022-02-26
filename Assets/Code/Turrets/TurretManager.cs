@@ -15,9 +15,6 @@ namespace TowerDefense
         //Temporary
         [SerializeField] private GameObject BulletPrefab;
         
-        //private List<TurretComponent> turrets = new List<TurretComponent>(2);
-
-        //TEST
         public List<TurretComponent> noTargetTurrets;
         public List<TurretComponent> withTargetTurrets;
         
@@ -30,18 +27,18 @@ namespace TowerDefense
         // Update is called once per frame
         private void Update()
         {
+            //Check changing states of the turrets
             UpdateInactiveTurret();
             UpdateActiveTurret();
+
+            //Attack Behaviour
+            AimTurrets();
         }
 
         private void LateUpdate()
         {
             if (withTargetTurrets.Count == 0) return;
-            for (int i = 0; i < withTargetTurrets.Count; i++)
-            {
-                withTargetTurrets[i].GetAim();
-            }
-            
+
             for (int i = 0; i < withTargetTurrets.Count; i++)
             {
                 withTargetTurrets[i].ShootAt(shootClip);
@@ -81,11 +78,20 @@ namespace TowerDefense
             TurretComponent turretComponent = turretObject.GetComponent<TurretComponent>();
 
             //Initializations triggered
-            BulletComponent newBullet = turretComponent.InitializeBullet(BulletPrefab);
+            BulletComponent newBullet = turretComponent.InitializeBullet(turretComponent.GetTurretData.BulletPrefab);
             this.Notify(newBullet, EventType.Register);
             
             //Registration
             noTargetTurrets.Add(turretComponent);
+        }
+
+        public void AimTurrets()
+        {
+            if (withTargetTurrets.Count == 0) return;
+            for (int i = 0; i < withTargetTurrets.Count; i++)
+            {
+                withTargetTurrets[i].GetAim();
+            }
         }
     }
 }

@@ -53,5 +53,11 @@ namespace KWUtils
         {
             return gameObject.GetComponentInChildren<T1>().gameObject.GetComponentInChildren<T2>();
         }
+
+        public static T GetOrAddComponent<T>(this GameObject gameObject)
+        where T : Component
+        {
+            return gameObject.TryGetComponent(out T component) ? component : gameObject.AddComponent<T>();
+        }
     }
 }

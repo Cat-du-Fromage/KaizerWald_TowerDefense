@@ -84,7 +84,6 @@ namespace KWUtils
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static int GetCellIndexFromChunkEnterPoint(this int chunkIndex, ChunkEnterPoint point, in GridData gridData)
         {
-            //int chunkEnterPointIndex = GetChunkEnterPoint(point, gridData);
             return chunkIndex.GetGridCellIndexFromChunkCellIndex(gridData, GetChunkEnterPoint(point, gridData));
         }
 

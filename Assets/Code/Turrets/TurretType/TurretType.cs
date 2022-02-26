@@ -14,15 +14,9 @@ namespace TowerDefense
         public float Range = 4;
         public float RotationSpeed = 2f;
         public float ReloadTime = 1f;
-        public float CurrentReload = 1f;
         public float OffsetYRotation;
-        public Vector3 ForwardAxis;
+        public Vector3 ForwardAxis {get; private set; }
         public Quaternion OffsetRotation;
-
-        private void Awake()
-        {
-            Debug.Log("AWAKE SO");
-        }
 
         public void SetForwardAxis()
         {

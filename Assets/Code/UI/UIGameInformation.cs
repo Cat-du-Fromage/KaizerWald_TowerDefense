@@ -73,6 +73,6 @@ namespace TowerDefense
         
         private void OnHealthChange(float healthValue) => HealthBarText.text = $"{(int)healthValue} / {MaxHealth}";
 
-        public void TakeDamage() => PlayerHealth.value -= 1;
+        public void TakeDamage() => PlayerHealth.value -= PlayerHealth.value > 0 ? 1 : 0;
     }
 }

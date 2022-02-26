@@ -23,6 +23,7 @@ namespace TowerDefense
         private GameObject currentTurret;
         private Transform currentBlueprint;
         
+        //Need To Make it's own separate grid!
         private int2 terrainWidthHeight;
         private Vector3[] snapPositions;
         

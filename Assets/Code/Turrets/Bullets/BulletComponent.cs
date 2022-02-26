@@ -7,8 +7,13 @@ namespace TowerDefense
 {
     public class BulletComponent : MonoBehaviour
     {
+        [SerializeField] private float muzzleVelocity = 10f;
+        private float velocity = 5f;
+        
+        private bool isShoot;
         public bool Hit;
         
+        //Stored Values
         private Vector3 initialPosition;
         private Rigidbody bulletRigidBody;
         private TrailRenderer trail;
@@ -22,36 +27,56 @@ namespace TowerDefense
             trail = GetComponent<TrailRenderer>();
         }
 
-        public void Shoot(Vector3 direction)
+        public void CheckFadeDistance()
         {
-            trail.emitting = true;
-            
-            bulletRigidBody.velocity = direction * 1;
-            bulletRigidBody.AddForce(bulletRigidBody.velocity * 10f, ForceMode.Impulse);
+            if ((transform.position - initialPosition).sqrMagnitude > 1024f)
+            {
+                Fade();
+            }
         }
-        
+
         public void Fade()
         {
+            bulletRigidBody.useGravity = false;
             trail.emitting = false;
             
             bulletRigidBody.velocity = Vector3.zero;
             transform.position = initialPosition;
+            ResetHitValues();
         }
 
-        public void ResetValues()
+        public void ResetHitValues()
         {
             Hit = false;
             enemyHit = null;
         }
+
+        public void UpdateVelocity() => bulletRigidBody.velocity /= 2f;
+
+
+
+        //==============================================================================================================
+        //EXTERNAL CALL
+        //==============================================================================================================
         
-        private void OnTriggerEnter(Collider other)
+        public void Shoot(Vector3 direction)
         {
-            if (other.gameObject.layer is 10 or 8)
-            {
-                Hit = true;
-                other.TryGetComponent(out enemyHit);
-                Fade();
-            }
+            isShoot = true;
+            
+            trail.emitting = true;
+            
+            bulletRigidBody.velocity = direction * velocity;
+
+            bulletRigidBody.useGravity = true;
+            
+            bulletRigidBody.AddForce(bulletRigidBody.velocity * muzzleVelocity, ForceMode.Impulse);
+        }
+        
+
+        private void OnCollisionEnter(Collision other)
+        {
+            Hit = other.gameObject.layer is 10 or 8;
+            other.transform.TryGetComponent(out enemyHit);
         }
     }
 }
