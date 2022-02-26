@@ -37,7 +37,21 @@ namespace KWUtils
         where T1 : Component
         where T2 : Component
         {
-            return gameObject.GetComponentInChildren(typeof(T1)).transform.GetComponent<T2>();
+            return gameObject.GetComponentInChildren<T1>().gameObject.GetComponent<T2>();
+        }
+        
+        public static T2 GetComponentWithTag<T1,T2>(this GameObject gameObject) 
+        where T1 : Component
+        where T2 : Component
+        {
+            return gameObject.GetComponentInChildren<T1>().gameObject.GetComponent<T2>();
+        }
+        
+        public static T2 GetWithTagComponentInChildren<T1,T2>(this GameObject gameObject) 
+        where T1 : Component
+        where T2 : Component
+        {
+            return gameObject.GetComponentInChildren<T1>().gameObject.GetComponentInChildren<T2>();
         }
     }
 }

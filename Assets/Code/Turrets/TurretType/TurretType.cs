@@ -10,6 +10,7 @@ namespace TowerDefense
     [CreateAssetMenu(fileName = "New Turret", menuName = "Turret")]
     public class TurretType : ScriptableObject
     {
+        public GameObject BulletPrefab;
         public float Range = 4;
         public float RotationSpeed = 2f;
         public float ReloadTime = 1f;
@@ -17,6 +18,11 @@ namespace TowerDefense
         public float OffsetYRotation;
         public Vector3 ForwardAxis;
         public Quaternion OffsetRotation;
+
+        private void Awake()
+        {
+            Debug.Log("AWAKE SO");
+        }
 
         public void SetForwardAxis()
         {

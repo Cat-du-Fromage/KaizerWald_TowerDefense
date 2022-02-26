@@ -28,12 +28,9 @@ namespace TowerDefense
         [SerializeField] private Transform EndPoint;
         [SerializeField] private GameObject EnemyPrefab;
 
-        private Vector3 spawn;
-
         //private Dictionary<int, EnemyComponent> enemiesData;
         private Dictionary<int, Transform> enemiesTransforms;
         private HashSet<int> enemiesToRemove;
-        
         private List<float3> enemiesPositions;
 
         //JOB SYSTEM
@@ -83,7 +80,7 @@ namespace TowerDefense
         {
             if (Keyboard.current.spaceKey.wasPressedThisFrame)
             {
-                CreateWave(1);
+                CreateWave(16);
             }
             if (enemiesTransforms.Count == 0) return;
             MoveAllEnemies();
@@ -94,16 +91,7 @@ namespace TowerDefense
             if (moveEnemiesJobHandle.IsCompleted && EnemiesMoved)
             {
                 moveEnemiesJobHandle.Complete();
-                enemiesPositions.Clear();
-                enemiesPositions.AddRange(nativeEnemiesPosition.ToArray());
-                /*
-                using var test1 = nativeEnemiesInGridCell.GetKeyArray(Allocator.Temp);
-                for (int i = 0; i < test1.Length; i++)
-                {
-                    int numValue = nativeEnemiesInGridCell.CountValuesForKey(test1[i]);
-                    Debug.Log($"Get value count for key:{test1[i]}; Numvalue : {numValue}");
-                }
-*/
+                ResetEnemyPositionCache();
                 DisposeAll();
 
                 EnemiesMoved = false;
@@ -113,27 +101,31 @@ namespace TowerDefense
             ClearEnemiesGone();
         }
 
+        private void ResetEnemyPositionCache()
+        {
+            enemiesPositions.Clear();
+            enemiesPositions.AddRange(nativeEnemiesPosition.ToArray());
+        }
+
         private void MoveAllEnemies()
         {
             int numEnemies = enemiesPositions.Count;
-            
-            //CAREFULL Need Manual Dispose
             nativeEnemiesPosition = enemiesPositions.ToNativeArray(Allocator.TempJob);
-            
             nativeFlowField = PathfindingGrid.DirectionsGrid.ToNativeArray().Reinterpret<float3>();
             nativeEnemiesDirection = AllocNtvAry<float3>(numEnemies);
+            
+            //CAREFULL MULTI HASH MAP SEEMS to be ... special
+            //null reference during a job?! like you a field in a job can be modified during runtime?
             //Gather Datas
-            nativeEnemiesID = enemiesTransforms.GetKeysArray().ToNativeArray();
-            nativeEnemiesInGridCell = new NativeMultiHashMap<int, int>(numEnemies, Allocator.TempJob);
+            //nativeEnemiesID = enemiesTransforms.GetKeysArray().ToNativeArray();
+            //nativeEnemiesInGridCell = new NativeMultiHashMap<int, int>(numEnemies, Allocator.TempJob);
             
             JEntityFlowFieldDirection directionsJob = new JEntityFlowFieldDirection
             {
-                EntitiesID = nativeEnemiesID,
                 GridSize = PathfindingGrid.GridSize,
                 EntitiesPosition = nativeEnemiesPosition,
                 FlowField = nativeFlowField,
                 Directions = nativeEnemiesDirection,
-                EnemiesInGridCell = nativeEnemiesInGridCell.AsParallelWriter()
             };
             directionJobHandle = directionsJob.ScheduleParallel(numEnemies, JobWorkerCount - 1,default);
 
@@ -143,7 +135,6 @@ namespace TowerDefense
                 EntityFlowFieldDirection = nativeEnemiesDirection,
                 EntitiesPosition = nativeEnemiesPosition
             };
-            
             moveEnemiesJobHandle = moveJob.Schedule(transformAccessArray, directionJobHandle);
             JobHandle.ScheduleBatchedJobs();
             EnemiesMoved = true;
@@ -154,18 +145,15 @@ namespace TowerDefense
             Vector3[] spawnPoints = PathfindingGrid.GetSpawnPointsForEntities(numToSpawn, 2);
             for (int i = 0; i < numToSpawn; i++)
             {
-                GameObject go = Instantiate(EnemyPrefab, spawnPoints[i], Quaternion.identity);
-                go.name = $"Agent_{i}";
-                EnemyComponent enemy = go.GetComponent<EnemyComponent>();
+                EnemyComponent enemy = Instantiate(EnemyPrefab, spawnPoints[i], Quaternion.identity).GetComponent<EnemyComponent>();
+                enemy.name = ($"Agent_{i}");
 
                 enemiesTransforms.Add(enemy.UniqueID, enemy.transform);
                 transformAccessArray.Add(enemy.transform);
                 enemiesPositions.Add(enemy.transform.position);
             }
         }
-        
-        
-        
+
         //ITS A MESS NEED A SERIOUS CONCEPTION NOW!
 
         private void ClearEnemiesGone()
@@ -192,9 +180,6 @@ namespace TowerDefense
         [ReadOnly] public int2 GridSize;
         
         [NativeDisableParallelForRestriction]
-        [ReadOnly] public NativeArray<int> EntitiesID;
-        
-        [NativeDisableParallelForRestriction]
         [ReadOnly] public NativeArray<float3> EntitiesPosition;
         
         [NativeDisableParallelForRestriction]
@@ -202,14 +187,10 @@ namespace TowerDefense
         
         [NativeDisableParallelForRestriction]
         [WriteOnly] public NativeArray<float3> Directions;
-        
-        [NativeDisableParallelForRestriction]
-        [WriteOnly] public NativeMultiHashMap<int, int>.ParallelWriter EnemiesInGridCell;
         public void Execute(int index)
         {
             int cellIndex = EntitiesPosition[index].xz.GetIndexFromPosition(GridSize, 1);
             Directions[index] = FlowField[cellIndex];
-            EnemiesInGridCell.Add(cellIndex, EntitiesID[index]);
         }
     }
     

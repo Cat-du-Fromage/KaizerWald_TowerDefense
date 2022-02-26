@@ -12,6 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5a883c526f5ffec43b3761e0e2487e6c, type: 3}
   m_Name: BaseTurret
   m_EditorClassIdentifier: 
+  BulletPrefab: {fileID: 4127270396997768243, guid: 1b71a03e02a0b7540976ad0485b7ae18,
+    type: 3}
   Range: 16
   RotationSpeed: 2
   ReloadTime: 2
@@ -19,4 +21,3 @@ MonoBehaviour:
   OffsetYRotation: 90
   ForwardAxis: {x: 0, y: 0, z: 1}
   OffsetRotation: {x: 0, y: 0.70710677, z: 0, w: 0.70710677}
-  CurrentRandom: 0.6069208

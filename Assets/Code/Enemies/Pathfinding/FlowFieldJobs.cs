@@ -37,11 +37,6 @@ namespace TowerDefense
             int chunkIndex = GetChunkIndex(currentCellCenter);
 
             CostField[index] = WalkableChunk.Contains(chunkIndex) ? (byte)1 : byte.MaxValue;
-            
-            if (chunkIndex == 1)
-            {
-                Debug.Log($"chunkCoord : {chunkIndex.GetXY2(MapSize.x)}");
-            }
         }
         private int GetChunkIndex(in float2 pointPos)
         {
@@ -80,7 +75,7 @@ namespace TowerDefense
             //Cell Coordinate : On the Chunk it belongs to
             int2 cellChunkCoord = cellCoord - (chunkCoord * ChunkSize);
             
-            int walkChunk = WalkableChunk.IndexOf(chunkIndex);
+            int walkChunk = WalkableChunk.IndexOf(chunkIndex); // -1 if index not found
 
             if (walkChunk != -1)
             {
@@ -95,8 +90,6 @@ namespace TowerDefense
                 {
                     cellChunkCoord = abs(cellChunkCoord - new int2(ChunkSize - 1, 0));
                 }
-                
-                //cellChunkCoord = config is Road.BotRight or Road.TopLeft ? abs(cellChunkCoord - new int2(ChunkSize - 1, 0)) : cellChunkCoord;
                 
                 value = config switch
                 {

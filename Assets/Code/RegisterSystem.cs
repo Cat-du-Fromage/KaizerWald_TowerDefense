@@ -20,33 +20,56 @@ namespace TowerDefense
             register.TurretNotification(bullet, eventType);
         }
 
+        //ENEMY KILLED / DISAPPEAR
+        
+        /// <summary>
+        /// Notify An enemy despawn by being killed by a turret
+        /// Event : Player gain resources
+        /// </summary>
         public static void Notify(this BulletManager bulletManager, EnemyComponent enemy)
         {
-            register.BulletNotification(enemy);
+            register.OnEnemyDespawn(bulletManager, enemy);
         }
 
+        /// <summary>
+        /// Notify An enemy despawn by passing through the EndGate
+        /// Event : Player take Damage
+        /// </summary>
+        public static void Notify(this EndGateComponent endGate, EnemyComponent enemy)
+        {
+            register.OnEnemyDespawn(endGate, enemy);
+        }
     }
     
     public class RegisterSystem : MonoBehaviour
     {
+        [SerializeField] private UIGameInformation UI;
+        
         [SerializeField] private TurretManager Turret;
         [SerializeField] private BulletManager Bullet;
         [SerializeField] private EnemyManager Enemy;
 
         private void Awake()
         {
+            UI     ??= FindObjectOfType<UIGameInformation>();
             Turret ??= FindObjectOfType<TurretManager>();
             Bullet ??= FindObjectOfType<BulletManager>();
-            Enemy ??= FindObjectOfType<EnemyManager>();
+            Enemy  ??= FindObjectOfType<EnemyManager>();
             this.InitializeRegister();
         }
 
-        //Bullet Notify => Enemy : remove(EnemyComponent)
-        public void BulletNotification(EnemyComponent enemy)
+        public void OnEnemyDespawn(Component sender, EnemyComponent enemy)
         {
-            if (enemy != null)
+            if (enemy == null) return;
+            Enemy.EnemyKilled(enemy.UniqueID);
+
+            if (sender is EndGateComponent)
             {
-                Enemy.EnemyKilled(enemy.UniqueID);
+                UI.TakeDamage();
+            }
+            else if (sender is BulletManager)
+            {
+                UI.AddResources(1);
             }
         }
         

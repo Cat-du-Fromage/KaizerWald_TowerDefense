@@ -133,7 +133,6 @@ namespace KWUtils
             
             Dictionary<int, Vector3[]> chunkCells = new Dictionary<int, Vector3[]>(totalChunk);
             int totalChunkCell = (gridData.ChunkSize * gridData.ChunkSize);
-            //int offsetChunk = startOffset - 1;
             for (int i = 0; i < totalChunk; i++)
             {
                 int start = i * totalChunkCell;
@@ -160,7 +159,6 @@ namespace KWUtils
             
             Dictionary<int, byte[]> chunkCells = new Dictionary<int, byte[]>(totalChunk);
             int totalChunkCell = (gridData.ChunkSize * gridData.ChunkSize);
-            //int offsetChunk = startOffset - 1;
             for (int i = 0; i < totalChunk; i++)
             {
                 int start = i * totalChunkCell;

@@ -134,7 +134,6 @@ namespace TowerDefense
                         
                     int2 coord = realIndex.GetXY2(gridSize.x);
                     Vector3 cellPos = new Vector3(coord.x + 0.5f, 0, coord.y + 0.5f);
-                    //Gizmos.DrawWireCube(cellPos, Vector3.one);
                     Handles.Label(cellPos, grid[chunkIndex][j].ToString(), style);
                 }
             }
