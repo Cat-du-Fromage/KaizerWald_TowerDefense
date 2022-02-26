@@ -165,9 +165,39 @@ namespace KWUtils
             }
             return chunkCells;
         }
+        
+        //TEST WITH ONLY THIS ONE!
+        public static Dictionary<int, T[]> GetGridValueOrderedByChunk<T>(this T[] unorderedIndices, in GridData gridData)
+        where T : struct
+        {
+            int totalChunk = gridData.NumChunkXY.x * gridData.NumChunkXY.y;
+            
+            using NativeArray<T> nativeUnOrderedIndices = unorderedIndices.ToNativeArray();
+            using NativeArray<T> nativeOrderedIndices = new (unorderedIndices.Length, Allocator.TempJob, NativeArrayOptions.UninitializedMemory);
+            
+            JOrderArrayByChunkIndex<T> job = new JOrderArrayByChunkIndex<T>
+            {
+                MapSizeX = gridData.MapSize.x,
+                ChunkSize = gridData.ChunkSize,
+                NumChunkX = gridData.NumChunkXY.x,
+                UnsortedArray = nativeUnOrderedIndices,
+                SortedArray = nativeOrderedIndices
+            };
+            job.ScheduleParallel(totalChunk, JobWorkerCount - 1, default).Complete();
+            
+            Dictionary<int, T[]> chunkCells = new Dictionary<int, T[]>(totalChunk);
+            int totalChunkCell = (gridData.ChunkSize * gridData.ChunkSize);
+            for (int i = 0; i < totalChunk; i++)
+            {
+                chunkCells.Add(i, nativeOrderedIndices.GetSubArray(i * totalChunkCell, totalChunkCell).ToArray());
+            }
+            return chunkCells;
+        }
     }
     
-    //[BurstCompile(CompileSynchronously = true)]
+    //CAREFUL BURST MAKE UNITY CRASH HERE!
+    //REPORT THIS TO UNITY'S BURST TEAM!
+    //[BurstCompile]
     public struct JOrderArrayByChunkIndex<T> : IJobFor
     where T : struct
     {
@@ -175,6 +205,7 @@ namespace KWUtils
         [ReadOnly] public int ChunkSize;
         [ReadOnly] public int NumChunkX;
         
+        [NativeDisableParallelForRestriction]
         [ReadOnly] public NativeArray<T> UnsortedArray;
         
         [NativeDisableParallelForRestriction]

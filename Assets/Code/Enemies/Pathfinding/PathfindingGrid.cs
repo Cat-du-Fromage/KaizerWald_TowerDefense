@@ -110,7 +110,7 @@ namespace TowerDefense
             
             FlowField flowField = new FlowField(gridSize, ChunkSize);
             directionsGrid = flowField.GetFlowField(destinationGridCell, walkableChunk, walkableRoad);
-            directionChunkGrid = KWChunk.GetCellDirectionOrderedByChunk(directionsGrid, gridData);
+            directionChunkGrid = directionsGrid.GetGridValueOrderedByChunk(gridData);
             //grid = KWChunk.GetCellIndicesOrderedByChunk(flowField.BestCostField, gridData);
             //CostField = flowField.CostField;
 

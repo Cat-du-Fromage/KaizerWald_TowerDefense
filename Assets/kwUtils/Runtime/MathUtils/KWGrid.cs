@@ -185,18 +185,18 @@ namespace KWUtils
         }
         
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static int GetIndexFromPosition(this Vector3 pointPos, int2 numCellsOnAxis, int cellSize)
+        public static int GetIndexFromPosition(this Vector3 pointPos, int2 gridSize, int cellSize)
         {
-            float percentX = pointPos.x / (numCellsOnAxis.x * cellSize);
-            float percentY = pointPos.z / (numCellsOnAxis.y * cellSize);
+            float percentX = pointPos.x / (gridSize.x * cellSize);
+            float percentY = pointPos.z / (gridSize.y * cellSize);
 
             percentX = Clamp01(percentX); //CAREFUL NEED ABS!
             percentY = Clamp01(percentY); //CAREFUL NEED ABS!
             
-            int x = Clamp(FloorToInt(numCellsOnAxis.x * percentX), 0, numCellsOnAxis.x-1);
-            int y = Clamp(FloorToInt(numCellsOnAxis.y * percentY), 0, numCellsOnAxis.y-1);
+            int x = Clamp(FloorToInt(gridSize.x * percentX), 0, gridSize.x-1);
+            int y = Clamp(FloorToInt(gridSize.y * percentY), 0, gridSize.y-1);
 
-            return y * (numCellsOnAxis.x/cellSize) + x;
+            return y * (gridSize.x/cellSize) + x;
         }
 
         /// <summary>
