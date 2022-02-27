@@ -38,15 +38,19 @@ namespace KWUtils
         }
         
         /// <summary>
-        /// Multiply value by itself (v * v)
+        /// Square value : Multiply value by itself (v * v)
         /// </summary>
-        /// <param name="v">value to multiple by itself</param>
-        /// <returns>(v * v)</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static int Sq(int v) => v * v;
         
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static float Sq(float v) => v * v;
+        
+        /// <summary>
+        /// ComponentWise Multiplication (x * y)
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static int cmul(int2 v) => v.x * v.y;
 
 
 

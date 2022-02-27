@@ -5,6 +5,7 @@ using UnityEngine;
 
 using static Unity.Mathematics.math;
 using static KWUtils.KWChunk;
+using static KWUtils.KWmath;
 
 namespace KWUtils.KWGenericGrid
 {
@@ -21,36 +22,60 @@ namespace KWUtils.KWGenericGrid
         private int chunkSize;
         private int2 chunkWidthHeight;
 
-        private int cellSize;
+        private float cellSize;
         private int2 cellWidthHeight;
 
         private Dictionary<int, T[]> chunkDictionary;
         private readonly T[] gridArray; //cell Independant From the Chunk
 
-        public ChunkedGrid(int mapWidth, int mapHeight, int chunkSize, int cellSize)
+        //private Vector3[] chunkCenters;
+        
+        public ChunkedGrid(int mapWidth, int mapHeight, int chunkSize, int cellSize = 1)
         {
             this.chunkSize = chunkSize;
             this.cellSize = cellSize;
             mapWidthHeight = new int2(mapWidth, mapHeight);
             chunkWidthHeight = mapWidthHeight / chunkSize;
 
-            gridArray = new T[mapWidth * mapHeight];
-            chunkDictionary = gridArray.GetGridValueOrderedByChunk(new GridData(chunkSize, mapWidthHeight));
+            cellWidthHeight = cellSize is 1 ? mapWidthHeight : mapWidthHeight / cellSize ;
+
+            gridArray = new T[cmul(cellWidthHeight)];
+            chunkDictionary = gridArray.GetGridValueOrderedByChunk(new GridData(chunkSize, cellWidthHeight));
         }
         
         
-        public ChunkedGrid(int2 mapSize, int chunkSize, int cellSize)
+        public ChunkedGrid(int2 mapSize, int chunkSize, int cellSize = 1)
         {
             this.chunkSize = chunkSize;
             this.cellSize = cellSize;
             mapWidthHeight = mapSize;
             chunkWidthHeight = mapWidthHeight / chunkSize;
+            
+            cellWidthHeight = cellSize is 1 ? mapWidthHeight : new int2(mapWidthHeight / cellSize);
 
-            gridArray = new T[mapSize.x * mapSize.y];
-            chunkDictionary = gridArray.GetGridValueOrderedByChunk(new GridData(chunkSize, mapWidthHeight));
+            gridArray = new T[cmul(cellWidthHeight)];
+            chunkDictionary = gridArray.GetGridValueOrderedByChunk(new GridData(chunkSize, cellWidthHeight));
         }
         
+        
+        //Get Chunk Value
+
+        public Vector3 GetChunkCenterAt(int index)
+        {
+            (int x, int z) = index.GetXY(chunkWidthHeight.x); //we offset by 1,0,1 so we just remove the last one
+            Vector3 pointPosition = (new Vector3(x, 0, z) * chunkSize) + (Vector3.one * (chunkSize / 2f)); //* cellBound not needed this time since value = Vector3(1,1,1)
+            return pointPosition.Flat();
+        }
+        
+
         // Cell Grid : Get Value
+        public Vector3 GetCellCenterAt(int index)
+        {
+            (int x, int z) = index.GetXY(cellWidthHeight.x);
+            Vector3 pointPosition = (new Vector3(x, 0, z) * cellSize) + (Vector3.one * (cellSize / 2f));
+            return pointPosition.Flat();
+        }
+        
         public T GetValueAt(int x, int y)
         {
             return gridArray[y * chunkWidthHeight.x + x];

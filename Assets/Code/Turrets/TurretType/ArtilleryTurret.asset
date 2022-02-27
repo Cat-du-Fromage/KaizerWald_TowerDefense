@@ -14,10 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   BulletPrefab: {fileID: 2302805806132557351, guid: ff89841686775c747989cac9be3420af,
     type: 3}
-  Range: 32
+  Range: 64
   RotationSpeed: 2
   ReloadTime: 3
-  CurrentReload: 1
   OffsetYRotation: 90
-  ForwardAxis: {x: 0, y: 0, z: 0}
   OffsetRotation: {x: 0, y: 0.70710677, z: 0, w: 0.70710677}

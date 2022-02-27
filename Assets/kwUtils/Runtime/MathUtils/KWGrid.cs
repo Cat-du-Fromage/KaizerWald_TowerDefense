@@ -198,6 +198,21 @@ namespace KWUtils
 
             return y * (gridSize.x/cellSize) + x;
         }
+        
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static int GetIndexFromPosition(this Vector3 pointPos, int2 gridSize, float cellSize)
+        {
+            float percentX = pointPos.x / (gridSize.x * cellSize);
+            float percentY = pointPos.z / (gridSize.y * cellSize);
+
+            percentX = Clamp01(percentX); //CAREFUL NEED ABS!
+            percentY = Clamp01(percentY); //CAREFUL NEED ABS!
+            
+            int x = Clamp(FloorToInt(gridSize.x * percentX), 0, gridSize.x-1);
+            int y = Clamp(FloorToInt(gridSize.y * percentY), 0, gridSize.y-1);
+
+            return (y * FloorToInt(gridSize.x/cellSize) + x);
+        }
 
         /// <summary>
         /// Find the index of the cells a point belongs to

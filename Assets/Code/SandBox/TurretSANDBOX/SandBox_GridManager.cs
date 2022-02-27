@@ -132,7 +132,7 @@ namespace TowerDefense
             if(numHits != 0)
             {
                 int indexPos = SnapGridBounds(Hits[0].point);
-                TurretBlueprint.position = TurretBlueprint.position.GridHMove(snapPositions[indexPos]);
+                TurretBlueprint.position = TurretBlueprint.position.FlatMove(snapPositions[indexPos]);
             }
         }
 

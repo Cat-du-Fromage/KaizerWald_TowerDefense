@@ -8,6 +8,7 @@ using Unity.Jobs.LowLevel.Unsafe;
 using Unity.Mathematics;
 
 using static Unity.Mathematics.math;
+using static KWUtils.KWmath;
 using static Unity.Jobs.LowLevel.Unsafe.JobsUtility;
 using Debug = UnityEngine.Debug;
 
@@ -170,7 +171,7 @@ namespace KWUtils
         public static Dictionary<int, T[]> GetGridValueOrderedByChunk<T>(this T[] unorderedIndices, in GridData gridData)
         where T : struct
         {
-            int totalChunk = gridData.NumChunkXY.x * gridData.NumChunkXY.y;
+            int totalChunk = cmul(gridData.NumChunkXY); //gridData.NumChunkXY.x * gridData.NumChunkXY.y;
             
             using NativeArray<T> nativeUnOrderedIndices = unorderedIndices.ToNativeArray();
             using NativeArray<T> nativeOrderedIndices = new (unorderedIndices.Length, Allocator.TempJob, NativeArrayOptions.UninitializedMemory);
@@ -186,7 +187,7 @@ namespace KWUtils
             job.ScheduleParallel(totalChunk, JobWorkerCount - 1, default).Complete();
             
             Dictionary<int, T[]> chunkCells = new Dictionary<int, T[]>(totalChunk);
-            int totalChunkCell = (gridData.ChunkSize * gridData.ChunkSize);
+            int totalChunkCell = Sq(gridData.ChunkSize);
             for (int i = 0; i < totalChunk; i++)
             {
                 chunkCells.Add(i, nativeOrderedIndices.GetSubArray(i * totalChunkCell, totalChunkCell).ToArray());

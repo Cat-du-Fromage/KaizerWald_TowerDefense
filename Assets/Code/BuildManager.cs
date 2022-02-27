@@ -2,13 +2,19 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using KWUtils;
+using KWUtils.KWGenericGrid;
 using Unity.Mathematics;
+using UnityEditor;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
+
 using static TowerDefense.TowerDefenseUtils;
 using static KWUtils.KWGrid;
 using static KWUtils.InputSystemExtension;
+using static KWUtils.KWmath;
+using static UnityEngine.Physics;
+using static Unity.Mathematics.math;
 
 namespace TowerDefense
 {
@@ -25,11 +31,15 @@ namespace TowerDefense
         
         //Need To Make it's own separate grid!
         private int2 terrainWidthHeight;
-        private Vector3[] snapPositions;
+        //private Vector3[] snapPositions;
         
         private RaycastHit[] hits = new RaycastHit[1];
         private Ray ray;
         
+        //Simple Generic Grid
+        private const int CellSize = 4;
+        private SimpleGrid<bool> simpleGrid; //use instanceID
+        private int currentGridIndex = -1;
         private void Awake()
         {
             TurretManager ??= FindObjectOfType<TurretManager>();
@@ -39,20 +49,23 @@ namespace TowerDefense
         
         private void Start()
         {
-            snapPositions = new Vector3[(terrainWidthHeight.x - 1) * (terrainWidthHeight.y - 1)];
-            GetSnapPosition();
+            //snapPositions = new Vector3[(terrainWidthHeight.x - 1) * (terrainWidthHeight.y - 1)];
+            //GetSnapPosition();
+            simpleGrid = new SimpleGrid<bool>(terrainWidthHeight, CellSize);
         }
 
         private void Update()
         {
             if (!IsBuilding) return;
             
-            SnapTowerToGrid();
+            //SnapTowerToGrid();
+            SnapBlueprintToGrid();
+            if (currentGridIndex == -1) return;
             
             //Rotate Turret
             if (Keyboard.current.rKey.wasPressedThisFrame)
             {
-                currentBlueprint.rotation *= Quaternion.Euler(0, 90, 0);
+                OnBlueprintRotation();
             }
             
             //so we dont create a turret when clicking on a build icon
@@ -61,7 +74,7 @@ namespace TowerDefense
             //Build Turret
             if (Mouse.current.leftButton.wasPressedThisFrame)
             {
-                TurretManager.CreateTurret(currentTurret, currentBlueprint.position, currentBlueprint.rotation);
+                OnCreateTurret();
             }
         }
 
@@ -70,15 +83,49 @@ namespace TowerDefense
         /// Must deactivate all blueprint except the one selected
         /// </summary>
         /// <param name="turretBlueprint"></param>
-        public void ToggleBuildMode(GameObject turretBlueprint)
+        public void ToggleBuildModeOn(GameObject turretBlueprint)
         {
             IsBuilding = true;
             currentBlueprint = turretBlueprint.transform;
             currentTurret = currentBlueprint.GetComponent<BlueprintComponent>().GetTurretPrefab;
         }
-        public void ToggleBuildMode() => IsBuilding = !IsBuilding;
-        
+        public void ToggleBuildModeOff()
+        {
+            IsBuilding = false;
+            currentGridIndex = -1;
+        }
 
+        private void OnBlueprintRotation() => currentBlueprint.rotation *= Quaternion.Euler(0, 90, 0);
+
+        private void OnCreateTurret()
+        {
+            if (simpleGrid.GetValueAt(currentGridIndex) == false)
+            {
+                //Move this to Register Notification
+                TurretManager.CreateTurret(currentTurret, currentBlueprint.position, currentBlueprint.rotation);
+                simpleGrid.SetValue(currentGridIndex, true);
+            }
+        }
+        
+//======================================================================================================================
+//TEST SIMPLE GRID
+//======================================================================================================================
+
+        private void SnapBlueprintToGrid()
+        {
+            ray = PlayerCamera.ScreenPointToRay(GetMousePosition);
+            if (RaycastNonAlloc(ray.origin, ray.direction, hits,INFINITY, TerrainLayerMask) != 0)
+            {
+                currentGridIndex = hits[0].point.GetIndexFromPosition(terrainWidthHeight, CellSize);
+                currentBlueprint.position = currentBlueprint.position.FlatMove(simpleGrid.GetCenterCellAt(currentGridIndex));
+            }
+        }
+
+
+//======================================================================================================================
+//TEST SIMPLE GRID
+//======================================================================================================================
+/*
         /// <summary>
         /// Get Snapping grid where turret can be placed
         /// </summary>
@@ -101,8 +148,6 @@ namespace TowerDefense
         /// Get index from Inner Grid! => bigCell => divide in 4 cells
         /// imagine a square of length one with each intersection of smalls square as center
         /// </summary>
-        /// <param name="point"></param>
-        /// <returns></returns>
         private int SnapGridBounds(Vector3 point)
         {
             Vector3 clampPoint = new Vector3(point.x - 0.5f, 0, point.z - 0.5f);
@@ -115,12 +160,26 @@ namespace TowerDefense
             ray = PlayerCamera.ScreenPointToRay(GetMousePosition);
             
             //for some reason basic raycast can't go through turrets
-            int numHits = Physics.RaycastNonAlloc(ray.origin, ray.direction, hits,Mathf.Infinity, TerrainLayerMask);
+            int numHits = RaycastNonAlloc(ray.origin, ray.direction, hits,Mathf.Infinity, TerrainLayerMask);
             if(numHits != 0)
             {
                 int indexPos = SnapGridBounds(hits[0].point);
-                currentBlueprint.position = currentBlueprint.position.GridHMove(snapPositions[indexPos]);
+                currentBlueprint.position = currentBlueprint.position.FlatMove(snapPositions[indexPos]);
             }
         }
+*/
+        private void OnDrawGizmos()
+        {
+            if (!IsBuilding) return;
+            
+            Gizmos.color = Color.green;
+            int numCellIteration = KWmath.cmul(terrainWidthHeight / CellSize);
+            Vector3 cellBounds = new Vector3(CellSize, 0.05f, CellSize);
+            for (int i = 0; i < numCellIteration; i++)
+            {
+                Gizmos.DrawWireCube(simpleGrid.GetCenterCellAt(i), cellBounds);
+            }
+        }
+        
     }
 }

@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using Unity.Mathematics;
 using UnityEngine;
 
@@ -11,42 +12,22 @@ namespace KWUtils
         /// <summary>
         /// flatten the coordinate by setting y to 0
         /// </summary>
-        /// <param name="coordToFlat">coord to flatten</param>
-        /// <returns></returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Vector3 Flat(this Vector3 coordToFlat)
         {
             return new Vector3(coordToFlat.x, 0, coordToFlat.z);
         }
         
-        public static Vector3 GridHMove(this Vector3 coordToMove, Vector3 newPosition)
+        /// <summary>
+        /// Set Axis to a given destination using XZ axis only
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static Vector3 FlatMove(this Vector3 coordToMove, Vector3 newPosition)
         {
             return new Vector3(newPosition.x, coordToMove.y, newPosition.z);
         }
-
-        /// <summary>
-        /// Set wanted axis
-        /// </summary>
-        /// <param name="target"></param>
-        /// <param name="axis">component to change</param>
-        /// <param name="val">value to assign</param>
-        /// <returns>changed axis</returns>
-        /*
-        public static void SetAxis(this Vector3 target, Axis axis, float val)
-        {
-            switch (axis)
-            {
-                case Axis.X:
-                    target.Set(val, target.y, target.z);
-                    break;
-                case Axis.Y:
-                    target.Set(target.x, val, target.z);
-                    break;
-                case Axis.Z:
-                    target.Set(target.x, target.y, val);
-                    break;
-            }
-        }
-        */
+        
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Vector3 SetAxis(this Vector3 target, Axis axis, float val)
         {
             Vector3 newPos = Vector3.zero;
@@ -68,9 +49,7 @@ namespace KWUtils
         /// <summary>
         /// Return normalize direction
         /// </summary>
-        /// <param name="source"></param>
-        /// <param name="destination"></param>
-        /// <returns></returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Vector3 DirectionTo(this Vector3 source, Vector3 destination)
         {
             return Vector3.Normalize(destination - source);
@@ -79,29 +58,31 @@ namespace KWUtils
         /// <summary>
         /// Return distance from 2 vector
         /// </summary>
-        /// <param name="source"></param>
-        /// <param name="destination"></param>
-        /// <returns></returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static float DistanceTo(this Vector3 source, Vector3 destination)
         {
             return Vector3.Magnitude(destination - source);
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Vector2 xy(this Vector3 source)
         {
             return new Vector2(source.x, source.y);
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Vector2 xz(this Vector3 source)
         {
             return new Vector2(source.x, source.z);
         }
         
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static float2 XY(this Vector3 source)
         {
             return new float2(source.x, source.y);
         }
         
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static float2 XZ(this Vector3 source)
         {
             return new float2(source.x, source.z);

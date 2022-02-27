@@ -40,7 +40,7 @@ namespace TowerDefense
             if (!BuildManager.IsBuilding) return;
             if (Keyboard.current.escapeKey.wasReleasedThisFrame || Keyboard.current.qKey.wasReleasedThisFrame)
             {
-                BuildManager.ToggleBuildMode();
+                BuildManager.ToggleBuildModeOff();
                 DisableAllBlueprint();
             }
         }
@@ -48,7 +48,7 @@ namespace TowerDefense
         private void OnBuildTurretButton(GameObject blueprint)
         {
             DisableAllBlueprint();
-            BuildManager.ToggleBuildMode(blueprint);
+            BuildManager.ToggleBuildModeOn(blueprint);
             blueprint.SetActive(true);
         }
 
