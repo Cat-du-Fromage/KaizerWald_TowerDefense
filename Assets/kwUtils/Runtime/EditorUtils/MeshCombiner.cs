@@ -4,8 +4,10 @@ using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
 
-namespace TowerDefense
+#if UNITY_EDITOR
+namespace KWUtils
 {
+    
     public class MeshCombiner : MonoBehaviour
     {
         [SerializeField] private string MeshName = string.Empty;
@@ -56,3 +58,4 @@ namespace TowerDefense
         }
     }
 }
+#endif

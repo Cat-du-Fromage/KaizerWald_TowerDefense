@@ -39,7 +39,10 @@ namespace TowerDefense
         //Simple Generic Grid
         private const int CellSize = 4;
         private SimpleGrid<bool> simpleGrid; //use instanceID
+        
         private int currentGridIndex = -1;
+        private int previousGridIndex = -1;
+        
         private void Awake()
         {
             TurretManager ??= FindObjectOfType<TurretManager>();
@@ -113,10 +116,12 @@ namespace TowerDefense
 
         private void SnapBlueprintToGrid()
         {
+            previousGridIndex = currentGridIndex;//Avoid unnecessary computation
             ray = PlayerCamera.ScreenPointToRay(GetMousePosition);
             if (RaycastNonAlloc(ray.origin, ray.direction, hits,INFINITY, TerrainLayerMask) != 0)
             {
                 currentGridIndex = hits[0].point.GetIndexFromPosition(terrainWidthHeight, CellSize);
+                if (currentGridIndex == previousGridIndex) return;//though it comes late in the process...
                 currentBlueprint.position = currentBlueprint.position.FlatMove(simpleGrid.GetCenterCellAt(currentGridIndex));
             }
         }

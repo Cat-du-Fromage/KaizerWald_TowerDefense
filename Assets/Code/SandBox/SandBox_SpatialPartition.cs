@@ -12,7 +12,7 @@ using UnityEngine.InputSystem;
 
 using static KWUtils.NativeCollectionExt;
 using static KWUtils.KWGrid;
-
+#if UNITY_EDITOR
 namespace TowerDefense
 {
     //SOA
@@ -247,3 +247,4 @@ namespace TowerDefense
         }
     }
 }
+#endif

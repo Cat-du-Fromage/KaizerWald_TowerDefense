@@ -8,7 +8,6 @@ namespace TowerDefense
     public class BulletManager : MonoBehaviour
     {
         private List<BulletComponent> bullets;
-        private List<BulletComponent> activeBullets;
 
         private void Awake()
         {
@@ -18,7 +17,11 @@ namespace TowerDefense
         private void Update()
         {
             if (bullets.Count == 0) return;
-            
+            CheckBulletHitUpdate();
+        }
+
+        private void CheckBulletHitUpdate()
+        {
             for (int i = 0; i < bullets.Count; i++)
             {
                 if (!bullets[i].Hit) continue;
@@ -28,7 +31,6 @@ namespace TowerDefense
                     OnBulletHitEnemy(bullets[i]);
                     continue;
                 }
-
                 OnBulletHitGround(bullets[i]);
             }
         }
@@ -46,8 +48,9 @@ namespace TowerDefense
             bullet.CheckFadeDistance();
             bullet.ResetHitValues();
         }
-
+        
         public void RegisterBullet(BulletComponent bullet) => bullets.Add(bullet);
         public void UnregisterBullet(BulletComponent bullet) => bullets.Remove(bullet);
+
     }
 }

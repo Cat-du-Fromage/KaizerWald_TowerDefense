@@ -10,12 +10,13 @@ namespace TowerDefense
         [SerializeField] private float muzzleVelocity = 10f;
         private float velocity = 5f;
         
-        private bool isShoot;
+        public bool IsShoot;
         public bool Hit;
         
         //Stored Values
         private Vector3 initialPosition;
         private Rigidbody bulletRigidBody;
+        
         private TrailRenderer trail;
 
         public EnemyComponent enemyHit;
@@ -61,10 +62,8 @@ namespace TowerDefense
         
         public void Shoot(Vector3 direction)
         {
-            isShoot = true;
-            
-            trail.emitting = true;
-            
+            IsShoot = trail.emitting = true;
+
             bulletRigidBody.velocity = direction * velocity;
 
             bulletRigidBody.useGravity = true;

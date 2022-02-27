@@ -56,9 +56,6 @@ namespace TowerDefense
 
         private CancellationTokenSource soundToken;
 
-        //TESTING
-        public bool IsPlayingSound;
-
         private void Awake()
         {
             if(MuzzleFlash != null) MuzzleFlash.Stop(true);
@@ -86,7 +83,6 @@ namespace TowerDefense
         //MUST introduce a system where the check is only made if enemies are in the chunk the turret is targeting
         public bool NoTargetUpdate()
         {
-            IsPlayingSound = shootSound.isPlaying;
             //Find target by collision
             if (OverlapSphereNonAlloc(turretTransform.position, Turret.Range, colliders, 1<<10) != 0)
             {
@@ -132,6 +128,8 @@ namespace TowerDefense
             if (currentTarget == null) return;
             shootDirection = (TargetShootPosition - GetBulletPosition).normalized;
             randomOffset = max(Random.value, 0.05f);
+            
+            //Notify shoot?
         }
 
         public void ShootAt(AudioClip clip)
@@ -213,8 +211,12 @@ namespace TowerDefense
         //==============================================================================================================
         //ROTATION BEHAVIOUR
         //==============================================================================================================
-        private void ToBaseRotation() => turretTransform.rotation = Quaternion.Lerp(turretTransform.rotation, BaseRotation, Turret.RotationSpeed * Time.deltaTime);
-        
+        private void ToBaseRotation()
+        {
+            turretTransform.rotation = Quaternion.Lerp(turretTransform.rotation, BaseRotation,
+                Turret.RotationSpeed * Time.deltaTime);
+        }
+
         private void RotateTowardsTarget()
         {
             Vector3 direction = (currentTarget.position - turretTransform.position).Flat();

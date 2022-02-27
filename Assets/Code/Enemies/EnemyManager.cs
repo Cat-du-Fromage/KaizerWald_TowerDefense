@@ -21,24 +21,25 @@ namespace TowerDefense
     public class EnemyManager : MonoBehaviour
     {
         //References to Grids
-        [SerializeField] private SandBox_SpatialPartition spatialPartition;
         [SerializeField] private PathfindingGrid PathfindingGrid;
 
         //Prefabs
-        [SerializeField] private Transform EndPoint;
         [SerializeField] private GameObject EnemyPrefab;
-
-        //private Dictionary<int, EnemyComponent> enemiesData;
+        
         private Dictionary<int, Transform> enemiesTransforms;
         private HashSet<int> enemiesToRemove;
         private List<float3> enemiesPositions;
 
         //JOB SYSTEM
-        private NativeArray<int> nativeEnemiesID;
         private NativeArray<float3> nativeFlowField;
         private NativeArray<float3> nativeEnemiesDirection;
         private NativeArray<float3> nativeEnemiesPosition;
+        
+        //Use later for FlockSystem
+        //===========================================================
+        private NativeArray<int> nativeEnemiesID;
         private NativeMultiHashMap<int, int> nativeEnemiesInGridCell;
+        //===========================================================
         
         private TransformAccessArray transformAccessArray;
 
@@ -59,8 +60,7 @@ namespace TowerDefense
         private void Awake()
         {
             PathfindingGrid ??= FindObjectOfType<PathfindingGrid>();
-
-            //enemiesData = new Dictionary<int, EnemyComponent>(16);
+            
             enemiesTransforms = new Dictionary<int, Transform>(16);
             
             enemiesToRemove = new HashSet<int>(16);

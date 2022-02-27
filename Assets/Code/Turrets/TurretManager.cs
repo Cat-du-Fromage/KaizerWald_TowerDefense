@@ -11,13 +11,9 @@ namespace TowerDefense
     public class TurretManager : MonoBehaviour
     {
         [SerializeField]private AudioClip shootClip;
-        
-        //Temporary
-        [SerializeField] private GameObject BulletPrefab;
-        
+
         public List<TurretComponent> noTargetTurrets;
         public List<TurretComponent> withTargetTurrets;
-        
         private void Awake()
         {
             noTargetTurrets = new List<TurretComponent>(2);
@@ -30,19 +26,15 @@ namespace TowerDefense
             //Check changing states of the turrets
             UpdateInactiveTurret();
             UpdateActiveTurret();
-
+            
             //Attack Behaviour
+            if (withTargetTurrets.Count == 0) return;
             AimTurrets();
         }
 
         private void LateUpdate()
         {
-            if (withTargetTurrets.Count == 0) return;
-
-            for (int i = 0; i < withTargetTurrets.Count; i++)
-            {
-                withTargetTurrets[i].ShootAt(shootClip);
-            }
+            RecordTurretsShoot();
         }
         
 //CAREFULE! MUST INTRODUCE ANTICIPATION
@@ -91,6 +83,14 @@ namespace TowerDefense
             for (int i = 0; i < withTargetTurrets.Count; i++)
             {
                 withTargetTurrets[i].GetAim();
+            }
+        }
+
+        private void RecordTurretsShoot()
+        {
+            for (int i = 0; i < withTargetTurrets.Count; i++)
+            {
+                withTargetTurrets[i].ShootAt(shootClip);
             }
         }
     }

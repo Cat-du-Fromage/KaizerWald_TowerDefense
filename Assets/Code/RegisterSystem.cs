@@ -20,8 +20,6 @@ namespace TowerDefense
             register.TurretNotification(bullet, eventType);
         }
 
-        //ENEMY KILLED / DISAPPEAR
-        
         /// <summary>
         /// Notify An enemy despawn by being killed by a turret
         /// Event : Player gain resources
@@ -39,6 +37,8 @@ namespace TowerDefense
         {
             register.OnEnemyDespawn(endGate, enemy);
         }
+        
+        
     }
     
     public class RegisterSystem : MonoBehaviour

@@ -10,9 +10,10 @@ using UnityEngine.InputSystem;
 using static TowerDefense.TowerDefenseUtils;
 using static KWUtils.KWGrid;
 using static KWUtils.InputSystemExtension;
-
+#if UNITY_EDITOR
 namespace TowerDefense
 {
+    
     public class Cell
     {
         private int size;
@@ -228,3 +229,4 @@ namespace TowerDefense
         }
     }
 }
+#endif

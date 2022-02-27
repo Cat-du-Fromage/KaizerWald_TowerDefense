@@ -6,7 +6,7 @@ using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
 using UnityEngine.UI;
 using KWUtils;
-
+#if UNITY_EDITOR
 namespace TowerDefense
 {
     public class UIBuildTurret : MonoBehaviour
@@ -55,3 +55,4 @@ namespace TowerDefense
         }
     }
 }
+#endif

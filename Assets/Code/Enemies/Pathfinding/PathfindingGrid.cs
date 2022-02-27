@@ -27,6 +27,9 @@ namespace TowerDefense
         [SerializeField] private TerrainData terrainData;
         [SerializeField] private int ChunkSize = 16;
 
+        [SerializeField] private GameObject walkableChunkPrefab;
+        private GameObject[] walkableChunkObj;
+        
         private Vector3[] directionsGrid;
         private Dictionary<int, Vector3[]> directionChunkGrid;
 
@@ -110,11 +113,27 @@ namespace TowerDefense
             
             FlowField flowField = new FlowField(gridSize, ChunkSize);
             directionsGrid = flowField.GetFlowField(destinationGridCell, walkableChunk, walkableRoad);
-            directionChunkGrid = directionsGrid.GetGridValueOrderedByChunk(gridData);
+            directionChunkGrid = directionsGrid.GetArrayOrderedByChunk(gridData);
             //grid = KWChunk.GetCellIndicesOrderedByChunk(flowField.BestCostField, gridData);
             //CostField = flowField.CostField;
 
             //costGrid = KWChunk.GetCellCostOrderedByChunk(CostField, gridData);
+        }
+        
+        
+        //PlaceHolder until a way to display a different texture On the Map is found
+        
+        private Vector3 GetPosition(int2 xyPos) => new Vector3((xyPos.x * ChunkSize) + ChunkSize / 2f, 0.05f, (xyPos.y * ChunkSize) + ChunkSize / 2f);
+        private void ShowWalkableArea()
+        {
+            for (int i = 0; i < walkableChunk.Length; i++)
+            {
+                int2 xyPos = walkableChunk[i].GetXY2(numChunkXY.x);
+                Vector3 position = GetPosition(xyPos);
+                walkableChunkObj[i] = Instantiate(walkableChunkPrefab, position, Quaternion.identity);
+                walkableChunkObj[i].name = $"Chunk_Id_{walkableChunk[i]}_Coord_({xyPos.x},{xyPos.y})";
+            }
+            
         }
     }
 }

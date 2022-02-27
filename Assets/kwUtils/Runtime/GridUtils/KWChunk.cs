@@ -88,7 +88,7 @@ namespace KWUtils
             return chunkIndex.GetGridCellIndexFromChunkCellIndex(gridData, GetChunkEnterPoint(point, gridData));
         }
 
-        public static Dictionary<int, int[]> GetCellIndicesOrderedByChunk(int[] unorderedIndices, in GridData gridData)
+        public static Dictionary<int, int[]> GetArrayOrderedByChunk(int[] unorderedIndices, in GridData gridData)
         {
             int totalChunk = gridData.NumChunkXY.x * gridData.NumChunkXY.y;
             
@@ -102,7 +102,7 @@ namespace KWUtils
                 UnsortedArray = unOrderedIndices,
                 SortedArray = orderedIndices
             };
-            job.ScheduleParallel(totalChunk, JobsUtility.JobWorkerCount - 1, default).Complete();
+            job.ScheduleParallel(totalChunk, JobWorkerCount - 1, default).Complete();
             
             Dictionary<int, int[]> chunkCells = new Dictionary<int, int[]>(totalChunk);
             int totalChunkCell = (gridData.ChunkSize * gridData.ChunkSize);
@@ -115,7 +115,7 @@ namespace KWUtils
             return chunkCells;
         }
         
-        public static Dictionary<int, Vector3[]> GetCellDirectionOrderedByChunk(Vector3[] unorderedIndices, in GridData gridData)
+        public static Dictionary<int, Vector3[]> GetArrayOrderedByChunk(this Vector3[] unorderedIndices, in GridData gridData)
         {
             int totalChunk = gridData.NumChunkXY.x * gridData.NumChunkXY.y;
             
@@ -129,7 +129,7 @@ namespace KWUtils
                 UnsortedArray = unOrderedIndices,
                 SortedArray = orderedIndices
             };
-            job.ScheduleParallel(totalChunk, JobsUtility.JobWorkerCount - 1, default).Complete();
+            job.ScheduleParallel(totalChunk, JobWorkerCount - 1, default).Complete();
             
             Dictionary<int, Vector3[]> chunkCells = new Dictionary<int, Vector3[]>(totalChunk);
             int totalChunkCell = (gridData.ChunkSize * gridData.ChunkSize);
@@ -141,9 +141,9 @@ namespace KWUtils
             return chunkCells;
         }
         
-        public static Dictionary<int, byte[]> GetCellCostOrderedByChunk(byte[] unorderedIndices, in GridData gridData)
+        public static Dictionary<int, byte[]> GetArrayOrderedByChunk(byte[] unorderedIndices, in GridData gridData)
         {
-            int totalChunk = gridData.NumChunkXY.x * gridData.NumChunkXY.y;
+            int totalChunk = cmul(gridData.NumChunkXY);
             
             using NativeArray<byte> unOrderedIndices = unorderedIndices.ToNativeArray(); 
             using NativeArray<byte> orderedIndices = new (unorderedIndices.Length, Allocator.TempJob, NativeArrayOptions.UninitializedMemory);
@@ -161,13 +161,12 @@ namespace KWUtils
             int totalChunkCell = (gridData.ChunkSize * gridData.ChunkSize);
             for (int i = 0; i < totalChunk; i++)
             {
-                int start = i * totalChunkCell;
-                chunkCells.Add(i, orderedIndices.GetSubArray(start, totalChunkCell).ToArray());
+                chunkCells.Add(i, orderedIndices.GetSubArray(i * totalChunkCell, totalChunkCell).ToArray());
             }
             return chunkCells;
         }
         
-        //TEST WITH ONLY THIS ONE!
+        //This One is not eligible for Burst Compile!
         public static Dictionary<int, T[]> GetGridValueOrderedByChunk<T>(this T[] unorderedIndices, in GridData gridData)
         where T : struct
         {
@@ -176,7 +175,7 @@ namespace KWUtils
             using NativeArray<T> nativeUnOrderedIndices = unorderedIndices.ToNativeArray();
             using NativeArray<T> nativeOrderedIndices = new (unorderedIndices.Length, Allocator.TempJob, NativeArrayOptions.UninitializedMemory);
             
-            JOrderArrayByChunkIndex<T> job = new JOrderArrayByChunkIndex<T>
+            JGenericOrderArrayByChunkIndex<T> job = new JGenericOrderArrayByChunkIndex<T>
             {
                 MapSizeX = gridData.MapSize.x,
                 ChunkSize = gridData.ChunkSize,
@@ -196,11 +195,46 @@ namespace KWUtils
         }
     }
     
-    //CAREFUL BURST MAKE UNITY CRASH HERE!
-    //REPORT THIS TO UNITY'S BURST TEAM!
-    //[BurstCompile]
+    [BurstCompile]
     public struct JOrderArrayByChunkIndex<T> : IJobFor
     where T : struct
+    {
+        [ReadOnly] public int MapSizeX;
+        [ReadOnly] public int ChunkSize;
+        [ReadOnly] public int NumChunkX;
+        
+        [NativeDisableParallelForRestriction]
+        [ReadOnly] public NativeArray<T> UnsortedArray;
+        
+        [NativeDisableParallelForRestriction]
+        [WriteOnly] public NativeArray<T> SortedArray;
+        public void Execute(int index)
+        {
+            int chunkPosY = (int)floor(index / (float)NumChunkX);
+            int chunkPosX = index - (chunkPosY * NumChunkX);
+            
+            for (int z = 0; z < ChunkSize; z++) // z axis
+            {
+                int startY = (chunkPosY * MapSizeX) * ChunkSize;
+                int startX = chunkPosX * ChunkSize;
+                int startYChunk = z * MapSizeX;
+                int start = startY + startX + startYChunk;
+
+                for (int x = 0; x < ChunkSize; x++) // x axis
+                {
+                    int sliceIndex = mad(z, ChunkSize, x) + (index * (ChunkSize * ChunkSize));
+                    SortedArray[sliceIndex] = UnsortedArray[start + x];
+                }
+            }
+        }
+    }
+    
+    //CAREFUL BURST MAKE UNITY CRASH HERE!
+    //REPORT THIS TO UNITY'S BURST TEAM!
+    //CAREFUL Burst does not support generic call
+    //Only enable if the static function calling it is not a generic type!
+    public struct JGenericOrderArrayByChunkIndex<T> : IJobFor
+        where T : struct
     {
         [ReadOnly] public int MapSizeX;
         [ReadOnly] public int ChunkSize;

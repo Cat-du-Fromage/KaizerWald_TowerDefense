@@ -19,8 +19,8 @@ namespace TowerDefense
         private GridData debugGridData;
         
         private byte[] CostField; 
-        [SerializeField] private GameObject walkableChunkPrefab;
-        private GameObject[] walkableChunkObj;
+        
+        
 
         //SPAWNING POINT
         [SerializeField] private GameObject SpawnArea;
@@ -42,18 +42,7 @@ namespace TowerDefense
             ShowHideSpawnArea(ShowSpawnChunk);
         }
 
-        private Vector3 GetPosition(int2 xyPos) => new Vector3((xyPos.x * ChunkSize) + ChunkSize / 2f, 0.05f, (xyPos.y * ChunkSize) + ChunkSize / 2f);
-        private void ShowWalkableArea()
-        {
-            for (int i = 0; i < walkableChunk.Length; i++)
-            {
-                int2 xyPos = walkableChunk[i].GetXY2(numChunkXY.x);
-                Vector3 position = GetPosition(xyPos);
-                walkableChunkObj[i] = Instantiate(walkableChunkPrefab, position, Quaternion.identity);
-                walkableChunkObj[i].name = $"Chunk_Id_{walkableChunk[i]}_Coord_({xyPos.x},{xyPos.y})";
-            }
-            
-        }
+        
 
         /// <summary>
         /// Move the spawning area (Green Square)

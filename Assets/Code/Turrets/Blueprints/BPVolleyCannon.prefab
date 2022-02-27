@@ -12,7 +12,7 @@ GameObject:
   - component: {fileID: 395068524082179967}
   - component: {fileID: 2680357132960840849}
   - component: {fileID: 5265612329822428260}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: BPVolleyCannon
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -27,9 +27,9 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 6621662165977332508}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 11.02, y: 1.19, z: 6.43}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
+  m_LocalPosition: {x: 11.02, y: 0.85, z: 6.43}
+  m_LocalScale: {x: 0.95, y: 0.95, z: 0.95}
+  m_ConstrainProportionsScale: 1
   m_Children: []
   m_Father: {fileID: 0}
   m_RootOrder: 0

@@ -31,7 +31,6 @@ namespace TowerDefense
 
         private void Start()
         {
-            Debug.Log(HealthBarText.GetType().ToString());
             InitializeResourcesPanel();
             InitializeHealthBar();
         }
