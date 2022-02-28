@@ -2,14 +2,24 @@ using System.Collections;
 using System.Collections.Generic;
 using KWUtils;
 using Unity.Mathematics;
-using UnityEditor;
+
 using UnityEngine;
+
+#if UNITY_EDITOR
+using UnityEditor;
+using KWUtils.Debug;
+#endif
 
 namespace TowerDefense
 {
 #if UNITY_EDITOR
     public partial class PathfindingGrid : MonoBehaviour
     {
+        [SerializeField] private MainFlock MainFlockDebug;
+        [SerializeField] private NeighborFlock[] NeighborFlockDebug;
+        private Transform MainFlockDebugTsm;
+        private Transform[] NeighborFlockDebugTsm;
+        
         public bool EnableDebugger;
         int totalChunk => numChunkXY.x * numChunkXY.y;
         
@@ -72,12 +82,107 @@ namespace TowerDefense
 
             //CostDebug(style, true);
             //BestCostDebug(style);
-
-            FlowFieldDebug(true);
+            FlowFieldDebug(true, true);
+            DebugBoidsBehaviour();
 
             //DisplayDestination();
         }
 
+        private void DebugBoidsBehaviour()
+        {
+            if(MainFlockDebug == null || NeighborFlockDebug.Length == 0) return;
+           
+            //Vector3 flowfieldDirectionMain = 
+            InitFlockDebug();
+            
+            int cellIndex = new float3(MainFlockDebugTsm.position).xz.GetIndexFromPosition(GridSize, 1);
+
+            Vector3 directionFlow = GetFlowDirection();
+            
+
+            //Display where the main flock IS
+            GetCellMainFlockIsIn();
+            
+            GetNeighborToMainDirection(directionFlow);
+            
+
+            void GetNeighborToMainDirection(Vector3 flowdir)
+            {
+                Vector3 AddAllNeighborDirection = Vector3.zero;
+                
+                
+                
+                for (int i = 0; i < NeighborFlockDebug.Length; i++)
+                {
+                    Vector3 debugDirection = Vector3.zero;
+                    debugDirection = MainFlockDebugTsm.position - NeighborFlockDebugTsm[i].position;
+                    if (CheckIfBehind(NeighborFlockDebugTsm[i])) continue;
+                    Gizmos.color = Color.magenta;
+                    DrawArrow.ForGizmo(NeighborFlockDebugTsm[i].position, debugDirection * 2);
+
+                    AddAllNeighborDirection += debugDirection.normalized;
+                }
+                //Without FlowField
+                AddAllNeighborDirection /= Mathf.Max(1,NeighborFlockDebug.Length);
+                Gizmos.color = Color.blue;
+                DrawArrow.ForGizmo(MainFlockDebugTsm.position, AddAllNeighborDirection);
+
+                //With FlowField
+                AddAllNeighborDirection += flowdir;
+                
+                if (AddAllNeighborDirection == Vector3.zero) return;
+                Gizmos.color = Color.red;
+                DrawArrow.ForGizmo(MainFlockDebugTsm.position,AddAllNeighborDirection * 2.5f);
+
+            }
+
+            //Check if Main Boids behind the others
+            bool CheckIfBehind(Transform neighbor)
+            {
+                //CAREFUL we need vector to be "opposite" so forward + direction(origin:main, to : other) this : <- + -> NOT : -> + <- OR <- + <-
+                Vector3 dotDirection = neighbor.position - MainFlockDebugTsm.position;
+                return Vector3.Dot(MainFlockDebugTsm.forward, dotDirection) < 0;
+            }
+            
+            //Check for null Value
+            void InitFlockDebug()
+            {
+                if (NeighborFlockDebugTsm == null)
+                {
+                    NeighborFlockDebugTsm = new Transform[NeighborFlockDebug.Length];
+                    for (int i = 0; i < NeighborFlockDebugTsm.Length; i++)
+                    {
+                        NeighborFlockDebugTsm[i] = NeighborFlockDebug[i].transform;
+                    }
+                }
+                if (MainFlockDebugTsm == null)
+                {
+                    MainFlockDebugTsm = MainFlockDebug.transform;
+                }
+            }
+
+            void GetCellMainFlockIsIn()
+            {
+                //DrawCell where the Main Flock IS
+                Gizmos.color = Color.green;
+                int2 coord = cellIndex.GetXY2(gridSize.x);
+                Gizmos.DrawWireCube(new Vector3(coord.x+0.5f,0,coord.y+0.5f), Vector3.one);
+            }
+
+            //GetFlowField Direction + display yellow Arrow
+            Vector3 GetFlowDirection()
+            {
+                if (directionsGrid != null && directionsGrid.Length > 0)
+                {
+                    Gizmos.color = Color.yellow;
+                    DrawArrow.ForGizmo(MainFlockDebugTsm.position, directionsGrid[cellIndex]);
+                    return directionsGrid[cellIndex];
+                }
+                return Vector3.zero;
+            }
+        }
+        
+        
         private void DisplayChunkGrid(GUIStyle style)
         {
             Vector3 cubeBounds = new Vector3(ChunkSize, 0, ChunkSize);
@@ -145,19 +250,28 @@ namespace TowerDefense
             }
         }
 
-        private void FlowFieldDebug(bool walkableOnly)
+        private void FlowFieldDebug(bool walkableOnly, bool drawCube = false)
         {
             if (directionChunkGrid == null) return;
+            
+            Vector3 cubeBounds = new Vector3(1f,0.2f,1f);
+            Vector3 ArrowOffset = new Vector3(0, -0.1f, 0);
             for (int i = 0; i < 4; i++)
             {
                 int chunkIndex = walkableOnly ? walkableChunk[i] : i;
                 for (int j = 0; j < directionChunkGrid[chunkIndex].Length; j++)
                 {
+                    Gizmos.color = Color.yellow;
                     int realIndex = chunkIndex.GetGridCellIndexFromChunkCellIndex(debugGridData, j);
                         
                     int2 coord = realIndex.GetXY2(gridSize.x);
                     Vector3 cellPos = new Vector3(coord.x + 0.5f, 0, coord.y + 0.5f);
-                    KWUtils.Debug.DrawArrow.ForGizmo(cellPos, directionChunkGrid[chunkIndex][j]/2f);
+                    DrawArrow.ForGizmo(cellPos-ArrowOffset, directionChunkGrid[chunkIndex][j]/2f);
+                    if (drawCube)
+                    {
+                        Gizmos.color = Color.white;
+                        Gizmos.DrawWireCube(cellPos, cubeBounds);
+                    }
                 }
             }
         }

@@ -1,11 +1,11 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using KWUtils;
 using Unity.Burst;
 using Unity.Collections;
 using Unity.Jobs;
-using Unity.Jobs.LowLevel.Unsafe;
 using Unity.Mathematics;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -14,6 +14,7 @@ using UnityEngine.Jobs;
 using static Unity.Jobs.LowLevel.Unsafe.JobsUtility;
 using static KWUtils.NativeCollectionExt;
 using static Unity.Mathematics.math;
+using float3 = Unity.Mathematics.float3;
 using quaternion = Unity.Mathematics.quaternion;
 
 namespace TowerDefense
@@ -28,8 +29,9 @@ namespace TowerDefense
         
         private Dictionary<int, Transform> enemiesTransforms;
         private HashSet<int> enemiesToRemove;
-        private List<float3> enemiesPositions;
+        //private List<float3> enemiesPositions;
 
+        private Dictionary<int, float3> enemiesPosition;
         //JOB SYSTEM
         private NativeArray<float3> nativeFlowField;
         private NativeArray<float3> nativeEnemiesDirection;
@@ -64,9 +66,13 @@ namespace TowerDefense
             enemiesTransforms = new Dictionary<int, Transform>(16);
             
             enemiesToRemove = new HashSet<int>(16);
-            enemiesPositions = new List<float3>(16);
+
+            //enemiesPositions = new List<float3>(16);
             
             transformAccessArray = new TransformAccessArray(16);
+            
+            //TEST
+            enemiesPosition = new Dictionary<int, float3>(16);
         }
 
         private void OnDestroy()
@@ -80,7 +86,7 @@ namespace TowerDefense
         {
             if (Keyboard.current.spaceKey.wasPressedThisFrame)
             {
-                CreateWave(16);
+                CreateWave(8);
             }
             if (enemiesTransforms.Count == 0) return;
             MoveAllEnemies();
@@ -103,14 +109,17 @@ namespace TowerDefense
 
         private void ResetEnemyPositionCache()
         {
-            enemiesPositions.Clear();
-            enemiesPositions.AddRange(nativeEnemiesPosition.ToArray());
+            foreach ((int id, Transform position) in enemiesTransforms)
+            {
+                enemiesPosition[id] = position.position;
+            }
         }
 
         private void MoveAllEnemies()
         {
-            int numEnemies = enemiesPositions.Count;
-            nativeEnemiesPosition = enemiesPositions.ToNativeArray(Allocator.TempJob);
+            int numEnemies = enemiesPosition.Count;
+            
+            nativeEnemiesPosition = enemiesPosition.GetValuesArray().ToNativeArray();
             nativeFlowField = PathfindingGrid.DirectionsGrid.ToNativeArray().Reinterpret<float3>();
             nativeEnemiesDirection = AllocNtvAry<float3>(numEnemies);
             
@@ -119,13 +128,13 @@ namespace TowerDefense
             //Gather Datas
             //nativeEnemiesID = enemiesTransforms.GetKeysArray().ToNativeArray();
             //nativeEnemiesInGridCell = new NativeMultiHashMap<int, int>(numEnemies, Allocator.TempJob);
-            
+            //Debug.Log($"num transformAcces = {enemiesTransforms.Count}; num enemyPosition = {numEnemies}");
             JEntityFlowFieldDirection directionsJob = new JEntityFlowFieldDirection
             {
                 GridSize = PathfindingGrid.GridSize,
                 EntitiesPosition = nativeEnemiesPosition,
                 FlowField = nativeFlowField,
-                Directions = nativeEnemiesDirection,
+                EntityFlowFieldDirection = nativeEnemiesDirection,
             };
             directionJobHandle = directionsJob.ScheduleParallel(numEnemies, JobWorkerCount - 1,default);
 
@@ -148,9 +157,8 @@ namespace TowerDefense
                 EnemyComponent enemy = Instantiate(EnemyPrefab, spawnPoints[i], Quaternion.identity).GetComponent<EnemyComponent>();
                 enemy.name = ($"Agent_{i}");
 
-                enemiesTransforms.Add(enemy.UniqueID, enemy.transform);
+                RegisterEnemy(enemy);
                 transformAccessArray.Add(enemy.transform);
-                enemiesPositions.Add(enemy.transform.position);
             }
         }
 
@@ -161,11 +169,23 @@ namespace TowerDefense
             foreach (int enemyIndex in enemiesToRemove)
             {
                 Destroy(enemiesTransforms[enemyIndex].gameObject);
-                enemiesTransforms.Remove(enemyIndex);
+                UnregisterEnemy(enemyIndex);
             }
             transformAccessArray.Dispose();
             transformAccessArray = new TransformAccessArray(enemiesTransforms.GetValuesArray());
             enemiesToRemove.Clear();
+        }
+
+        private void RegisterEnemy(EnemyComponent enemy)
+        {
+            enemiesTransforms.Add(enemy.UniqueID, enemy.transform);
+            enemiesPosition.Add(enemy.UniqueID,enemy.transform.position);
+        }
+
+        private void UnregisterEnemy(int uniqueId)
+        {
+            enemiesTransforms.Remove(uniqueId);
+            enemiesPosition.Remove(uniqueId);
         }
         
         //==============================================================================================================
@@ -173,7 +193,7 @@ namespace TowerDefense
         //==============================================================================================================
         public void EnemyKilled(int enemy) => enemiesToRemove.Add(enemy);
     }
-
+/*
     [BurstCompile]
     public struct JEntityFlowFieldDirection : IJobFor
     {
@@ -186,15 +206,61 @@ namespace TowerDefense
         [ReadOnly] public NativeArray<float3> FlowField;
         
         [NativeDisableParallelForRestriction]
-        [WriteOnly] public NativeArray<float3> Directions;
+        [WriteOnly] public NativeArray<float3> EntityFlowFieldDirection;
         public void Execute(int index)
         {
             int cellIndex = EntitiesPosition[index].xz.GetIndexFromPosition(GridSize, 1);
-            Directions[index] = FlowField[cellIndex];
+            EntityFlowFieldDirection[index] = FlowField[cellIndex];
         }
     }
-    
-    [BurstCompile]
+    */
+
+    //[BurstCompile]
+    public struct JEntityFlowFieldDirection : IJobFor
+    {
+        [ReadOnly] public int2 GridSize;
+        
+        [NativeDisableParallelForRestriction]
+        [ReadOnly] public NativeArray<float3> EntitiesPosition;
+        
+        [NativeDisableParallelForRestriction]
+        [ReadOnly] public NativeArray<float3> FlowField;
+        
+        [NativeDisableParallelForRestriction]
+        [WriteOnly] public NativeArray<float3> EntityFlowFieldDirection;
+        public void Execute(int index)
+        {
+            int cellIndex = EntitiesPosition[index].xz.GetIndexFromPosition(GridSize, 1);
+            EntityFlowFieldDirection[index] = FlowField[cellIndex];
+        }
+        
+        private float3 GetDirection(int index)
+        {
+            //Get AllEnemies
+            float distanceCheck = 4f * 4f;
+            NativeList<int> distances = new NativeList<int>(EntitiesPosition.Length, Allocator.Temp);
+            for (int i = 0; i < EntitiesPosition.Length; i++)
+            {
+                if (i == index) continue;
+                if (dot(EntitiesPosition[index].xz, EntitiesPosition[i].xz) < 0) continue;
+                if (distancesq(EntitiesPosition[index].xz, EntitiesPosition[i].xz) <= distanceCheck)
+                {
+                    distances.AddNoResize(i);
+                }
+            }
+            float3 directionSeparation = float3.zero;
+            if (distances.Length > 0)
+            {
+                for (int i = 0; i < distances.Length; i++)
+                {
+                    directionSeparation.xz += EntitiesPosition[index].xz - EntitiesPosition[distances[i]].xz;
+                }
+            }
+            return normalizesafe(directionSeparation);
+        }
+    }
+
+    //[BurstCompile]
     public struct JMoveEnemies : IJobParallelForTransform
     {
         [ReadOnly] public float DeltaTime;
@@ -203,7 +269,7 @@ namespace TowerDefense
         [ReadOnly] public NativeArray<float3> EntityFlowFieldDirection;
         
         [NativeDisableParallelForRestriction]
-        [WriteOnly] public NativeArray<float3> EntitiesPosition;
+        public NativeArray<float3> EntitiesPosition;
         public void Execute(int index, TransformAccess transform)
         {
             //Rotation
@@ -212,11 +278,39 @@ namespace TowerDefense
             
             //Position
             float2 direction = EntityFlowFieldDirection[index].xz;
+
             Vector3 newPosition = transform.position + new Vector3(direction.x, 0.0f, direction.y) * DeltaTime * 5;
-            
+
             //Apply Changes to GameObject's Transform
             transform.position = newPosition;
             EntitiesPosition[index] = newPosition;
         }
+/*
+        private float3 GetDirection(int index)
+        {
+            //Get AllEnemies
+            float distanceCheck = 2f * 2f;
+            NativeList<int> distances = new NativeList<int>(EntitiesPosition.Length, Allocator.Temp);
+            for (int i = 0; i < EntitiesPosition.Length; i++)
+            {
+                if (i == index) continue;
+                if (dot(EntitiesPosition[index].xz, EntitiesPosition[i].xz) < 0) continue;
+                if (distancesq(EntitiesPosition[index].xz, EntitiesPosition[i].xz) <= distanceCheck)
+                {
+                    distances.AddNoResize(i);
+                }
+            }
+            Debug.Log($"num neigh = {distances.Length}");
+            float3 directionSeparation = float3.zero;
+            if (distances.Length > 0)
+            {
+                for (int i = 0; i < distances.Length; i++)
+                {
+                    directionSeparation.xz += EntitiesPosition[index].xz - EntitiesPosition[distances[i]].xz;
+                }
+            }
+            return normalizesafe(directionSeparation);
+        }
+        */
     }
 }
