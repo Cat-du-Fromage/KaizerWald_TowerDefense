@@ -1,6 +1,7 @@
 using System;
 using KWUtils;
 using TowerDefense;
+using Unity.Mathematics;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -92,7 +93,16 @@ namespace KaizerWaldCode.RTTCamera
         private void CameraRotation(in Vector2 currentMousePosition)
         {
             MouseEndPosition = currentMousePosition;
-            
+            /*
+            if (CameraTransform.localEulerAngles.x >= 180)
+            {
+                Debug.Log($"current Rotation Y = {CameraTransform.localEulerAngles.x-360}");
+            }
+            else
+            {
+                Debug.Log($"current Rotation Y = {CameraTransform.localEulerAngles.x}");
+            }
+            */
             //Distances mouse on camera view (XY because we got them from camera view!)
             //2D:X = 3D:Y
             //2D:Y = 3D:X
