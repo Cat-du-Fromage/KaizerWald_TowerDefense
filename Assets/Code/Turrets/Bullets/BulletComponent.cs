@@ -3,34 +3,49 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
+using static KWUtils.KWmath;
+
 namespace TowerDefense
 {
+    public struct BulletData
+    {
+        //Initialization when out of the Pool
+        public bool IsLoaded;
+        public float MaxRange;
+        public Vector3 StartPosition;
+    }
     public class BulletComponent : MonoBehaviour
     {
+        public BulletData data;
+        
         [SerializeField] private float muzzleVelocity = 10f;
         private float velocity = 5f;
         
-        public bool IsShoot;
+        
         public bool Hit;
         
         //Stored Values
-        private Vector3 initialPosition;
+        public Vector3 StartPosition;
         private Rigidbody bulletRigidBody;
         
         private TrailRenderer trail;
 
         public EnemyComponent enemyHit;
 
+        
+
         private void Awake()
         {
-            initialPosition = transform.position;
+            data = new BulletData();
+            
+            StartPosition = transform.position;
             bulletRigidBody = GetComponent<Rigidbody>();
             trail = GetComponent<TrailRenderer>();
         }
 
         public void CheckFadeDistance()
         {
-            if ((transform.position - initialPosition).sqrMagnitude > 1024f)
+            if ((transform.position - StartPosition).sqrMagnitude > 1024f)
             {
                 Fade();
             }
@@ -42,7 +57,7 @@ namespace TowerDefense
             trail.emitting = false;
             
             bulletRigidBody.velocity = Vector3.zero;
-            transform.position = initialPosition;
+            transform.position = StartPosition;
             ResetHitValues();
         }
 
@@ -59,10 +74,17 @@ namespace TowerDefense
         //==============================================================================================================
         //EXTERNAL CALL
         //==============================================================================================================
+
+        public void LoadBullet(in Vector3 startPosition, float turretRange)
+        {
+            data.MaxRange = Sq(turretRange * 1.5f);
+            data.StartPosition = startPosition;
+            data.IsLoaded = true;
+        }
         
         public void Shoot(Vector3 direction)
         {
-            IsShoot = trail.emitting = true;
+            trail.emitting = true;
 
             bulletRigidBody.velocity = direction * velocity;
 
