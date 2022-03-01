@@ -233,7 +233,7 @@ namespace TowerDefense
             int cellIndex = EntitiesPosition[index].xz.GetIndexFromPosition(GridSize, 1);
             EntityFlowFieldDirection[index] = FlowField[cellIndex];
         }
-        
+        /*
         private float3 GetDirection(int index)
         {
             //Get AllEnemies
@@ -258,6 +258,7 @@ namespace TowerDefense
             }
             return normalizesafe(directionSeparation);
         }
+        */
     }
 
     //[BurstCompile]
