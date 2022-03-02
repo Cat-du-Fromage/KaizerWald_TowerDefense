@@ -17,6 +17,10 @@ using static Unity.Mathematics.math;
 using float3 = Unity.Mathematics.float3;
 using quaternion = Unity.Mathematics.quaternion;
 
+#if !(UNITY_EDITOR)
+#define EnableBurst
+#endif
+
 namespace TowerDefense
 {
     public class EnemyManager : MonoBehaviour
@@ -214,8 +218,9 @@ namespace TowerDefense
         }
     }
     */
-
-    //[BurstCompile]
+#if EnableBurst
+    [BurstCompile]
+#endif
     public struct JEntityFlowFieldDirection : IJobFor
     {
         [ReadOnly] public int2 GridSize;
@@ -260,8 +265,9 @@ namespace TowerDefense
         }
         */
     }
-
-    //[BurstCompile]
+#if EnableBurst
+    [BurstCompile]
+#endif
     public struct JMoveEnemies : IJobParallelForTransform
     {
         [ReadOnly] public float DeltaTime;

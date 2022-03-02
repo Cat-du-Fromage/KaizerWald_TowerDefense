@@ -56,6 +56,8 @@ namespace KWUtils.KWGenericGrid
             gridArray = new T[gridWidth * gridHeight];
         }
         
+        public int GridLength => gridArray.Length;
+        
         //Get Grid's Cell World Position
         public Vector3 GetCenterCellAt(int index)
         {

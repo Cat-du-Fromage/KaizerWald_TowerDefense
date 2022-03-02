@@ -194,8 +194,9 @@ namespace KWUtils
             return chunkCells;
         }
     }
-    
+#if !(UNITY_EDITOR)
     [BurstCompile]
+#endif
     public struct JOrderArrayByChunkIndex<T> : IJobFor
     where T : struct
     {
