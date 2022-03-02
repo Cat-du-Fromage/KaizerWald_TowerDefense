@@ -2,7 +2,7 @@
   "dependencies": {
     "com.cysharp.unitask": "https://github.com/Cysharp/UniTask.git?path=src/UniTask/Assets/Plugins/UniTask",
     "com.unity.addressables": "1.19.18",
-    "com.unity.burst": "1.7.0-pre.1",
+    "com.unity.burst": "1.7.0",
     "com.unity.cinemachine": "2.8.4",
     "com.unity.collections": "https://github.com/Cat-du-Fromage/com.unity.collections-1.1.0.git",
     "com.unity.feature.worldbuilding": "1.0.1",

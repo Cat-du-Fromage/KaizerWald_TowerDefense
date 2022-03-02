@@ -7,12 +7,13 @@ namespace TowerDefense
 {
 	    
 	public interface IHeapItem<in T> : IComparable<T> 
+	where T : class
 	{
 		int HeapIndex {get;set;}
 	}
 	
-    public class Heap<T>
-    where T : IHeapItem<T>
+	public class Heap<T>
+    where T : class, IHeapItem<T>
     {
 	    private readonly T[] items;
 	    private int currentItemCount;
@@ -83,8 +84,7 @@ namespace TowerDefense
 	            {
 					return;
 				}
-
-			}
+	        }
 		}
 
 		private void SortUp(T item) 

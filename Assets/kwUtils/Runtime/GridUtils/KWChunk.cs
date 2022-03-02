@@ -194,6 +194,11 @@ namespace KWUtils
             return chunkCells;
         }
     }
+    
+    // The Job will "slice" the array and reorder them
+    // at the end when we cut the array given the number of cell in one chunk
+    // we only get the value owned by the chunk
+    // ✂ 1️⃣2️⃣3️⃣ ✂ 4️⃣5️⃣6️⃣ ✂ 7️⃣8️⃣9️⃣
 #if !(UNITY_EDITOR)
     [BurstCompile]
 #endif
@@ -235,7 +240,7 @@ namespace KWUtils
     //CAREFUL Burst does not support generic call
     //Only enable if the static function calling it is not a generic type!
     public struct JGenericOrderArrayByChunkIndex<T> : IJobFor
-        where T : struct
+    where T : struct
     {
         [ReadOnly] public int MapSizeX;
         [ReadOnly] public int ChunkSize;

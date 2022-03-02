@@ -2,6 +2,8 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using KWUtils;
+using Unity.Collections;
+using Unity.Jobs;
 using Unity.Mathematics;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -9,6 +11,7 @@ using UnityEngine.InputSystem;
 using static KWUtils.KWmath;
 using static TowerDefense.TowerDefenseUtils;
 using static KWUtils.InputSystemExtension;
+using static Unity.Mathematics.math;
 
 namespace TowerDefense
 {
@@ -100,7 +103,7 @@ namespace TowerDefense
         /// <param name="endNode"></param>
         private void RetracePath(Node startNode, Node endNode)
         {
-            var path = new List<Node>();
+            List<Node> path = new List<Node>();
             Node currentNode = endNode;
 
             while(currentNode != startNode)
@@ -115,10 +118,26 @@ namespace TowerDefense
 
         private int GetDistance(Node nodeA, Node nodeB)
         {
-            int distX = Mathf.Abs(nodeA.gridX - nodeB.gridX);
-            int distY = Mathf.Abs(nodeA.gridY - nodeB.gridY);
+            int distX = abs(nodeA.gridX - nodeB.gridX);
+            int distY = abs(nodeA.gridY - nodeB.gridY);
 
             return (distX > distY) ? 14 * distY + 10 * (distX - distY) : 14 * distX + 10 * (distY - distX);
+        }
+/*
+        public void JobedFindPath()
+        {
+            NativeHashMap<int2, Node> nodes = new NativeHashMap<int2, Node>(10, Allocator.TempJob);
+            NativeHashMap<int2, Node> openSet = new NativeHashMap<int2, Node>(10, Allocator.TempJob);
+            NativeArray<int2> offsets = new NativeArray<int2>(8, Allocator.TempJob);
+        }
+        */
+    }
+
+    public struct JAStar : IJob
+    {
+        public void Execute()
+        {
+            
         }
     }
 }

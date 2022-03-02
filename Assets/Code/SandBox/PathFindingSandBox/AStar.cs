@@ -93,15 +93,14 @@ namespace TowerDefense
         {
             //Gizmos.DrawWireCube(transform.position, new Vector3(mapBounds.x, 1, mapBounds.y)); //y on z is normal
             Vector3 size = new Vector3(1f,0.05f,1f);
-            if(onlyDisplayPathGizmos == true)
+            if(onlyDisplayPathGizmos)
             {
                 if(PathList != null)
                 {
                     Gizmos.color = Color.black;
-                    foreach(Node n in PathList)
+                    for (int i = 0; i < PathList.Count; i++)
                     {
-                        
-                        Gizmos.DrawWireSphere(n.worldPosition, 0.2f); //Vector3.one = Vector3(1,1,1)
+                        Gizmos.DrawSphere(PathList[i].worldPosition, 0.2f);
                     }
                 }
             }

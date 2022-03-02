@@ -32,8 +32,8 @@ namespace KWUtils
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static float ClampAngle(float lfAngle, float lfMin, float lfMax)
         {
-            if (lfAngle < -360f) lfAngle += 360f;
-            if (lfAngle > 360f) lfAngle -= 360f;
+            if (lfAngle < -180f) lfAngle += 360f;
+            if (lfAngle > 180) lfAngle -= 360f;
             return Mathf.Clamp(lfAngle, lfMin, lfMax);
         }
         

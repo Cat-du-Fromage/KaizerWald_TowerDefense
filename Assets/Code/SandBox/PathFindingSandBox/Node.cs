@@ -26,7 +26,19 @@ namespace TowerDefense
         public int FCost => gCost + hCost;
 
         public int HeapIndex { get; set; }
-
+/*
+        public int PseudoCompareTo(Node node, Node nodeToCompare)
+        {
+            int compare;
+            if (node.FCost == nodeToCompare.FCost)
+            {
+                compare = node.hCost > nodeToCompare.hCost ? 1 : -1;
+                return -compare;
+            }
+            compare = node.FCost > nodeToCompare.FCost ? 1 : -1;
+            return -compare;
+        }
+*/
         public int CompareTo(Node nodeToCompare)
         {
             int compare = FCost.CompareTo(nodeToCompare.FCost);
