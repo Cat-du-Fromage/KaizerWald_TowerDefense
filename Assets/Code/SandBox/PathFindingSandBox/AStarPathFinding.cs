@@ -80,7 +80,7 @@ namespace TowerDefense
 
                     foreach(Node neighbour in grid.GetNeighbours(currentNode)) // find the nearest valid node and add it to the opensetlist
                     {
-                        if(!neighbour.walkable || closedSet.Contains(neighbour)) {continue;} // check if not walkable or not part of list closedSet
+                        if(!neighbour.walkable || closedSet.Contains(neighbour)) continue; // check if not walkable or not part of list closedSet
                         int newMovementCostToNeighbour = currentNode.gCost + GetDistance(currentNode, neighbour); // calcul length beetween position and adjacent
                         if(newMovementCostToNeighbour < neighbour.gCost || !openSet.Contains(neighbour))
                         {
@@ -120,24 +120,9 @@ namespace TowerDefense
         {
             int distX = abs(nodeA.gridX - nodeB.gridX);
             int distY = abs(nodeA.gridY - nodeB.gridY);
-
+            
             return (distX > distY) ? 14 * distY + 10 * (distX - distY) : 14 * distX + 10 * (distY - distX);
         }
-/*
-        public void JobedFindPath()
-        {
-            NativeHashMap<int2, Node> nodes = new NativeHashMap<int2, Node>(10, Allocator.TempJob);
-            NativeHashMap<int2, Node> openSet = new NativeHashMap<int2, Node>(10, Allocator.TempJob);
-            NativeArray<int2> offsets = new NativeArray<int2>(8, Allocator.TempJob);
-        }
-        */
     }
 
-    public struct JAStar : IJob
-    {
-        public void Execute()
-        {
-            
-        }
-    }
 }

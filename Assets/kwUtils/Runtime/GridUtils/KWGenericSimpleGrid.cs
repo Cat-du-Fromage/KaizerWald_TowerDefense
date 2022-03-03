@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using Unity.Mathematics;
@@ -26,6 +27,48 @@ namespace KWUtils.KWGenericGrid
         
         private readonly T[] gridArray;
 
+        public SimpleGrid(in int2 mapSize, int cellSize, Func<int2, T> createGridObject)
+        {
+            this.cellSize = cellSize;
+            
+            mapWidth = mapSize.x;
+            mapHeight = mapSize.y;
+            
+            gridWidth = mapSize.x / cellSize;
+            gridHeight = mapSize.y / cellSize;
+            
+            gridBounds = new int2(gridWidth, gridHeight);
+            
+            gridArray = new T[gridWidth * gridHeight];
+
+            //Init Grid
+            for (int i = 0; i < gridArray.Length; i++)
+            {
+                gridArray[i] = createGridObject(i.GetXY2(gridWidth));
+            }
+        }
+        
+        public SimpleGrid(int mapWidth, int mapHeight, int cellSize, Func<SimpleGrid<T>, int2 , T> createGridObject)
+        {
+            this.cellSize = cellSize;
+            
+            this.mapWidth = mapWidth;
+            this.mapHeight = mapHeight;
+            
+            gridWidth = mapWidth / cellSize;
+            gridHeight = mapHeight / cellSize;
+            
+            gridBounds = new int2(gridWidth, gridHeight);
+
+            gridArray = new T[gridWidth * gridHeight];
+
+            //Init Grid
+            for (int i = 0; i < gridArray.Length; i++)
+            {
+                gridArray[i] = createGridObject(this, i.GetXY2(gridWidth));
+            }
+        }
+        
         public SimpleGrid(int mapWidth, int mapHeight, int cellSize)
         {
             this.cellSize = cellSize;
