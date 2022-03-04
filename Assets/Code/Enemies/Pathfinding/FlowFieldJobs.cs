@@ -11,8 +11,8 @@ using static Unity.Mathematics.math;
 using float2 = Unity.Mathematics.float2;
 using float3 = Unity.Mathematics.float3;
 
-#if !(UNITY_EDITOR)
-#define EnableBurst
+#if (UNITY_EDITOR)
+//#define EnableBurst
 #endif
 
 namespace TowerDefense
@@ -23,8 +23,8 @@ namespace TowerDefense
     /// NEED TO KNOW which cell is directly near an unwalkable chunk
     /// So we can set a value of 2 for the costfield
     /// </summary>
-#if EnableBurst
-    [BurstCompile]
+#if !EnableBurst
+    //[BurstCompile]
 #endif
     public struct JCostField : IJobFor
     {
@@ -52,7 +52,7 @@ namespace TowerDefense
             return mad(xy.y, MapSize.x/ChunkSize, xy.x);
         }
     }
-#if EnableBurst
+#if !EnableBurst
     [BurstCompile]
 #endif
     public struct JSmoothCostField : IJobFor
@@ -123,7 +123,7 @@ namespace TowerDefense
             return mad(xy.y, MapSize.x/ChunkSize, xy.x);
         }
     }
-#if EnableBurst
+#if !EnableBurst
     [BurstCompile]
 #endif
     public struct JIntegrationField : IJob
@@ -178,7 +178,7 @@ namespace TowerDefense
             }
         }
     }
-#if EnableBurst
+#if !EnableBurst
     [BurstCompile]
 #endif
     public struct JBestDirection : IJobFor

@@ -6,6 +6,7 @@ using UnityEngine;
 using static Unity.Mathematics.math;
 using static KWUtils.KWChunk;
 using static KWUtils.KWmath;
+using float2 = Unity.Mathematics.float2;
 
 namespace KWUtils.KWGenericGrid
 {
@@ -22,13 +23,15 @@ namespace KWUtils.KWGenericGrid
         private int chunkSize;
         private int2 chunkWidthHeight;
 
-        private float cellSize;
+        private int cellSize;
         private int2 cellWidthHeight;
 
         private Dictionary<int, T[]> chunkDictionary;
         private readonly T[] gridArray; //cell Independant From the Chunk
 
         //private Vector3[] chunkCenters;
+
+        private float2 cachedCellCenter = float2.zero; //Use for SetValue
         
         public ChunkedGrid(int mapWidth, int mapHeight, int chunkSize, int cellSize = 1)
         {
@@ -95,6 +98,11 @@ namespace KWUtils.KWGenericGrid
         public void SetValue(int x, int y, T value)
         {
             gridArray[y * chunkWidthHeight.x + x] = value;
+            
+            cachedCellCenter = new float2(x + 0.5f, y + 0.5f);
+            int chunkIndex = cachedCellCenter.GetIndexFromPosition(mapWidthHeight, chunkSize);
+            int2 chunkCoord = chunkIndex.GetXY2(mapWidthHeight.x);
+            int chunkCellIndex = cachedCellCenter.GetIndexFromPosition(chunkSize, cellSize, chunkCoord * chunkSize);
         }
 
         public void SetValueFromPosition(Vector3 position, T value)

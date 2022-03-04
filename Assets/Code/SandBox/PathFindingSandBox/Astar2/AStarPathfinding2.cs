@@ -23,8 +23,6 @@ namespace TowerDefense
         {
             terrain ??= Terrain.activeTerrain;
             mapBounds = (int2)terrain.terrainData.size.XZ();
-            
-            
         }
 
         private void Start()
@@ -44,8 +42,6 @@ namespace TowerDefense
 
         public void Execute()
         {
-            
-            
             NativeQueue<int> cellsToCheck = new NativeQueue<int>(Allocator.Temp);
             NativeList<int> currentNeighbors = new NativeList<int>(4,Allocator.Temp);
             

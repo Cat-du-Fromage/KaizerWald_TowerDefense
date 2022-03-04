@@ -169,6 +169,17 @@ namespace KWUtils
         }
         
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static int GetIndexFromPosition(this float2 pointPos, int2 gridSize, int cellSize, int2 offset)
+        {
+            float2 percents = (pointPos - offset) / (gridSize * cellSize);
+            percents = clamp(percents, 0, 1f);
+
+            int2 xy =  clamp((int2)floor(gridSize * percents), 0, gridSize - 1);
+            
+            return mad(xy.y, gridSize.x/cellSize, xy.x);
+        }
+        
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static int GetIndexFromPosition(this float3 pointPos, int2 gridSize, int cellSize, bool offset)
         {
             float2 mapOffset = offset ? gridSize / 2 : 0;

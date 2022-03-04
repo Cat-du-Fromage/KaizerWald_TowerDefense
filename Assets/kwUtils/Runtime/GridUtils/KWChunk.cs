@@ -52,6 +52,12 @@ namespace KWUtils
         {
             return (chunkCoord * chunkSize) + cellInChunkCoord;
         }
+
+        public static void GetChunkCellIndexFromCellIndex(this in int2 cellInGridCoord,  int chunkSize)
+        {
+            //int index = 
+            //int2 chunkCoord = chunkIndex.GetXY2(gridData.NumChunkXY.x);
+        }
         
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static int GetGridCellIndexFromChunkCellIndex(this int chunkIndex, in GridData gridData, int cellIndexInsideChunk)

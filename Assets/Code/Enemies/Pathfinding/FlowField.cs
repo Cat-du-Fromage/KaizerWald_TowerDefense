@@ -66,7 +66,7 @@ namespace TowerDefense
         
         //FlowField
         private NativeArray<float3> nativeBestDirection;
-
+        
         //public byte[] CostField;
 
         public FlowField(int2 gridSize, int chunkSize)
@@ -79,7 +79,7 @@ namespace TowerDefense
         public Vector3[] GetFlowField(int targetCell, int[] walkableChunk, Road[] walkableRoad)
         {
             Vector3[] directionField = new Vector3[totalNumCells];
-
+            
             //Cost Field
             nativeWalkableChunk = walkableChunk.ToNativeArray();
             nativeCostField = AllocNtvAry<byte>(totalNumCells);
@@ -123,7 +123,7 @@ namespace TowerDefense
                 MapSize = gridSize,
                 ChunkSize = chunkSize,
                 WalkableChunk = nativeWalkableChunk,
-                CostField = nativeCostField
+                CostField = nativeCostField,
             };
             return job.ScheduleParallel(totalNumCells, JobWorkerCount - 1, dependency);
         }

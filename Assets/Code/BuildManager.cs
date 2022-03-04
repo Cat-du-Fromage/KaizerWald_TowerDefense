@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using KWUtils;
 using KWUtils.KWGenericGrid;
+using Unity.Collections;
 using Unity.Mathematics;
 using UnityEditor;
 using UnityEngine;
@@ -39,6 +40,8 @@ namespace TowerDefense
         //Simple Generic Grid
         private const int CellSize = 4;
         private SimpleGrid<bool> simpleGrid; //use instanceID
+
+        private ChunkedBitFieldGrid chunkedBitfieldGrid;
         
         private int currentGridIndex = -1;
         private int previousGridIndex = -1;
@@ -55,6 +58,7 @@ namespace TowerDefense
             //snapPositions = new Vector3[(terrainWidthHeight.x - 1) * (terrainWidthHeight.y - 1)];
             //GetSnapPosition();
             simpleGrid = new SimpleGrid<bool>(terrainWidthHeight, CellSize);
+            chunkedBitfieldGrid = new ChunkedBitFieldGrid(terrainWidthHeight, CellSize);
         }
 
         private void Update()
@@ -107,6 +111,10 @@ namespace TowerDefense
                 //Move this to Register Notification
                 TurretManager.CreateTurret(currentTurret, currentBlueprint.position, currentBlueprint.rotation);
                 simpleGrid.SetValue(currentGridIndex, true);
+
+                (int x, int y) = currentGridIndex.GetXY(terrainWidthHeight.x);
+                chunkedBitfieldGrid.SetValue(x,y, true);
+                //Debug.Log($"value at Chunk {chunkedBitfieldGrid.ChunkIndexAtCoord(x,y)} is {chunkedBitfieldGrid.GetValueAt(x,y)}");
             }
         }
         
