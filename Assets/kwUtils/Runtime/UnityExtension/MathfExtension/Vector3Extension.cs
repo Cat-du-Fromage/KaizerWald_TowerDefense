@@ -5,6 +5,8 @@ using System.Runtime.CompilerServices;
 using Unity.Mathematics;
 using UnityEngine;
 
+using static Unity.Mathematics.math;
+
 namespace KWUtils
 {
     public static class Vector3Extension
@@ -53,6 +55,12 @@ namespace KWUtils
         public static Vector3 DirectionTo(this Vector3 source, Vector3 destination)
         {
             return Vector3.Normalize(destination - source);
+        }
+        
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static float3 DirectionTo(this float3 source, float3 destination)
+        {
+            return normalize(destination - source);
         }
         
         /// <summary>

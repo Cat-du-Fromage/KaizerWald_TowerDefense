@@ -14,110 +14,183 @@ namespace KWUtils
         private int2 mapWidthHeight;
 
         private int chunkSize;
+        private float halfChunk;
         private int2 chunkWidthHeight;
 
         private int cellSize;
+        private float halfCell;
         private int2 cellWidthHeight;
 
-        private Dictionary<int, BitField32> chunkBitfield;
+        private int cellPerChunkWidth;
+
+        private BitField64[] chunkBitfield;
+        //private Dictionary<int, BitField64> chunkBitfield;
         private readonly bool[] gridArray; //cell Independant From the Chunk
 
         //private Vector3[] chunkCenters;
         
-        public ChunkedBitFieldGrid(int mapWidth, int mapHeight, int chunkSize, int cellSize = 1)
+        public ChunkedBitFieldGrid(int mapWidth, int mapHeight, int cellSize = 1)
         {
-            this.chunkSize = chunkSize;
+            chunkSize = (int)sqrt(64) * cellSize;
+            halfChunk = chunkSize / 2f;
+            
             this.cellSize = cellSize;
+            halfCell = cellSize / 2f;
+
+            cellPerChunkWidth = chunkSize / cellSize;
+            
             mapWidthHeight = new int2(mapWidth, mapHeight);
             chunkWidthHeight = mapWidthHeight / chunkSize;
-
+            
             cellWidthHeight = cellSize is 1 ? mapWidthHeight : mapWidthHeight / cellSize ;
 
             gridArray = new bool[cmul(cellWidthHeight)];
             
             int capacity = cmul(chunkWidthHeight);
-            chunkBitfield = new Dictionary<int, BitField32>(capacity);
+            chunkBitfield = new BitField64[capacity];
+            
+            //chunkBitfield = new Dictionary<int, BitField64>(capacity);
             for (int i = 0; i < capacity; i++)
             {
-                chunkBitfield.Add(i, new BitField32());
+                chunkBitfield[i] = new BitField64();
+                //chunkBitfield.Add(i, new BitField64());
             }
         }
         
         
-        public ChunkedBitFieldGrid(int2 mapSize, int chunkSize, int cellSize = 1)
+        public ChunkedBitFieldGrid(int2 mapSize, int cellSize = 1)
         {
-            this.chunkSize = chunkSize;
+            chunkSize = (int)sqrt(64) * cellSize;
+            halfChunk = chunkSize / 2f;
+            
             this.cellSize = cellSize;
+            halfCell = cellSize / 2f;
+            
+            cellPerChunkWidth = chunkSize / cellSize;
+            
             mapWidthHeight = mapSize;
             chunkWidthHeight = mapWidthHeight / chunkSize;
             
             cellWidthHeight = cellSize is 1 ? mapWidthHeight : new int2(mapWidthHeight / cellSize);
-
+            
             gridArray = new bool[cmul(cellWidthHeight)];
 
             int capacity = cmul(chunkWidthHeight);
-            chunkBitfield = new Dictionary<int, BitField32>(capacity);
+            chunkBitfield = new BitField64[capacity];
+            //chunkBitfield = new Dictionary<int, BitField64>(capacity);
             for (int i = 0; i < capacity; i++)
             {
-                chunkBitfield.Add(i, new BitField32());
+                chunkBitfield[i] = new BitField64();
+                //chunkBitfield.Add(i, new BitField64());
             }
         }
-        
-        
-        //Get Chunk Value
-        public int ChunkIndexAtCoord(int x, int y)
+
+        public int ChunkLength => chunkBitfield.Length;
+        public int GridLength => gridArray.Length;
+        //==============================================================================================================
+        /// <summary>
+        /// From Cell coordinate : Get the cell Index Inside a Chunk
+        /// Index Correspond to the CHUNK's index (0->63), not the full grid 
+        /// </summary>
+        //==============================================================================================================
+        public int GetChunkIndexAtCoord(int x, int y)
         {
-            float2 centerCell = new float2(x + cellSize/2f, y + cellSize/2f);
-            return centerCell.GetIndexFromPosition(mapWidthHeight, chunkSize);
-        }
-        
-        public int ChunkIndexAtPosition(Vector3 position)
-        {
-            float2 centerCell = new float2(position.x, position.z);
-            return centerCell.GetIndexFromPosition(mapWidthHeight, chunkSize);
+            float2 cellCenter = float2(x + halfCell, y + halfCell);
+            return cellCenter.GetIndexFromPosition(mapWidthHeight, chunkSize);
         }
 
-        public Vector3 GetChunkCenterAt(int index)
+        //==============================================================================================================
+        /// <summary>
+        /// From World Position : Get the cell Index Inside a Chunk
+        /// Index Correspond to the CHUNK's index not the full grid (0->63)
+        /// </summary>
+        //==============================================================================================================
+        public int GetChunkIndexAtPosition(Vector3 position) => position.XZ().GetIndexFromPosition(mapWidthHeight, chunkSize);
+        public int GetChunkIndexAtPosition(float3 position) => position.xz.GetIndexFromPosition(mapWidthHeight, chunkSize);
+        
+        //==============================================================================================================
+        /// <summary>
+        /// Get The Center Of a Chunk Given an index
+        /// </summary>
+        //==============================================================================================================
+        public Vector3 GetChunkCenterAt(int chunkIndex)
         {
-            (int x, int z) = index.GetXY(chunkWidthHeight.x); //we offset by 1,0,1 so we just remove the last one
-            Vector3 pointPosition = (new Vector3(x, 0, z) * chunkSize) + (Vector3.one * (chunkSize / 2f)); //* cellBound not needed this time since value = Vector3(1,1,1)
+            (int x, int z) = chunkIndex.GetXY(chunkWidthHeight.x);
+            Vector3 pointPosition = (new Vector3(x, 0, z) * chunkSize) + (Vector3.one * halfChunk);
             return pointPosition.Flat();
         }
         
-
-        // Cell Grid : Get Value
-        public Vector3 GetCellCenterAt(int index)
+        //==============================================================================================================
+        /// <summary>
+        /// Get Cell Center given an Index
+        /// Index Is from world grid ! not the index inside a chunk
+        /// </summary>
+        //==============================================================================================================
+        public Vector3 GetCellCenterAt(int cellIndex)
         {
-            (int x, int z) = index.GetXY(cellWidthHeight.x);
-            Vector3 pointPosition = (new Vector3(x, 0, z) * cellSize) + (Vector3.one * (cellSize / 2f));
+            (int x, int z) = cellIndex.GetXY(cellWidthHeight.x);
+            Vector3 pointPosition = (new Vector3(x, 0, z) * cellSize) + (Vector3.one * (halfCell));
             return pointPosition.Flat();
         }
         
-        public bool GetValueAt(int x, int y)
+        //==============================================================================================================
+        /// <summary>
+        /// Get Cell Center given an Index
+        /// Index Is from Chunk Grid
+        /// </summary>
+        //==============================================================================================================
+        public Vector3 GetCellCenterFromChunkIndexAt(int chunkIndex, int cellIndex)
         {
-            return gridArray[y * cellWidthHeight.x + x];
+            int2 chunkCoord = chunkIndex.GetXY2(chunkWidthHeight.x);
+            int2 cellCoord = cellIndex.GetXY2(cellPerChunkWidth);
+            
+            float2 chunkOffset = float2(chunkCoord * chunkSize);
+            float2 centerCell = (cellCoord * cellSize + float2(halfCell)) + chunkOffset; // OK
+            return new Vector3(centerCell.x,0,centerCell.y);
+        }
+        
+        //==============================================================================================================
+        /// <summary>
+        /// From Chunk Grid : Get Value
+        /// Without Chunk indices
+        /// </summary>
+        //==============================================================================================================
+        public bool GetChunkCellValueAt(int chunkIndex, int index)
+        {
+            return chunkBitfield[chunkIndex].IsSet(index);
+        }
+        
+        public bool GetChunkCellValueAt(int chunkIndex, in int2 coord)
+        {
+            return chunkBitfield[chunkIndex].IsSet(mad(coord.y, chunkWidthHeight.x, coord.x));
         }
 
-        public bool GetValueAt(in int2 coord)
+        public bool GetChunkCellValueAt(int chunkIndex, int x, int y)
         {
-            return gridArray[coord.y * cellWidthHeight.x + coord.x];
+            return chunkBitfield[chunkIndex].IsSet(mad(y, chunkWidthHeight.x, x));
         }
 
-        public bool GetValueFromWorldPosition(Vector3 position)
-        {
-            return gridArray[position.GetIndexFromPosition(mapWidthHeight, cellSize)];
-        }
+        //==============================================================================================================
+        /// <summary>
+        /// From Grid : Get Value
+        /// Without Chunk indices
+        /// </summary>
+        //==============================================================================================================
+        public bool GetValueAt(int x, int y) => gridArray[y * cellWidthHeight.x + x];
+        public bool GetValueAt(in int2 coord) => gridArray[coord.y * cellWidthHeight.x + coord.x];
+        public bool GetValueFromWorldPosition(Vector3 position) => gridArray[position.GetIndexFromPosition(mapWidthHeight, cellSize)];
+        
         
         //Retrieve bot chunk Index and the cell Index from a coord
-        private (int, int) GetChunkCellIndexFromCellArray(int x, int y, float offset = 0)
+        private (int, int) GetChunkCellIndexFromCellArray(float x, float y, float offset = 0)
         {
-            float2 centerCell = new float2(x + offset, y + offset); // OK
-            
+            float2 centerCell = float2(mad(x,cellSize,offset), mad(y,cellSize,offset)); // OK
+            //UnityEngine.Debug.Log($"centerCell : {centerCell}");
             int chunkIndex = centerCell.GetIndexFromPosition(mapWidthHeight, chunkSize);
-            UnityEngine.Debug.Log(chunkIndex);
-            int2 chunkCoord = chunkIndex.GetXY2(cellWidthHeight.x);
-            int chunkCellIndex = centerCell.GetIndexFromPosition(mapWidthHeight, cellSize, chunkCoord * chunkSize);
-//UnityEngine.Debug.Log(chunkIndex);
+            
+            int2 chunkCoord = chunkIndex.GetXY2(chunkWidthHeight.x);
+            int chunkCellIndex = centerCell.GetIndexFromPositionOffseted(int2(chunkSize), cellSize, chunkCoord * chunkSize);
+            
             return (chunkIndex, chunkCellIndex);
         }
         
@@ -126,15 +199,21 @@ namespace KWUtils
         {
             gridArray[y * cellWidthHeight.x + x] = value;
             //CHECK THIS
-            (int chunkIndex, int chunkCellIndex) = GetChunkCellIndexFromCellArray(x, y, cellSize/2f);
+            //UnityEngine.Debug.Log($"position = {float3(x,0,y)};");
+            (int chunkIndex, int chunkCellIndex) = GetChunkCellIndexFromCellArray(x, y, halfCell);
+            //UnityEngine.Debug.Log($"chunkIndex = {chunkIndex}; chunkCellIndex = {chunkCellIndex}");
+
             chunkBitfield[chunkIndex].SetBits(chunkCellIndex, value);
+            //UnityEngine.Debug.Log(chunkBitfield[chunkIndex].IsSet(chunkCellIndex));
         }
 
         public void SetValueFromPosition(Vector3 position, bool value)
         {
             gridArray[position.GetIndexFromPosition(cellWidthHeight, cellSize)] = value;
             //CHECK THIS
-            (int chunkIndex, int chunkCellIndex) = GetChunkCellIndexFromCellArray((int)position.x, (int)position.y);
+            
+            (int chunkIndex, int chunkCellIndex) = GetChunkCellIndexFromCellArray((int)position.x, (int)position.z);
+            UnityEngine.Debug.Log($"chunkIndex = {chunkIndex}; chunkCellIndex = {chunkCellIndex}");
             chunkBitfield[chunkIndex].SetBits(chunkCellIndex, value);
         }
     }

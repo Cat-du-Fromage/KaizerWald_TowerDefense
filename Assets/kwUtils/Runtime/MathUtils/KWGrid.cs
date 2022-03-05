@@ -169,7 +169,7 @@ namespace KWUtils
         }
         
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static int GetIndexFromPosition(this float2 pointPos, int2 gridSize, int cellSize, int2 offset)
+        public static int GetIndexFromPositionOffseted(this float2 pointPos, int2 gridSize, int cellSize, int2 offset)
         {
             float2 percents = (pointPos - offset) / (gridSize * cellSize);
             percents = clamp(percents, 0, 1f);
@@ -292,14 +292,17 @@ namespace KWUtils
                           || (x == 0 && y == gridWidth - 1) 
                           || (x == gridWidth - 1 && y == 0) 
                           || (x == gridWidth - 1 && y == gridWidth - 1);
+            
             bool yOnEdge = y == 0 || y == gridWidth - 1;
             bool xOnEdge = x == 0 || x == gridWidth - 1;
 
             //check if on edge 0 : int2(0, 1) ; if not NumCellJob - 1 : int2(-1, 0)
             int2 OnEdge(int e) => select(int2(-1, 0), int2(0, 1), e == 0);
+            
             int2 yRange = select(OnEdge(y), int2(-1, 1), !yOnEdge);
             int2 xRange = select(OnEdge(x), int2(-1, 1), !xOnEdge);
             int numCell = select(select(9, 6, yOnEdge || xOnEdge), 4, corner);
+            
             return (numCell, xRange, yRange);
         }
 

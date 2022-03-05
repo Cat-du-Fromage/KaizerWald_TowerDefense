@@ -17,12 +17,12 @@ namespace KWUtils.KWGenericGrid
     public class SimpleGrid<T>
     {
         //Need this in order to get value from world position
-        private readonly int mapWidth;
-        private readonly int mapHeight;
-        
+
         private readonly int cellSize;
         private readonly int gridWidth;
         private readonly int gridHeight;
+        
+        private readonly int2 mapWidthHeight;
         private readonly int2 gridBounds;
         
         private readonly T[] gridArray;
@@ -30,9 +30,8 @@ namespace KWUtils.KWGenericGrid
         public SimpleGrid(in int2 mapSize, int cellSize, Func<int2, T> createGridObject)
         {
             this.cellSize = cellSize;
-            
-            mapWidth = mapSize.x;
-            mapHeight = mapSize.y;
+
+            mapWidthHeight = mapSize;
             
             gridWidth = mapSize.x / cellSize;
             gridHeight = mapSize.y / cellSize;
@@ -41,6 +40,7 @@ namespace KWUtils.KWGenericGrid
             
             gridArray = new T[gridWidth * gridHeight];
 
+            UnityEngine.Debug.Log($"PATH {gridArray.Length}");
             //Init Grid
             for (int i = 0; i < gridArray.Length; i++)
             {
@@ -51,9 +51,8 @@ namespace KWUtils.KWGenericGrid
         public SimpleGrid(int mapWidth, int mapHeight, int cellSize, Func<SimpleGrid<T>, int2 , T> createGridObject)
         {
             this.cellSize = cellSize;
-            
-            this.mapWidth = mapWidth;
-            this.mapHeight = mapHeight;
+
+            mapWidthHeight = new int2(mapWidth, mapHeight);
             
             gridWidth = mapWidth / cellSize;
             gridHeight = mapHeight / cellSize;
@@ -62,9 +61,11 @@ namespace KWUtils.KWGenericGrid
 
             gridArray = new T[gridWidth * gridHeight];
 
+            
             //Init Grid
             for (int i = 0; i < gridArray.Length; i++)
             {
+                
                 gridArray[i] = createGridObject(this, i.GetXY2(gridWidth));
             }
         }
@@ -72,9 +73,8 @@ namespace KWUtils.KWGenericGrid
         public SimpleGrid(int mapWidth, int mapHeight, int cellSize)
         {
             this.cellSize = cellSize;
-            
-            this.mapWidth = mapWidth;
-            this.mapHeight = mapHeight;
+
+            mapWidthHeight = new int2(mapWidth, mapHeight);
             
             gridWidth = mapWidth / cellSize;
             gridHeight = mapHeight / cellSize;
@@ -87,9 +87,8 @@ namespace KWUtils.KWGenericGrid
         public SimpleGrid(in int2 mapSize, int cellSize)
         {
             this.cellSize = cellSize;
-            
-            mapWidth = mapSize.x;
-            mapHeight = mapSize.y;
+
+            mapWidthHeight = mapSize;
             
             gridWidth = mapSize.x / cellSize;
             gridHeight = mapSize.y / cellSize;
@@ -97,19 +96,25 @@ namespace KWUtils.KWGenericGrid
             gridBounds = new int2(gridWidth, gridHeight);
             
             gridArray = new T[gridWidth * gridHeight];
+            UnityEngine.Debug.Log($"BUILD {gridArray.Length}");
         }
-        
+
+        public T[] GetGridArray => gridArray;
         public int GridLength => gridArray.Length;
+
+        public int GetGridWidth => gridWidth;
         
         //Get Grid's Cell World Position
         public Vector3 GetCenterCellAt(int index)
         {
             (int x, int z) = index.GetXY(gridWidth);
+            //UnityEngine.Debug.Log($"X : {x}; Z : {z}");
             Vector3 pointPosition = (new Vector3(x, 0, z) * cellSize) + (Vector3.one * (cellSize / 2f));
             return pointPosition.Flat();
         }
 
         //Get Value
+        //==============================================================================================================
         public T GetValueAt(int index)
         {
             return gridArray[index];
@@ -126,7 +131,14 @@ namespace KWUtils.KWGenericGrid
 
         public T GetValueFromWorldPosition(in Vector3 position)
         {
-            return gridArray[position.GetIndexFromPosition(gridBounds, cellSize)];
+            return gridArray[position.GetIndexFromPosition(mapWidthHeight, cellSize)];
+        }
+        
+        //GetIndex from Position
+        //==============================================================================================================
+        public int GetIndexFromPosition(in Vector3 position)
+        {
+            return position.XZ().GetIndexFromPosition(mapWidthHeight, cellSize);
         }
         
         //Set Value
@@ -147,7 +159,7 @@ namespace KWUtils.KWGenericGrid
 
         public void SetValueFromPosition(in Vector3 position, T value)
         {
-            gridArray[position.GetIndexFromPosition(gridBounds, cellSize)] = value;
+            gridArray[position.GetIndexFromPosition(mapWidthHeight, cellSize)] = value;
         }
     }
 }

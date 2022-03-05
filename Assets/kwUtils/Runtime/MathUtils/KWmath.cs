@@ -16,18 +16,7 @@ namespace KWUtils
         
         public static bool IsAbove(this Vector2 centerPoint, Vector2 otherPoint) => centerPoint.y > otherPoint.y;
         public static bool IsAbove(this float2 centerPoint, float2 otherPoint) => centerPoint.y > otherPoint.y;
-        
-        
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static float MinMax(float valMin, float valMax, float input)
-        {
-            return max(valMin, min(input, valMax));
-        }
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static int MinMax(int valMin, int valMax, int input)
-        {
-            return max(valMin, min(input, valMax));
-        }
+
         
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static float ClampAngle(float lfAngle, float lfMin, float lfMax)
@@ -37,21 +26,31 @@ namespace KWUtils
             return Mathf.Clamp(lfAngle, lfMin, lfMax);
         }
         
+        //==============================================================================================================
         /// <summary>
         /// Square value : Multiply value by itself (v * v)
         /// </summary>
+        //==============================================================================================================
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static int Sq(int v) => v * v;
         
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static float Sq(float v) => v * v;
         
+        //==============================================================================================================
         /// <summary>
         /// ComponentWise Multiplication (x * y)
         /// </summary>
+        //==============================================================================================================
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static int cmul(int2 v) => v.x * v.y;
 
+        //==============================================================================================================
+        /// <summary>
+        /// ComponentWise substraction (x - y)
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static int csub(int2 v) => v.x - v.y;
 
 
         // Line Segment Intersection (line1 is p1-p2 and line2 is p3-p4)
@@ -69,12 +68,12 @@ namespace KWUtils
             float cx = p3.x - p1.x;
             float cy = p3.y - p1.y;
             float t = (cx * dy - cy * dx) / bDotDPerp;
-            if (t < 0 || t > 1)
+            if (t is < 0 or > 1)
             {
                 return false;
             }
             float u = (cx * by - cy * bx) / bDotDPerp;
-            if (u < 0 || u > 1)
+            if (u is < 0 or > 1)
             {
                 return false;
             }
@@ -330,14 +329,38 @@ namespace KWUtils
          
          */
          //VECTOR
-         public static Vector3 Direction(in Vector3 end, in Vector3 start)
-         {
-            return (end - start).normalized;
-         }
          
-         public static float3 Direction(in float3 end, in float3 start)
+         
+         // Source: https://stackoverflow.com/questions/3154454/what-is-the-most-efficient-way-to-calculate-the-least-common-multiple-of-two-int
+         
+         /// <summary>
+         /// Greater Common Divisor / Plus grand diviseur commun
+         /// </summary>
+         public static int gcd(int a, int b)
          {
-             return normalize(end - start);
+             if (b == 0)
+                 return a;
+             return gcd(b, a % b);
+             /*
+             while (a != 0 && b != 0)
+             {
+                 if (a > b)
+                     a %= b;
+                 else
+                     b %= a;
+             }
+
+             return a | b;
+             */
+         }
+
+         /// <summary>
+         /// Lower Common Multiplicator / Plus petit multiple commun
+         /// </summary>
+         public static int lcm(int a, int b)
+         {
+             //return select((b / gcd(a, b)) * a, (a / gcd(a, b)) * b, a > b);
+             return a > b ? (a / gcd(a, b)) * b : (b / gcd(a, b)) * a;
          }
     }
 }

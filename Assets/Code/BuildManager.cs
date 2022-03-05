@@ -19,8 +19,11 @@ using static Unity.Mathematics.math;
 
 namespace TowerDefense
 {
-    public class BuildManager : MonoBehaviour
+    public class BuildManager : MonoBehaviour, IGridHandler<bool>
     {
+        public IGridSystem GridSystem { get; set; }
+        public SimpleGrid<bool> Grid { get; private set; }
+        
         public bool IsBuilding;
 
         [SerializeField] private TurretManager TurretManager;
@@ -39,13 +42,12 @@ namespace TowerDefense
         
         //Simple Generic Grid
         private const int CellSize = 4;
-        private SimpleGrid<bool> simpleGrid; //use instanceID
+        //private SimpleGrid<bool> Grid; //use instanceID
 
-        private ChunkedBitFieldGrid chunkedBitfieldGrid;
-        
         private int currentGridIndex = -1;
         private int previousGridIndex = -1;
-        
+        private IGridHandler<bool> gridHandlerImplementation;
+
         private void Awake()
         {
             TurretManager ??= FindObjectOfType<TurretManager>();
@@ -55,17 +57,13 @@ namespace TowerDefense
         
         private void Start()
         {
-            //snapPositions = new Vector3[(terrainWidthHeight.x - 1) * (terrainWidthHeight.y - 1)];
-            //GetSnapPosition();
-            simpleGrid = new SimpleGrid<bool>(terrainWidthHeight, CellSize);
-            chunkedBitfieldGrid = new ChunkedBitFieldGrid(terrainWidthHeight, CellSize);
+            Grid = new SimpleGrid<bool>(terrainWidthHeight, CellSize);
         }
 
         private void Update()
         {
             if (!IsBuilding) return;
             
-            //SnapTowerToGrid();
             SnapBlueprintToGrid();
             if (currentGridIndex == -1) return;
             
@@ -106,22 +104,15 @@ namespace TowerDefense
 
         private void OnCreateTurret()
         {
-            if (simpleGrid.GetValueAt(currentGridIndex) == false)
+            if (Grid.GetValueAt(currentGridIndex) == false)
             {
                 //Move this to Register Notification
                 TurretManager.CreateTurret(currentTurret, currentBlueprint.position, currentBlueprint.rotation);
-                simpleGrid.SetValue(currentGridIndex, true);
-
-                (int x, int y) = currentGridIndex.GetXY(terrainWidthHeight.x);
-                chunkedBitfieldGrid.SetValue(x,y, true);
-                //Debug.Log($"value at Chunk {chunkedBitfieldGrid.ChunkIndexAtCoord(x,y)} is {chunkedBitfieldGrid.GetValueAt(x,y)}");
+                Grid.SetValue(currentGridIndex, true); //NOT THE RIGHT PLACE
+                GridSystem.OnGridChange(GridType.Turret, currentGridIndex);
             }
         }
         
-//======================================================================================================================
-//TEST SIMPLE GRID
-//======================================================================================================================
-
         private void SnapBlueprintToGrid()
         {
             previousGridIndex = currentGridIndex;//Avoid unnecessary computation
@@ -130,57 +121,11 @@ namespace TowerDefense
             {
                 currentGridIndex = hits[0].point.GetIndexFromPosition(terrainWidthHeight, CellSize);
                 if (currentGridIndex == previousGridIndex) return;//though it comes late in the process...
-                currentBlueprint.position = currentBlueprint.position.FlatMove(simpleGrid.GetCenterCellAt(currentGridIndex));
+                currentBlueprint.position = currentBlueprint.position.FlatMove(Grid.GetCenterCellAt(currentGridIndex));
             }
         }
 
-
-//======================================================================================================================
-//TEST SIMPLE GRID
-//======================================================================================================================
-/*
-        /// <summary>
-        /// Get Snapping grid where turret can be placed
-        /// </summary>
-        private void GetSnapPosition()
-        {
-            Vector3 cellOffset = Vector3.one.Flat();
-            
-            for (int index = 0; index < snapPositions.Length; index++)
-            {
-                (int x, int z) = index.GetXY(terrainWidthHeight.x-1); //we offset by 1,0,1 so we just remove the last one
-                
-                Vector3 cellPositionOnMesh = new Vector3(x, 0, z);
-                Vector3 pointPosition = cellPositionOnMesh + cellOffset; //* cellBound not needed this time since value = Vector3(1,1,1)
-                snapPositions[index] = pointPosition;
-            }
-        }
         
-        /// <summary>
-        /// 1/2 BIG CELLS
-        /// Get index from Inner Grid! => bigCell => divide in 4 cells
-        /// imagine a square of length one with each intersection of smalls square as center
-        /// </summary>
-        private int SnapGridBounds(Vector3 point)
-        {
-            Vector3 clampPoint = new Vector3(point.x - 0.5f, 0, point.z - 0.5f);
-            int indexPos = clampPoint.GetIndexFromPosition(terrainWidthHeight - new int2(1), 1);
-            return indexPos;
-        }
-        
-        private void SnapTowerToGrid()
-        {
-            ray = PlayerCamera.ScreenPointToRay(GetMousePosition);
-            
-            //for some reason basic raycast can't go through turrets
-            int numHits = RaycastNonAlloc(ray.origin, ray.direction, hits,Mathf.Infinity, TerrainLayerMask);
-            if(numHits != 0)
-            {
-                int indexPos = SnapGridBounds(hits[0].point);
-                currentBlueprint.position = currentBlueprint.position.FlatMove(snapPositions[indexPos]);
-            }
-        }
-*/
         private void OnDrawGizmos()
         {
             if (!IsBuilding) return;
@@ -190,9 +135,30 @@ namespace TowerDefense
             Vector3 cellBounds = new Vector3(CellSize, 0.05f, CellSize);
             for (int i = 0; i < numCellIteration; i++)
             {
-                Gizmos.DrawWireCube(simpleGrid.GetCenterCellAt(i), cellBounds);
+                Gizmos.DrawWireCube(Grid.GetCenterCellAt(i), cellBounds);
             }
         }
-        
+/*
+        private void DebugChunkBitField()
+        {
+            if (chunkedBitfieldGrid == null) return;
+            GUIStyle style = new GUIStyle(GUI.skin.label)
+            {
+                alignment = TextAnchor.MiddleCenter
+            };
+            Vector3 position;
+            bool value;
+            for (int i = 0; i < chunkedBitfieldGrid.ChunkLength; i++)
+            {
+                for (int j = 0; j < 64; j++)
+                {
+                    position = chunkedBitfieldGrid.GetCellCenterFromChunkIndexAt(i, j);
+                    
+                    value = chunkedBitfieldGrid.GetChunkCellValueAt(i,j);
+                    Handles.Label(position, value.ToString(), style);
+                }
+            }
+        }
+        */
     }
 }
