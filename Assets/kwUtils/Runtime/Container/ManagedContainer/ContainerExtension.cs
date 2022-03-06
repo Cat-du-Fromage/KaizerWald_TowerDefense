@@ -28,6 +28,13 @@ namespace KWUtils
         }
         
         //GENERIC ARRAY
+        public static T[] Reverse<T>(this T[] array)
+        where T : struct
+        {
+            Array.Reverse(array);
+            return array;
+        }
+        
         public static T[] Concat<T>(this T[] x, T[] y)
         where T : struct
         {
@@ -111,7 +118,6 @@ namespace KWUtils
             return array == null || array.Length == 0;
         }
         
-
  
         public static unsafe NativeArray<T> ToNativeArray<T>(Span<T> span) 
         where T : unmanaged

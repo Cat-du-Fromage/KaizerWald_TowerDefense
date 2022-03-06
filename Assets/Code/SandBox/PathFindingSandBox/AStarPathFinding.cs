@@ -54,39 +54,39 @@ namespace TowerDefense
             sw.Start();
             //========================
 
-            Node startNode = grid.NodeFromWorldPoint(startPos);
-            Node targetNode = grid.NodeFromWorldPoint(targetPos);
+            Node1 startNode1 = grid.NodeFromWorldPoint(startPos);
+            Node1 targetNode1 = grid.NodeFromWorldPoint(targetPos);
 
-            if(startNode.walkable && targetNode.walkable)
+            if(startNode1.walkable && targetNode1.walkable)
             {
-                Heap<Node> openSet = new Heap<Node>(grid.GridLength);
-                HashSet<Node> closedSet = new HashSet<Node>();
+                Heap<Node1> openSet = new Heap<Node1>(grid.GridLength);
+                HashSet<Node1> closedSet = new HashSet<Node1>();
 
-                openSet.Add(startNode);
+                openSet.Add(startNode1);
                 while(openSet.Count > 0)
                 {
-                    Node currentNode = openSet.RemoveFirst(); //starting node
-                    closedSet.Add(currentNode);
+                    Node1 currentNode1 = openSet.RemoveFirst(); //starting node
+                    closedSet.Add(currentNode1);
 
-                    if(currentNode == targetNode) 
+                    if(currentNode1 == targetNode1) 
                     {
                         //========================
                         sw.Stop();
-                        print($"Path found: {sw.ElapsedMilliseconds} ms");
+                        print($"Path HEAP found: {sw.Elapsed} ms");
                         //========================
-                        RetracePath(startNode, targetNode);
+                        RetracePath(startNode1, targetNode1);
                         return;
                     }
 
-                    foreach(Node neighbour in grid.GetNeighbours(currentNode)) // find the nearest valid node and add it to the opensetlist
+                    foreach(Node1 neighbour in grid.GetNeighbours(currentNode1)) // find the nearest valid node and add it to the opensetlist
                     {
                         if(!neighbour.walkable || closedSet.Contains(neighbour)) continue; // check if not walkable or not part of list closedSet
-                        int newMovementCostToNeighbour = currentNode.gCost + GetDistance(currentNode, neighbour); // calcul length beetween position and adjacent
+                        int newMovementCostToNeighbour = currentNode1.gCost + GetDistance(currentNode1, neighbour); // calcul length beetween position and adjacent
                         if(newMovementCostToNeighbour < neighbour.gCost || !openSet.Contains(neighbour))
                         {
                             neighbour.gCost = newMovementCostToNeighbour;
-                            neighbour.hCost = GetDistance(neighbour, targetNode); 
-                            neighbour.parent = currentNode;
+                            neighbour.hCost = GetDistance(neighbour, targetNode1); 
+                            neighbour.parent = currentNode1;
 
                             if(!openSet.Contains(neighbour)) 
                                 openSet.Add(neighbour);
@@ -99,27 +99,27 @@ namespace TowerDefense
         /// <summary>
         /// Get all the node by retrieving each parent node previously store
         /// </summary>
-        /// <param name="startNode"></param>
-        /// <param name="endNode"></param>
-        private void RetracePath(Node startNode, Node endNode)
+        /// <param name="startNode1"></param>
+        /// <param name="endNode1"></param>
+        private void RetracePath(Node1 startNode1, Node1 endNode1)
         {
-            List<Node> path = new List<Node>();
-            Node currentNode = endNode;
+            List<Node1> path = new List<Node1>();
+            Node1 currentNode1 = endNode1;
 
-            while(currentNode != startNode)
+            while(currentNode1 != startNode1)
             {
-                path.Add(currentNode);
-                currentNode = currentNode.parent;
+                path.Add(currentNode1);
+                currentNode1 = currentNode1.parent;
             }
             path.Reverse();
 
             grid.PathList = path;
         }
 
-        private int GetDistance(Node nodeA, Node nodeB)
+        private int GetDistance(Node1 node1A, Node1 node1B)
         {
-            int distX = abs(nodeA.gridX - nodeB.gridX);
-            int distY = abs(nodeA.gridY - nodeB.gridY);
+            int distX = abs(node1A.gridX - node1B.gridX);
+            int distY = abs(node1A.gridY - node1B.gridY);
             
             return (distX > distY) ? 14 * distY + 10 * (distX - distY) : 14 * distX + 10 * (distY - distX);
         }

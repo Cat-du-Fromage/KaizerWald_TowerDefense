@@ -5,7 +5,7 @@ using UnityEngine;
 
 namespace TowerDefense
 {
-    public struct Node2
+    public struct Node
     {
         public int CameFromNodeIndex;
         
@@ -14,7 +14,7 @@ namespace TowerDefense
         public int FCost;
         public int2 Coord;
 
-        public Node2(int cameFromNodeIndex, int gCost, int hCost, int2 coord)
+        public Node(int cameFromNodeIndex, int gCost, int hCost, int2 coord)
         {
             CameFromNodeIndex = cameFromNodeIndex;
             GCost = gCost;
@@ -23,7 +23,7 @@ namespace TowerDefense
             Coord = coord;
         }
         
-        public Node2(int cameFromNodeIndex, int gCost, int hCost, int fCost, int2 coord)
+        public Node(int cameFromNodeIndex, int gCost, int hCost, int fCost, int2 coord)
         {
             CameFromNodeIndex = cameFromNodeIndex;
             GCost = gCost;
@@ -32,7 +32,7 @@ namespace TowerDefense
             Coord = coord;
         }
         
-        public Node2(int2 coord)
+        public Node(int2 coord)
         {
             CameFromNodeIndex = -1;
             GCost = int.MaxValue;
@@ -40,7 +40,5 @@ namespace TowerDefense
             FCost = default;
             Coord = coord;
         }
-        
-        public void UpdateFCost() => FCost = GCost + HCost;
     }
 }

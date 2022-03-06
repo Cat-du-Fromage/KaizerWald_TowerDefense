@@ -14,16 +14,17 @@ using static KWUtils.Vector3Extension;
 using static TowerDefense.TowerDefenseUtils;
 using static Unity.Mathematics.math;
 using static KWUtils.InputSystemExtension;
-using Debug = UnityEngine.Debug;
+
 
 namespace TowerDefense
 {
-    public class AStarPathfinding2 : MonoBehaviour, IGridHandler<Node2>
+    public partial class AStarPathfinding2 : MonoBehaviour, IGridHandler<Node>
     {
-        public bool DebugAStar;
+        [SerializeField] private Transform DestinationGate;
+        [SerializeField] private Transform agentStart;
         //Interfaces
         public IGridSystem GridSystem { get; set; }
-        public SimpleGrid<Node2> Grid { get; private set; }
+        public SimpleGrid<Node> Grid { get; private set; }
 
         [SerializeField] private Terrain terrain;
         private int2 mapBounds;
@@ -32,38 +33,43 @@ namespace TowerDefense
         private const int StraightCostMove = 10;
 
         private const int CellSize = 4;
-        private const float HalfCell = 2f;
 
-        [SerializeField] private Transform agentStart;
         private Vector3 startPosition;
         private Vector3 destination;
-        private RaycastHit[] hits = new RaycastHit[1];
-
+        
         private int startIndex = -1;
         private int endIndex = -1;
-
-        private int[] path;
         
+        private RaycastHit[] hits = new RaycastHit[1];
+        
+        private int[] path;
+
         private void Awake()
         {
             mapBounds = (int2)terrain.terrainData.size.XZ();
-            
-            //mapBounds = new int2((int) terrain.terrainData.size.x, (int) terrain.terrainData.size.z);
+            DestinationGate ??= FindObjectOfType<EndGateComponent>().transform;
+            Grid = new SimpleGrid<Node>(mapBounds, CellSize, (coord) => new Node(coord));
+            destination = DestinationGate.position;
+            endIndex = Grid.GetIndexFromPosition(destination);
         }
 
         private void Start()
         {
-            Grid = new SimpleGrid<Node2>(mapBounds, CellSize, (coord) => new Node2(coord));
+            //startPosition = agentStart.position;
+            //startIndex = Grid.GetIndexFromPosition(startPosition);
+            
+            
         }
         
         private void Update() 
         {
+            /*
             if (startPosition != agentStart.position)
             {
                 startPosition = agentStart.position;
                 startIndex = Grid.GetIndexFromPosition(startPosition);
             }
-                
+                */
             
             if (Mouse.current.rightButton.wasPressedThisFrame)
             {
@@ -77,11 +83,19 @@ namespace TowerDefense
             
             if(Keyboard.current.pKey.wasPressedThisFrame && agentStart != null)
             {
+#if UNITY_EDITOR
                 Stopwatch sw = new Stopwatch();
                 sw.Start();
+#endif
+                startPosition = agentStart.position;
+                startIndex = Grid.GetIndexFromPosition(startPosition);
                 path = AStarProcess();
+                
+#if UNITY_EDITOR
                 sw.Stop();
-                print($"Path found: {sw.ElapsedMilliseconds} ms");
+                print($"Path found: {sw.Elapsed} ms");          
+#endif
+                
             }
         }
 
@@ -90,17 +104,17 @@ namespace TowerDefense
             //Get the Node affected
             if (!path.IsNullOrEmpty())
             {
-                for (int i = 0; i < path.Length; i++)
+                for (int pathIndex = 0; pathIndex < path.Length; pathIndex++)
                 {
-                    if (path[i] != index) continue;
+                    if (path[pathIndex] != index) continue;
                     
-                    int lengthUntilChange = i;
-                    startIndex = path[i-1];
+                    startIndex = path[pathIndex-1];
                     int[] segment = AStarProcess();
                     
-                    int newLength = lengthUntilChange + segment.Length;
-                    Array.Resize(ref path, newLength);
-                    segment.CopyTo(path, i);
+                    if (segment.IsNullOrEmpty()) return; // CAREFUL IT MEANS THERE IS NOS PATH!
+                    
+                    Array.Resize(ref path, pathIndex + segment.Length);
+                    segment.CopyTo(path, pathIndex);
                     startIndex = Grid.GetIndexFromPosition(startPosition);
                     break;
                 }
@@ -109,20 +123,29 @@ namespace TowerDefense
             //Check if current Path contain the Node Index
         }
 
+        public (Vector3[], int[]) RequestPath(in Vector3 currentPosition)
+        {
+            startIndex = Grid.GetIndexFromPosition(currentPosition);
+            path = AStarProcess();
+            Vector3[] nodesPosition = new Vector3[path.Length];
+            for (int i = 0; i < path.Length; i++)
+            {
+                nodesPosition[i] = Grid.GetCenterCellAt(path[i]);
+            }
+            return (nodesPosition, path);
+        }
+
         public int[] AStarProcess()
         {
-            //Get Start And End in the Grid
+            // TODO : Get Cost Field 1 if free 255 if Obstacle => get from BuildManager?
             
-            
-
-            //Get Cost Field 1 if free 255 if Obstacle => get from BuildManager?
             using NativeArray<bool> obstacles = GridSystem.RequestGrid<bool>(GridType.Turret).GetGridArray.ToNativeArray();
-            using NativeArray<Node2> nodes = Grid.GetGridArray.ToNativeArray();
+            using NativeArray<Node> nodes = Grid.GetGridArray.ToNativeArray();
 
             using NativeList<int> pathList = new NativeList<int>(16, Allocator.TempJob);
 
             //Get Path from Start -> End
-            JAStar2 job = new JAStar2
+            JAStar job = new JAStar
             {
                 MapSizeX = Grid.GetGridWidth,
                 StartNodeIndex = startIndex,
@@ -131,67 +154,31 @@ namespace TowerDefense
                 ObstaclesGrid = obstacles,
                 PathList = pathList
             };
-            JobHandle jh = job.Schedule(default);
-            jh.Complete();
+            JobHandle jh = job.Schedule();
+            JobHandle.ScheduleBatchedJobs();
             
-            int[] pathToFollow = pathList.ToArray();
-            Array.Reverse(pathToFollow);
+            // TODO : Complete the Job On the Next Frame (use a bool variable to say "jobscheduled" to check in the update
+            //Otherwise we loose the benefits of the job being work in parallel
+            jh.Complete(); 
+            
+            int[] pathToFollow = pathList.ToArray().Reverse();
             return pathToFollow;
         }
 
-        private void OnDrawGizmos()
-        {
-            if (!DebugAStar) return;
+        
 
-            GUIStyle style = new GUIStyle(GUI.skin.label)
-            {
-                alignment = TextAnchor.MiddleCenter
-            };
-            
-            if (Grid != null)
-            {
-                Vector3 pos;
-                Vector3 cellBounds = new Vector3(CellSize, 0.05f, CellSize);
-                for (int i = 0; i < Grid.GetGridArray.Length / 4; i++)
-                {
-                    pos = Grid.GetCenterCellAt(i);
-                    Gizmos.DrawWireCube(pos, cellBounds);
-                    int index = Grid.GetGridArray[i].Coord.y * Grid.GetGridWidth + Grid.GetGridArray[i].Coord.x;
-                    Handles.Label(pos, index.ToString(), style);
-                }
-            }
-            
-            if (path == null) return;
-            if (path.Length != 0)
-            {
-                Gizmos.color = Color.green;
-                Gizmos.DrawSphere(Grid.GetCenterCellAt(startIndex), 1f);
-                Gizmos.color = Color.red;
-                Gizmos.DrawSphere(Grid.GetCenterCellAt(endIndex), 1f);
-                Gizmos.color = Color.black;
-                for (int i = 0; i < path.Length; i++)
-                {
-                    Handles.Label(Grid.GetCenterCellAt(path[i]), path[i].ToString(), style);
-                    Gizmos.DrawWireSphere(Grid.GetCenterCellAt(path[i]), 1f);
-                }
-            }
-        }
-
-        [BurstCompile]
-        private struct JAStar2 : IJob
+        [BurstCompile(CompileSynchronously = true)]
+        private struct JAStar : IJob
         {
             [ReadOnly] public int MapSizeX;
-            
-            [ReadOnly] public int StartNodeIndex; //we write to it BEFORE!
+            [ReadOnly] public int StartNodeIndex;
             [ReadOnly] public int EndNodeIndex;
             
-            public NativeArray<Node2> Nodes;
-            public NativeArray<bool> ObstaclesGrid;
-
-            public NativeList<int> PathList; // if PathNode.Length == 0 means No Path!
-
-            //private NativeHashSet<int> openSet;
-
+            [ReadOnly] public NativeArray<bool> ObstaclesGrid;
+            
+            public NativeArray<Node> Nodes;
+            [WriteOnly] public NativeList<int> PathList; // if PathNode.Length == 0 means No Path!
+            
             public void Execute()
             {
                 NativeHashSet<int> openSet = new NativeHashSet<int>(16, Allocator.Temp);
@@ -200,7 +187,7 @@ namespace TowerDefense
                 Nodes[StartNodeIndex] = StartNode(Nodes[StartNodeIndex], Nodes[EndNodeIndex]);
                 openSet.Add(StartNodeIndex);
 
-                NativeList<int> neighbors = new NativeList<int>(4,Allocator.Temp);
+                NativeList<int> neighbors = new NativeList<int>(8,Allocator.Temp);
                 int currentNode = 0;
                 
                 while (!openSet.IsEmpty)
@@ -210,7 +197,6 @@ namespace TowerDefense
                     if (currentNode == EndNodeIndex)
                     {
                         CalculatePath();
-                        openSet.Clear();
                         return;
                     }
 
@@ -224,7 +210,7 @@ namespace TowerDefense
                     {
                         for (int i = 0; i < neighbors.Length; i++)
                         {
-                            if (closeSet.Contains(neighbors[i])) continue;
+                            //if (closeSet.Contains(neighbors[i])) continue;
                             openSet.Add(neighbors[i]);
                         }
                     }
@@ -235,24 +221,21 @@ namespace TowerDefense
 
             private void CalculatePath()
             {
-                PathList.Add(EndNodeIndex);
                 int currentNode = EndNodeIndex;
+
                 while(currentNode != StartNodeIndex)
                 {
                     PathList.Add(currentNode);
                     currentNode = Nodes[currentNode].CameFromNodeIndex;
-                    if (currentNode == StartNodeIndex)
-                        break;
                 }
-                
+
+                PathList.Add(StartNodeIndex);
             }
             
             private void GetNeighborCells(int index, ref NativeList<int> curNeighbors, in NativeHashSet<int> closeSet)
             {
                 int2 coord = index.GetXY2(MapSizeX);
-                int gCost;
-                int hCost;
-                for (int i = 0; i < 4; i++)
+                for (int i = 0; i < 8; i++)
                 {
                     int neighborId = index.AdjCellFromIndex((1 << i), coord, MapSizeX);
                     if (neighborId == -1 || ObstaclesGrid[neighborId] == true || closeSet.Contains(neighborId)) continue;
@@ -262,9 +245,9 @@ namespace TowerDefense
                     {
                         curNeighbors.Add(neighborId);
                     
-                        gCost = CalculateDistanceCost(Nodes[neighborId], Nodes[StartNodeIndex]);
-                        hCost = CalculateDistanceCost(Nodes[neighborId], Nodes[EndNodeIndex]);
-                        Nodes[neighborId] = new Node2
+                        int gCost = CalculateDistanceCost(Nodes[neighborId], Nodes[StartNodeIndex]);
+                        int hCost = CalculateDistanceCost(Nodes[neighborId], Nodes[EndNodeIndex]);
+                        Nodes[neighborId] = new Node
                         (
                             index,
                             gCost,
@@ -278,33 +261,23 @@ namespace TowerDefense
 
             private int GetLowestFCostNodeIndex(in NativeHashSet<int> openSet)
             {
-                int lowest = -1;
                 using NativeArray<int> tempOpenSet = openSet.ToNativeArray(Allocator.Temp);
-                for (int i = 0; i < tempOpenSet.Length; i++)
+                int lowest = tempOpenSet[0];
+                for (int i = 1; i < tempOpenSet.Length; i++)
                 {
                     int index = tempOpenSet[i];
-                    if (lowest != -1)
-                    {
-                        if (Nodes[index].FCost < Nodes[lowest].FCost)
-                        {
-                            lowest = index;
-                        }
-                    }
-                    else
-                    {
-                        lowest = index;
-                    }
+                    lowest = select(lowest, index, Nodes[index].FCost < Nodes[lowest].FCost);
                 }
                 return lowest;
             }
 
-            private Node2 StartNode(in Node2 start, in Node2 end)
+            private Node StartNode(in Node start, in Node end)
             {
                 int hCost = CalculateDistanceCost(start, end);
-                return new Node2(-1, 0, hCost, 0+hCost,start.Coord);
+                return new Node(-1, 0, hCost, 0+hCost,start.Coord);
             }
 
-            private int CalculateDistanceCost(in Node2 a, in Node2 b)
+            private int CalculateDistanceCost(in Node a, in Node b)
             {
                 int2 xyDistance = abs(a.Coord - b.Coord);
                 int remaining = abs(xyDistance.x - xyDistance.y);

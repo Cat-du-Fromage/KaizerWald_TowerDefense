@@ -39,8 +39,7 @@ namespace KWUtils.KWGenericGrid
             gridBounds = new int2(gridWidth, gridHeight);
             
             gridArray = new T[gridWidth * gridHeight];
-
-            UnityEngine.Debug.Log($"PATH {gridArray.Length}");
+            
             //Init Grid
             for (int i = 0; i < gridArray.Length; i++)
             {

@@ -1,3 +1,5 @@
+#define EnableBurst
+
 using System.Collections.Generic;
 using UnityEngine;
 using System.Runtime.CompilerServices;
@@ -53,12 +55,6 @@ namespace KWUtils
             return (chunkCoord * chunkSize) + cellInChunkCoord;
         }
 
-        public static void GetChunkCellIndexFromCellIndex(this in int2 cellInGridCoord,  int chunkSize)
-        {
-            //int index = 
-            //int2 chunkCoord = chunkIndex.GetXY2(gridData.NumChunkXY.x);
-        }
-        
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static int GetGridCellIndexFromChunkCellIndex(this int chunkIndex, in GridData gridData, int cellIndexInsideChunk)
         {
@@ -205,7 +201,7 @@ namespace KWUtils
     // at the end when we cut the array given the number of cell in one chunk
     // we only get the value owned by the chunk
     // ✂ 1️⃣2️⃣3️⃣ ✂ 4️⃣5️⃣6️⃣ ✂ 7️⃣8️⃣9️⃣
-#if !(UNITY_EDITOR)
+#if EnableBurst
     [BurstCompile]
 #endif
     public struct JOrderArrayByChunkIndex<T> : IJobFor

@@ -52,7 +52,7 @@ namespace TowerDefense
             buildManager.GetInterfaceComponent<IGridHandler<bool>>().SetGridSystem(this);
             
             Astar ??= FindObjectOfType<AStarPathfinding2>();
-            Astar.GetInterfaceComponent<IGridHandler<Node2>>().SetGridSystem(this);
+            Astar.GetInterfaceComponent<IGridHandler<Node>>().SetGridSystem(this);
         }
         
 

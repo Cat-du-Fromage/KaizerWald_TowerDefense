@@ -22,14 +22,14 @@ namespace TowerDefense
         private const int CellSize = 1;
         private const float HalfCell = 0.5f;
         
-        private SimpleGrid<Node> nodeGrid;
+        private SimpleGrid<Node1> nodeGrid;
         
-        public List<Node> PathList;
+        public List<Node1> PathList;
 
         private void Awake()
         {
             mapBounds = (int2)terrain.terrainData.size.XZ();
-            nodeGrid = new SimpleGrid<Node>(mapBounds, 1);
+            nodeGrid = new SimpleGrid<Node1>(mapBounds, 1);
         }
 
         private void Start()
@@ -47,21 +47,21 @@ namespace TowerDefense
             {
                 (int x, int y) = i.GetXY(mapBounds.x);
                 worldPoint = Vector3.right * (x + HalfCell) + Vector3.forward * (y + HalfCell);
-                nodeGrid.SetValue(i, new Node(true, worldPoint, x, y));
+                nodeGrid.SetValue(i, new Node1(true, worldPoint, x, y));
             }
         }
         
-        public List<Node> GetNeighbours(Node node)
+        public List<Node1> GetNeighbours(Node1 node1)
         {
-            List<Node> neighbours = new List<Node>();
+            List<Node1> neighbours = new List<Node1>();
             for(int x = -1; x <= 1; x++)
             {
                 for(int y = -1; y <= 1; y++)
                 {
                     if (x == 0 && y == 0) continue;
 
-                    int checkX = node.gridX + x;
-                    int checkY = node.gridY + y;
+                    int checkX = node1.gridX + x;
+                    int checkY = node1.gridY + y;
 
                     if(checkX >= 0 && checkX < mapBounds.x && checkY >= 0 && checkY < mapBounds.y)
                     {
@@ -72,7 +72,7 @@ namespace TowerDefense
             return neighbours;
         }
 
-        public Node NodeFromWorldPoint(Vector3 worldPosition) => nodeGrid.GetValueFromWorldPosition(worldPosition);
+        public Node1 NodeFromWorldPoint(Vector3 worldPosition) => nodeGrid.GetValueFromWorldPosition(worldPosition);
 
         private void OnDrawGizmos()
         {
@@ -108,13 +108,13 @@ namespace TowerDefense
             {
                 if(nodeGrid != null)
                 {
-                    Node playerNode = NodeFromWorldPoint(player.position);
+                    Node1 playerNode1 = NodeFromWorldPoint(player.position);
                     
                     for (int i = 0; i < nodeGrid.GridLength; i++)
                     {
-                        Node n = nodeGrid.GetValueAt(i);
+                        Node1 n = nodeGrid.GetValueAt(i);
                         Gizmos.color = (n.walkable) ? Color.white : Color.red;
-                        if(playerNode == n)
+                        if(playerNode1 == n)
                         {
                             Gizmos.color = Color.cyan;
                         }
