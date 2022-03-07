@@ -50,7 +50,7 @@ namespace TowerDefense
             DestinationGate ??= FindObjectOfType<EndGateComponent>().transform;
             Grid = new SimpleGrid<Node>(mapBounds, CellSize, (coord) => new Node(coord));
             destination = DestinationGate.position;
-            endIndex = Grid.GetIndexFromPosition(destination);
+            endIndex = Grid.IndexFromPosition(destination);
         }
 
         private void Start()
@@ -77,7 +77,7 @@ namespace TowerDefense
                 if (Physics.RaycastNonAlloc(ray.origin, ray.direction, hits, math.INFINITY, TerrainLayerMask) != 0)
                 {
                     destination = hits[0].point;
-                    endIndex = Grid.GetIndexFromPosition(destination);
+                    endIndex = Grid.IndexFromPosition(destination);
                 }
             }
             
@@ -88,7 +88,7 @@ namespace TowerDefense
                 sw.Start();
 #endif
                 startPosition = agentStart.position;
-                startIndex = Grid.GetIndexFromPosition(startPosition);
+                startIndex = Grid.IndexFromPosition(startPosition);
                 path = AStarProcess();
                 
 #if UNITY_EDITOR
@@ -115,7 +115,7 @@ namespace TowerDefense
                     
                     Array.Resize(ref path, pathIndex + segment.Length);
                     segment.CopyTo(path, pathIndex);
-                    startIndex = Grid.GetIndexFromPosition(startPosition);
+                    startIndex = Grid.IndexFromPosition(startPosition);
                     break;
                 }
             }
@@ -125,7 +125,7 @@ namespace TowerDefense
 
         public (Vector3[], int[]) RequestPath(in Vector3 currentPosition)
         {
-            startIndex = Grid.GetIndexFromPosition(currentPosition);
+            startIndex = Grid.IndexFromPosition(currentPosition);
             path = AStarProcess();
             Vector3[] nodesPosition = new Vector3[path.Length];
             for (int i = 0; i < path.Length; i++)

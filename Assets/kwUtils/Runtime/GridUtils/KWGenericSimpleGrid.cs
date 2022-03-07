@@ -50,21 +50,16 @@ namespace KWUtils.KWGenericGrid
         public SimpleGrid(int mapWidth, int mapHeight, int cellSize, Func<SimpleGrid<T>, int2 , T> createGridObject)
         {
             this.cellSize = cellSize;
-
             mapWidthHeight = new int2(mapWidth, mapHeight);
             
             gridWidth = mapWidth / cellSize;
             gridHeight = mapHeight / cellSize;
-            
             gridBounds = new int2(gridWidth, gridHeight);
 
             GridArray = new T[gridWidth * gridHeight];
-
-            
             //Init Grid
             for (int i = 0; i < GridArray.Length; i++)
             {
-                
                 GridArray[i] = createGridObject(this, i.GetXY2(gridWidth));
             }
         }
@@ -79,7 +74,6 @@ namespace KWUtils.KWGenericGrid
             gridHeight = mapHeight / cellSize;
             
             gridBounds = new int2(gridWidth, gridHeight);
-
             GridArray = new T[gridWidth * gridHeight];
         }
         
@@ -95,7 +89,6 @@ namespace KWUtils.KWGenericGrid
             gridBounds = new int2(gridWidth, gridHeight);
             
             GridArray = new T[gridWidth * gridHeight];
-            UnityEngine.Debug.Log($"BUILD {GridArray.Length}");
         }
 
         public T[] GetGridArray => GridArray;
@@ -113,50 +106,36 @@ namespace KWUtils.KWGenericGrid
 
         //Get Value
         //==============================================================================================================
-        public T this[int index] => GridArray[index];
-        public T this[int x, int y] => GridArray[y * gridWidth + x];
-        public T this[in int2 coord] => GridArray[coord.y * gridWidth + coord.x];
-        /*
-        public T GetValueAt(int index)
+        public T this[int index]
         {
-            return GridArray[index];
-        }
-        public T GetValueAt(int x, int y)
-        {
-            return GridArray[y * gridWidth + x];
+            get => GridArray[index];
+            set => GridArray[index] = value;
         }
 
-        public T GetValueAt(in int2 coord)
+        public T this[int x, int y]
         {
-            return GridArray[coord.y * gridWidth + coord.x];
+            get => GridArray[y * gridWidth + x];
+            set => GridArray[y * gridWidth + x] = value;
         }
-*/
-        public T GetValueFromWorldPosition(in Vector3 position)
+
+        public T this[in int2 coord]
         {
-            return GridArray[position.GetIndexFromPosition(mapWidthHeight, cellSize)];
+            get => GridArray[coord.y * gridWidth + coord.x];
+            set => GridArray[coord.y * gridWidth + coord.x] = value;
         }
+
         
-        //GetIndex from Position
+        
+        //Operation from World Position
         //==============================================================================================================
-        public int GetIndexFromPosition(in Vector3 position)
+        public int IndexFromPosition(in Vector3 position)
         {
             return position.XZ().GetIndexFromPosition(mapWidthHeight, cellSize);
         }
         
-        //Set Value
-        public void SetValue(int index, T value)
+        public T GetValueFromWorldPosition(in Vector3 position)
         {
-            GridArray[index] = value;
-        }
-        
-        public void SetValue(int x, int y, T value)
-        {
-            GridArray[y * gridWidth + x] = value;
-        }
-        
-        public void SetValue(in int2 coord, T value)
-        {
-            GridArray[coord.y * gridWidth + coord.x] = value;
+            return GridArray[position.GetIndexFromPosition(mapWidthHeight, cellSize)];
         }
 
         public void SetValueFromPosition(in Vector3 position, T value)

@@ -26,7 +26,7 @@ namespace TowerDefense
     {
         public void NotifyGridSystem<T>(Component handler, int index, T value);
 
-        public SimpleGrid<bool> RequestTurretGrid();
+        public T[] RequestArray<T>(GridType grid);
         
         public SimpleGrid<T> RequestGrid<T>(GridType grid);
 
@@ -36,6 +36,8 @@ namespace TowerDefense
     public enum GridType
     {
         Turret,
+        Enemy,
+        FlowField
     }
     
     /// <summary>
@@ -43,13 +45,15 @@ namespace TowerDefense
     /// </summary>
     public class GridSystem : MonoBehaviour, IGridSystem
     {
-        [SerializeField] private BuildManager buildManager;
+        [SerializeField] private BuildManager TurretGrid;
+        [SerializeField] private EnemyManager EnemyGrid;
+        
         [SerializeField] private AStarPathfinding2 Astar;
 
         private void Awake()
         {
-            buildManager ??= FindObjectOfType<BuildManager>();
-            buildManager.GetInterfaceComponent<IGridHandler<bool>>().SetGridSystem(this);
+            TurretGrid ??= FindObjectOfType<BuildManager>();
+            TurretGrid.GetInterfaceComponent<IGridHandler<bool>>().SetGridSystem(this);
             
             Astar ??= FindObjectOfType<AStarPathfinding2>();
             Astar.GetInterfaceComponent<IGridHandler<Node>>().SetGridSystem(this);
@@ -64,18 +68,26 @@ namespace TowerDefense
             }
         }
 
-        public SimpleGrid<bool> RequestTurretGrid() => buildManager.Grid;
-        
+        public T[] RequestArray<T>(GridType grid)
+        {
+            if (grid == GridType.Turret)
+            {
+                return TurretGrid.Grid.GridArray as T[];
+            }
+            
+            return null;
+        }
+
         public SimpleGrid<T> RequestGrid<T>(GridType grid)
         {
             if (grid == GridType.Turret)
             {
-                return buildManager.Grid as SimpleGrid<T>;
+                return TurretGrid.Grid as SimpleGrid<T>;
             }
 
             return null;
         }
-
+        
         public void OnGridChange(GridType grid, int index)
         {
             if (grid == GridType.Turret)
@@ -84,4 +96,5 @@ namespace TowerDefense
             }
         }
     }
+
 }

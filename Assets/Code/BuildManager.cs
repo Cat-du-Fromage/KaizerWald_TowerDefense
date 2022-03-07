@@ -35,18 +35,15 @@ namespace TowerDefense
         
         //Need To Make it's own separate grid!
         private int2 terrainWidthHeight;
-        //private Vector3[] snapPositions;
         
         private RaycastHit[] hits = new RaycastHit[1];
         private Ray ray;
         
         //Simple Generic Grid
         private const int CellSize = 4;
-        //private SimpleGrid<bool> Grid; //use instanceID
 
         private int currentGridIndex = -1;
         private int previousGridIndex = -1;
-        private IGridHandler<bool> gridHandlerImplementation;
 
         private void Awake()
         {
@@ -108,7 +105,7 @@ namespace TowerDefense
             {
                 //Move this to Register Notification
                 TurretManager.CreateTurret(currentTurret, currentBlueprint.position, currentBlueprint.rotation);
-                Grid.SetValue(currentGridIndex, true); //NOT THE RIGHT PLACE
+                Grid[currentGridIndex] = true; //NOT THE RIGHT PLACE
                 GridSystem.OnGridChange(GridType.Turret, currentGridIndex);
             }
         }
