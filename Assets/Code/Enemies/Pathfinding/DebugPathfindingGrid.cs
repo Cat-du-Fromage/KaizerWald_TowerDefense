@@ -83,7 +83,7 @@ namespace TowerDefense
             //CostDebug(style, true);
             //BestCostDebug(style);
             FlowFieldDebug(true, true);
-            DebugBoidsBehaviour();
+            //DebugBoidsBehaviour();
 
             //DisplayDestination();
         }
@@ -97,13 +97,13 @@ namespace TowerDefense
             
             int cellIndex = new float3(MainFlockDebugTsm.position).xz.GetIndexFromPosition(GridSize, 1);
 
-            Vector3 directionFlow = GetFlowDirection();
+            //Vector3 directionFlow = GetFlowDirection();
             
 
             //Display where the main flock IS
             GetCellMainFlockIsIn();
             
-            GetNeighborToMainDirection(directionFlow);
+            //GetNeighborToMainDirection(directionFlow);
             
 
             void GetNeighborToMainDirection(Vector3 flowdir)
@@ -168,7 +168,7 @@ namespace TowerDefense
                 int2 coord = cellIndex.GetXY2(gridSize.x);
                 Gizmos.DrawWireCube(new Vector3(coord.x+0.5f,0,coord.y+0.5f), Vector3.one);
             }
-
+/*
             //GetFlowField Direction + display yellow Arrow
             Vector3 GetFlowDirection()
             {
@@ -180,6 +180,7 @@ namespace TowerDefense
                 }
                 return Vector3.zero;
             }
+            */
         }
         
         
@@ -252,6 +253,7 @@ namespace TowerDefense
 
         private void FlowFieldDebug(bool walkableOnly, bool drawCube = false)
         {
+            /*
             if (directionChunkGrid == null) return;
             
             Vector3 cubeBounds = new Vector3(1f,0.2f,1f);
@@ -267,6 +269,29 @@ namespace TowerDefense
                     int2 coord = realIndex.GetXY2(gridSize.x);
                     Vector3 cellPos = new Vector3(coord.x + 0.5f, 0, coord.y + 0.5f);
                     DrawArrow.ForGizmo(cellPos-ArrowOffset, directionChunkGrid[chunkIndex][j]/2f);
+                    if (drawCube)
+                    {
+                        Gizmos.color = Color.white;
+                        Gizmos.DrawWireCube(cellPos, cubeBounds);
+                    }
+                }
+            }
+            */
+            if (directionGrid == null) return;
+            
+            Vector3 cubeBounds = new Vector3(1f,0.2f,1f);
+            Vector3 ArrowOffset = new Vector3(0, -0.1f, 0);
+            for (int i = 0; i < 4; i++)
+            {
+                int chunkIndex = walkableOnly ? walkableChunk[i] : i;
+                for (int j = 0; j < directionGrid[chunkIndex].Length; j++)
+                {
+                    Gizmos.color = Color.yellow;
+                    int realIndex = chunkIndex.GetGridCellIndexFromChunkCellIndex(debugGridData, j);
+                        
+                    int2 coord = realIndex.GetXY2(gridSize.x);
+                    Vector3 cellPos = new Vector3(coord.x + 0.5f, 0, coord.y + 0.5f);
+                    DrawArrow.ForGizmo(cellPos-ArrowOffset, directionGrid[chunkIndex][j]/2f);
                     if (drawCube)
                     {
                         Gizmos.color = Color.white;

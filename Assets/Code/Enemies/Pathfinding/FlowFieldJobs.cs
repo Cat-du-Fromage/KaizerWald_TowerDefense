@@ -1,3 +1,4 @@
+#define EnableBurst
 using System.Collections;
 using System.Collections.Generic;
 using KWUtils;
@@ -11,20 +12,15 @@ using static Unity.Mathematics.math;
 using float2 = Unity.Mathematics.float2;
 using float3 = Unity.Mathematics.float3;
 
-#if (UNITY_EDITOR)
-//#define EnableBurst
-#endif
-
 namespace TowerDefense
 {
-
     /// <summary>
     /// CAREFUL FOR BLENDING
     /// NEED TO KNOW which cell is directly near an unwalkable chunk
     /// So we can set a value of 2 for the costfield
     /// </summary>
-#if !EnableBurst
-    //[BurstCompile]
+#if EnableBurst
+    [BurstCompile(CompileSynchronously = true)]
 #endif
     public struct JCostField : IJobFor
     {
@@ -52,8 +48,8 @@ namespace TowerDefense
             return mad(xy.y, MapSize.x/ChunkSize, xy.x);
         }
     }
-#if !EnableBurst
-    [BurstCompile]
+#if EnableBurst
+    [BurstCompile(CompileSynchronously = true)]
 #endif
     public struct JSmoothCostField : IJobFor
     {
@@ -123,8 +119,8 @@ namespace TowerDefense
             return mad(xy.y, MapSize.x/ChunkSize, xy.x);
         }
     }
-#if !EnableBurst
-    [BurstCompile]
+#if EnableBurst
+    [BurstCompile(CompileSynchronously = true)]
 #endif
     public struct JIntegrationField : IJob
     {
@@ -178,8 +174,8 @@ namespace TowerDefense
             }
         }
     }
-#if !EnableBurst
-    [BurstCompile]
+#if EnableBurst
+    [BurstCompile(CompileSynchronously = true)]
 #endif
     public struct JBestDirection : IJobFor
     {
@@ -214,7 +210,7 @@ namespace TowerDefense
                     currentBestCost = BestCostField[currentNeighbor];
                     int2 neighborCoord = currentNeighbor.GetXY2(MapSizeX);
                     int2 bestDirection = neighborCoord - currentCellCoord;
-                    CellBestDirection[index] = new float3(bestDirection.x, 0, bestDirection.y);
+                    CellBestDirection[index] = float3(bestDirection.x, 0, bestDirection.y);
                 }
             }
             neighbors.Dispose();

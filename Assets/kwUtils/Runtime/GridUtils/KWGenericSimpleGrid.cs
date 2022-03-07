@@ -25,7 +25,7 @@ namespace KWUtils.KWGenericGrid
         private readonly int2 mapWidthHeight;
         private readonly int2 gridBounds;
         
-        private readonly T[] gridArray;
+        public readonly T[] GridArray;
 
         public SimpleGrid(in int2 mapSize, int cellSize, Func<int2, T> createGridObject)
         {
@@ -38,12 +38,12 @@ namespace KWUtils.KWGenericGrid
             
             gridBounds = new int2(gridWidth, gridHeight);
             
-            gridArray = new T[gridWidth * gridHeight];
+            GridArray = new T[gridWidth * gridHeight];
             
             //Init Grid
-            for (int i = 0; i < gridArray.Length; i++)
+            for (int i = 0; i < GridArray.Length; i++)
             {
-                gridArray[i] = createGridObject(i.GetXY2(gridWidth));
+                GridArray[i] = createGridObject(i.GetXY2(gridWidth));
             }
         }
         
@@ -58,14 +58,14 @@ namespace KWUtils.KWGenericGrid
             
             gridBounds = new int2(gridWidth, gridHeight);
 
-            gridArray = new T[gridWidth * gridHeight];
+            GridArray = new T[gridWidth * gridHeight];
 
             
             //Init Grid
-            for (int i = 0; i < gridArray.Length; i++)
+            for (int i = 0; i < GridArray.Length; i++)
             {
                 
-                gridArray[i] = createGridObject(this, i.GetXY2(gridWidth));
+                GridArray[i] = createGridObject(this, i.GetXY2(gridWidth));
             }
         }
         
@@ -80,7 +80,7 @@ namespace KWUtils.KWGenericGrid
             
             gridBounds = new int2(gridWidth, gridHeight);
 
-            gridArray = new T[gridWidth * gridHeight];
+            GridArray = new T[gridWidth * gridHeight];
         }
         
         public SimpleGrid(in int2 mapSize, int cellSize)
@@ -94,12 +94,12 @@ namespace KWUtils.KWGenericGrid
             
             gridBounds = new int2(gridWidth, gridHeight);
             
-            gridArray = new T[gridWidth * gridHeight];
-            UnityEngine.Debug.Log($"BUILD {gridArray.Length}");
+            GridArray = new T[gridWidth * gridHeight];
+            UnityEngine.Debug.Log($"BUILD {GridArray.Length}");
         }
 
-        public T[] GetGridArray => gridArray;
-        public int GridLength => gridArray.Length;
+        public T[] GetGridArray => GridArray;
+        public int GridLength => GridArray.Length;
 
         public int GetGridWidth => gridWidth;
         
@@ -107,30 +107,33 @@ namespace KWUtils.KWGenericGrid
         public Vector3 GetCenterCellAt(int index)
         {
             (int x, int z) = index.GetXY(gridWidth);
-            //UnityEngine.Debug.Log($"X : {x}; Z : {z}");
             Vector3 pointPosition = (new Vector3(x, 0, z) * cellSize) + (Vector3.one * (cellSize / 2f));
             return pointPosition.Flat();
         }
 
         //Get Value
         //==============================================================================================================
+        public T this[int index] => GridArray[index];
+        public T this[int x, int y] => GridArray[y * gridWidth + x];
+        public T this[in int2 coord] => GridArray[coord.y * gridWidth + coord.x];
+        /*
         public T GetValueAt(int index)
         {
-            return gridArray[index];
+            return GridArray[index];
         }
         public T GetValueAt(int x, int y)
         {
-            return gridArray[y * gridWidth + x];
+            return GridArray[y * gridWidth + x];
         }
 
         public T GetValueAt(in int2 coord)
         {
-            return gridArray[coord.y * gridWidth + coord.x];
+            return GridArray[coord.y * gridWidth + coord.x];
         }
-
+*/
         public T GetValueFromWorldPosition(in Vector3 position)
         {
-            return gridArray[position.GetIndexFromPosition(mapWidthHeight, cellSize)];
+            return GridArray[position.GetIndexFromPosition(mapWidthHeight, cellSize)];
         }
         
         //GetIndex from Position
@@ -143,22 +146,22 @@ namespace KWUtils.KWGenericGrid
         //Set Value
         public void SetValue(int index, T value)
         {
-            gridArray[index] = value;
+            GridArray[index] = value;
         }
         
         public void SetValue(int x, int y, T value)
         {
-            gridArray[y * gridWidth + x] = value;
+            GridArray[y * gridWidth + x] = value;
         }
         
         public void SetValue(in int2 coord, T value)
         {
-            gridArray[coord.y * gridWidth + coord.x] = value;
+            GridArray[coord.y * gridWidth + coord.x] = value;
         }
 
         public void SetValueFromPosition(in Vector3 position, T value)
         {
-            gridArray[position.GetIndexFromPosition(mapWidthHeight, cellSize)] = value;
+            GridArray[position.GetIndexFromPosition(mapWidthHeight, cellSize)] = value;
         }
     }
 }

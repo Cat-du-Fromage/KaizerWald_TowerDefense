@@ -1,3 +1,4 @@
+#define EnableBurst
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -17,9 +18,6 @@ using static Unity.Mathematics.math;
 using float3 = Unity.Mathematics.float3;
 using quaternion = Unity.Mathematics.quaternion;
 
-#if !(UNITY_EDITOR)
-#define EnableBurst
-#endif
 
 namespace TowerDefense
 {

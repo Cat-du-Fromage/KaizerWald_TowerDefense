@@ -97,7 +97,6 @@ namespace TowerDefense
             nativeBestDirection = AllocNtvAry<float3>(totalNumCells);
             JobHandle jHDirectionField = GetDirectionField(jHIntegrationField);
             jHDirectionField.Complete();
-
             //CostField = new byte[nativeCostField.Length];
             //nativeCostField.CopyTo(CostField);
 

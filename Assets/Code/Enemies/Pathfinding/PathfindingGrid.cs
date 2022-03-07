@@ -1,7 +1,9 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 using KWUtils;
+using KWUtils.KWGenericGrid;
 using Unity.Collections;
 using Unity.Jobs;
 using Unity.Jobs.LowLevel.Unsafe;
@@ -16,22 +18,26 @@ using static KWUtils.KWmath;
 
 #if UNITY_EDITOR
 using UnityEditor;
-using UnityEngine.Rendering.VirtualTexturing;
+using System.Diagnostics;
 #endif
 
 namespace TowerDefense
 {
-    public partial class PathfindingGrid : MonoBehaviour
+    public partial class PathfindingGrid : MonoBehaviour, IGridHandler<Vector3>
     {
+        //Interface
+        public IGridSystem GridSystem { get; set; }
+        public SimpleGrid<Vector3> Grid { get; }
+        
+        
         [SerializeField] private int SpawningChunkIndex;
         [SerializeField] private TerrainData terrainData;
         [SerializeField] private int ChunkSize = 16;
 
         [SerializeField] private GameObject walkableChunkPrefab;
         private GameObject[] walkableChunkObj;
-        
-        private Vector3[] directionsGrid;
-        private Dictionary<int, Vector3[]> directionChunkGrid;
+
+        private ChunkedGrid<Vector3> directionGrid;
 
         private int2 gridSize;
         private int2 numChunkXY;
@@ -54,7 +60,7 @@ namespace TowerDefense
         //Accessors
         //=====================
         public int2 GridSize => gridSize;
-        public Vector3[] DirectionsGrid => directionsGrid;
+        public Vector3[] DirectionsGrid => directionGrid.ArrayGrid;
         
         private void Awake()
         {
@@ -66,8 +72,15 @@ namespace TowerDefense
             //DEBUG
             walkableChunkObj = new GameObject[walkableChunk.Length];
             ShowWalkableArea();
-
+#if UNITY_EDITOR
+            Stopwatch sw = new Stopwatch();
+            sw.Start();
+#endif
             GetFlowField();
+#if UNITY_EDITOR
+            sw.Stop();
+            UnityEngine.Debug.Log($"Path found: {sw.Elapsed} ms");          
+#endif
         }
 
         private void InitializeFields()
@@ -112,18 +125,13 @@ namespace TowerDefense
             destinationGridCell = destinationChunk.GetCellIndexFromChunkEnterPoint(ChunkEnterPoint.Right, gridData);
             
             FlowField flowField = new FlowField(gridSize, ChunkSize);
-            directionsGrid = flowField.GetFlowField(destinationGridCell, walkableChunk, walkableRoad);
-            directionChunkGrid = directionsGrid.GetArrayOrderedByChunk(gridData);
-            //grid = KWChunk.GetCellIndicesOrderedByChunk(flowField.BestCostField, gridData);
-            //CostField = flowField.CostField;
-
-            //costGrid = KWChunk.GetCellCostOrderedByChunk(CostField, gridData);
+            directionGrid = new ChunkedGrid<Vector3>(gridSize, ChunkSize, 1,() => flowField.GetFlowField(destinationGridCell, walkableChunk, walkableRoad));
         }
         
-        
+        //TODO : Find a way to change terrain texture
         //PlaceHolder until a way to display a different texture On the Map is found
         
-        private Vector3 GetPosition(int2 xyPos) => new Vector3((xyPos.x * ChunkSize) + ChunkSize / 2f, 0.05f, (xyPos.y * ChunkSize) + ChunkSize / 2f);
+        private Vector3 GetPosition(in int2 xyPos) => new Vector3((xyPos.x * ChunkSize) + ChunkSize / 2f, 0.05f, (xyPos.y * ChunkSize) + ChunkSize / 2f);
         private void ShowWalkableArea()
         {
             for (int i = 0; i < walkableChunk.Length; i++)
@@ -135,5 +143,7 @@ namespace TowerDefense
             }
             
         }
+
+        
     }
 }

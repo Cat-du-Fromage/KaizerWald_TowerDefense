@@ -104,7 +104,7 @@ namespace TowerDefense
 
         private void OnCreateTurret()
         {
-            if (Grid.GetValueAt(currentGridIndex) == false)
+            if (Grid[currentGridIndex] == false)
             {
                 //Move this to Register Notification
                 TurretManager.CreateTurret(currentTurret, currentBlueprint.position, currentBlueprint.rotation);

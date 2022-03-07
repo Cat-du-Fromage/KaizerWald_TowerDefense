@@ -25,7 +25,9 @@ public static class KwSceneUtils
 
     static KwSceneUtils()
     {
+#pragma warning disable CS4014
         GetAll("SceneAsset");
+#pragma warning restore CS4014
     }
     
     private static async Task GetAll(string label)
