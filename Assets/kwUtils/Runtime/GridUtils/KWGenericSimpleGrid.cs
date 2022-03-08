@@ -14,93 +14,93 @@ namespace KWUtils.KWGenericGrid
     /// CAREFUL ALL SIZE must be POW 2!
     /// </summary>
     /// <typeparam name="T"></typeparam>
-    public class SimpleGrid<T>
+    public class SimpleGrid<T> : IGenericGrid<T>
+    where T : struct
     {
         //Need this in order to get value from world position
-
-        private readonly int cellSize;
-        private readonly int gridWidth;
-        private readonly int gridHeight;
         
-        private readonly int2 mapWidthHeight;
-        private readonly int2 gridBounds;
+        public int CellSize        { get; private set; }
+        public int GridWidth       { get; private set; }
+        public int GridHeight      { get; private set; }
+        public int2 MapWidthHeight { get; private set; }
+        public int2 GridBounds     { get; private set; }
+        public T[] GridArray       { get; private set; }
         
-        public readonly T[] GridArray;
 
         public SimpleGrid(in int2 mapSize, int cellSize, Func<int2, T> createGridObject)
         {
-            this.cellSize = cellSize;
+            this.CellSize = cellSize;
 
-            mapWidthHeight = mapSize;
+            MapWidthHeight = mapSize;
             
-            gridWidth = mapSize.x / cellSize;
-            gridHeight = mapSize.y / cellSize;
+            GridWidth = mapSize.x / cellSize;
+            GridHeight = mapSize.y / cellSize;
             
-            gridBounds = new int2(gridWidth, gridHeight);
+            GridBounds = new int2(GridWidth, GridHeight);
             
-            GridArray = new T[gridWidth * gridHeight];
+            GridArray = new T[GridWidth * GridHeight];
             
             //Init Grid
             for (int i = 0; i < GridArray.Length; i++)
             {
-                GridArray[i] = createGridObject(i.GetXY2(gridWidth));
+                GridArray[i] = createGridObject(i.GetXY2(GridWidth));
             }
         }
         
         public SimpleGrid(int mapWidth, int mapHeight, int cellSize, Func<SimpleGrid<T>, int2 , T> createGridObject)
         {
-            this.cellSize = cellSize;
-            mapWidthHeight = new int2(mapWidth, mapHeight);
+            this.CellSize = cellSize;
+            MapWidthHeight = new int2(mapWidth, mapHeight);
             
-            gridWidth = mapWidth / cellSize;
-            gridHeight = mapHeight / cellSize;
-            gridBounds = new int2(gridWidth, gridHeight);
+            GridWidth = mapWidth / cellSize;
+            GridHeight = mapHeight / cellSize;
+            GridBounds = new int2(GridWidth, GridHeight);
 
-            GridArray = new T[gridWidth * gridHeight];
+            GridArray = new T[GridWidth * GridHeight];
             //Init Grid
             for (int i = 0; i < GridArray.Length; i++)
             {
-                GridArray[i] = createGridObject(this, i.GetXY2(gridWidth));
+                GridArray[i] = createGridObject(this, i.GetXY2(GridWidth));
             }
         }
         
         public SimpleGrid(int mapWidth, int mapHeight, int cellSize)
         {
-            this.cellSize = cellSize;
+            this.CellSize = cellSize;
 
-            mapWidthHeight = new int2(mapWidth, mapHeight);
+            MapWidthHeight = new int2(mapWidth, mapHeight);
             
-            gridWidth = mapWidth / cellSize;
-            gridHeight = mapHeight / cellSize;
+            GridWidth = mapWidth / cellSize;
+            GridHeight = mapHeight / cellSize;
             
-            gridBounds = new int2(gridWidth, gridHeight);
-            GridArray = new T[gridWidth * gridHeight];
+            GridBounds = new int2(GridWidth, GridHeight);
+            GridArray = new T[GridWidth * GridHeight];
         }
         
         public SimpleGrid(in int2 mapSize, int cellSize)
         {
-            this.cellSize = cellSize;
+            this.CellSize = cellSize;
 
-            mapWidthHeight = mapSize;
+            MapWidthHeight = mapSize;
             
-            gridWidth = mapSize.x / cellSize;
-            gridHeight = mapSize.y / cellSize;
+            GridWidth = mapSize.x / cellSize;
+            GridHeight = mapSize.y / cellSize;
             
-            gridBounds = new int2(gridWidth, gridHeight);
+            GridBounds = new int2(GridWidth, GridHeight);
             
-            GridArray = new T[gridWidth * gridHeight];
+            GridArray = new T[GridWidth * GridHeight];
         }
 
         public T[] GetGridArray => GridArray;
         public int GridLength => GridArray.Length;
 
-        public int GetGridWidth => gridWidth;
+        public int GetGridWidth => GridWidth;
         
         //Get Grid's Cell World Position
         public Vector3 GetCenterCellAt(int index)
         {
-            (int x, int z) = index.GetXY(gridWidth);
-            Vector3 pointPosition = (new Vector3(x, 0, z) * cellSize) + (Vector3.one * (cellSize / 2f));
+            (int x, int z) = index.GetXY(GridWidth);
+            Vector3 pointPosition = (new Vector3(x, 0, z) * CellSize) + (Vector3.one * (CellSize / 2f));
             return pointPosition.Flat();
         }
 
@@ -114,14 +114,14 @@ namespace KWUtils.KWGenericGrid
 
         public T this[int x, int y]
         {
-            get => GridArray[y * gridWidth + x];
-            set => GridArray[y * gridWidth + x] = value;
+            get => GridArray[y * GridWidth + x];
+            set => GridArray[y * GridWidth + x] = value;
         }
 
         public T this[in int2 coord]
         {
-            get => GridArray[coord.y * gridWidth + coord.x];
-            set => GridArray[coord.y * gridWidth + coord.x] = value;
+            get => GridArray[coord.y * GridWidth + coord.x];
+            set => GridArray[coord.y * GridWidth + coord.x] = value;
         }
 
         
@@ -130,17 +130,19 @@ namespace KWUtils.KWGenericGrid
         //==============================================================================================================
         public int IndexFromPosition(in Vector3 position)
         {
-            return position.XZ().GetIndexFromPosition(mapWidthHeight, cellSize);
+            return position.XZ().GetIndexFromPosition(MapWidthHeight, CellSize);
         }
         
         public T GetValueFromWorldPosition(in Vector3 position)
         {
-            return GridArray[position.GetIndexFromPosition(mapWidthHeight, cellSize)];
+            return GridArray[position.GetIndexFromPosition(MapWidthHeight, CellSize)];
         }
 
         public void SetValueFromPosition(in Vector3 position, T value)
         {
-            GridArray[position.GetIndexFromPosition(mapWidthHeight, cellSize)] = value;
+            GridArray[position.GetIndexFromPosition(MapWidthHeight, CellSize)] = value;
         }
+
+        
     }
 }

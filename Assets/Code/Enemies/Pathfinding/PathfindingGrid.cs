@@ -15,6 +15,7 @@ using float2 = Unity.Mathematics.float2;
 using static Unity.Jobs.LowLevel.Unsafe.JobsUtility;
 using static KWUtils.NativeCollectionExt;
 using static KWUtils.KWmath;
+using Debug = UnityEngine.Debug;
 
 #if UNITY_EDITOR
 using UnityEditor;
@@ -23,15 +24,14 @@ using System.Diagnostics;
 
 namespace TowerDefense
 {
-    public partial class PathfindingGrid : MonoBehaviour, IGridHandler<Vector3>
+    public partial class PathfindingGrid : MonoBehaviour, IGridHandler<ChunkedGrid<Vector3>, Vector3>
     {
         //Interface
         public IGridSystem GridSystem { get; set; }
-        public SimpleGrid<Vector3> Grid { get; }
-        
-        
+        public ChunkedGrid<Vector3> Grid { get; }
+
         [SerializeField] private int SpawningChunkIndex;
-        [SerializeField] private TerrainData terrainData;
+        //[SerializeField] private TerrainData terrainData;
         [SerializeField] private int ChunkSize = 16;
 
         [SerializeField] private GameObject walkableChunkPrefab;
@@ -39,8 +39,8 @@ namespace TowerDefense
 
         private ChunkedGrid<Vector3> directionGrid;
 
-        private int2 gridSize;
-        private int2 numChunkXY;
+        //private int2 gridSize;
+        //private int2 numChunkXY;
 
         //Path Data
         //=====================
@@ -59,8 +59,8 @@ namespace TowerDefense
         
         //Accessors
         //=====================
-        public int2 GridSize => gridSize;
-        public Vector3[] DirectionsGrid => directionGrid.ArrayGrid;
+        //public int2 GridSize => gridSize;
+        public Vector3[] DirectionsGrid => directionGrid.GridArray;
         
         private void Awake()
         {
@@ -85,9 +85,9 @@ namespace TowerDefense
 
         private void InitializeFields()
         {
-            gridSize = (int2)terrainData.size.XZ();
+            //gridSize = (int2)terrainData.size.XZ();
             ChunkSize = ceilpow2(ChunkSize);
-            numChunkXY = (int2)(terrainData.size.XZ() / new int2(ChunkSize));
+            //numChunkXY = (int2)(terrainData.size.XZ() / new int2(ChunkSize));
         }
         
         //Spawn Point
@@ -96,6 +96,7 @@ namespace TowerDefense
         //Get Position Point depending on number of enemy to spawn (must be pow2)
         public Vector3[] GetSpawnPointsForEntities(int numToSpawn, int separation)
         {
+            int2 numChunkXY = (TerrainDataProvider.Instance.TerrainWidthHeight / new int2(ChunkSize));
             int spawns = max(ceilpow2(numToSpawn),4);
             Vector3[] spawnPoints = new Vector3[spawns];
             
@@ -122,7 +123,8 @@ namespace TowerDefense
         private void GetFlowField()
         {
             GridData gridData = new GridData(ChunkSize, gridSize);
-            destinationGridCell = destinationChunk.GetCellIndexFromChunkEnterPoint(ChunkEnterPoint.Right, gridData);
+            Debug.Log($"gridData.ChunkSize = {gridData.ChunkSize}; gridData.MapSize = {gridData.MapSize}; gridData.NumChunkXY = {gridData.NumChunkXY}");
+            destinationGridCell = destinationChunk.GetCellIndexFromChunkEnterPoint(ChunkEnterPoint.Bottom, gridData);
             
             FlowField flowField = new FlowField(gridSize, ChunkSize);
             directionGrid = new ChunkedGrid<Vector3>(gridSize, ChunkSize, 1,() => flowField.GetFlowField(destinationGridCell, walkableChunk, walkableRoad));
@@ -134,6 +136,7 @@ namespace TowerDefense
         private Vector3 GetPosition(in int2 xyPos) => new Vector3((xyPos.x * ChunkSize) + ChunkSize / 2f, 0.05f, (xyPos.y * ChunkSize) + ChunkSize / 2f);
         private void ShowWalkableArea()
         {
+            int2 numChunkXY = (TerrainDataProvider.Instance.TerrainWidthHeight / new int2(ChunkSize));
             for (int i = 0; i < walkableChunk.Length; i++)
             {
                 int2 xyPos = walkableChunk[i].GetXY2(numChunkXY.x);
@@ -141,9 +144,6 @@ namespace TowerDefense
                 walkableChunkObj[i] = Instantiate(walkableChunkPrefab, position, Quaternion.identity);
                 walkableChunkObj[i].name = $"Chunk_Id_{walkableChunk[i]}_Coord_({xyPos.x},{xyPos.y})";
             }
-            
         }
-
-        
     }
 }

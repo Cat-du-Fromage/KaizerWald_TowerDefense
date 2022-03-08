@@ -15,13 +15,15 @@ namespace TowerDefense
 #if UNITY_EDITOR
     public partial class PathfindingGrid : MonoBehaviour
     {
+        private int2 gridSize = TerrainDataProvider.Instance.TerrainWidthHeight;
+        
         [SerializeField] private MainFlock MainFlockDebug;
         [SerializeField] private NeighborFlock[] NeighborFlockDebug;
         private Transform MainFlockDebugTsm;
         private Transform[] NeighborFlockDebugTsm;
         
         public bool EnableDebugger;
-        int totalChunk => numChunkXY.x * numChunkXY.y;
+        int totalChunk => NumChunkXY().x * NumChunkXY().y;
         
         private Dictionary<int, int[]> grid;//DEBUG ONLY
         private Dictionary<int, byte[]> costGrid; //DEBUG ONLY
@@ -30,7 +32,7 @@ namespace TowerDefense
         
         private byte[] CostField; 
         
-        
+        private int2 NumChunkXY() => (TerrainDataProvider.Instance.TerrainWidthHeight / new int2(ChunkSize));
 
         //SPAWNING POINT
         [SerializeField] private GameObject SpawnArea;
@@ -41,6 +43,7 @@ namespace TowerDefense
 
         private void OnValidate()
         {
+            /*
             InitializeFields();
             if (chunksPosition.Length == 0 || chunksPosition.Length != totalChunk)
             {
@@ -50,6 +53,7 @@ namespace TowerDefense
             SpawningChunkIndex = Mathf.Clamp(SpawningChunkIndex, 0, totalChunk - 1);
             MoveSpawnArea();
             ShowHideSpawnArea(ShowSpawnChunk);
+            */
         }
 
         
@@ -57,12 +61,11 @@ namespace TowerDefense
         /// <summary>
         /// Move the spawning area (Green Square)
         /// </summary>
-        private void MoveSpawnArea() => SpawnArea.transform.position = GetPosition(SpawningChunkIndex.GetXY2(numChunkXY.x));
+        private void MoveSpawnArea() => SpawnArea.transform.position = GetPosition(SpawningChunkIndex.GetXY2(NumChunkXY().x));
         private void ShowHideSpawnArea(bool state) => SpawnArea.GetComponent<MeshRenderer>().enabled = state;
 
 
-
-        [ExecuteInEditMode]
+        
         private void OnDrawGizmos()
         {
             if (!EnableDebugger) return;
@@ -95,7 +98,7 @@ namespace TowerDefense
             //Vector3 flowfieldDirectionMain = 
             InitFlockDebug();
             
-            int cellIndex = new float3(MainFlockDebugTsm.position).xz.GetIndexFromPosition(GridSize, 1);
+            int cellIndex = new float3(MainFlockDebugTsm.position).xz.GetIndexFromPosition(TerrainDataProvider.Instance.TerrainWidthHeight, 1);
 
             //Vector3 directionFlow = GetFlowDirection();
             
@@ -165,22 +168,9 @@ namespace TowerDefense
             {
                 //DrawCell where the Main Flock IS
                 Gizmos.color = Color.green;
-                int2 coord = cellIndex.GetXY2(gridSize.x);
+                int2 coord = cellIndex.GetXY2(TerrainDataProvider.Instance.TerrainWidthHeight.x);
                 Gizmos.DrawWireCube(new Vector3(coord.x+0.5f,0,coord.y+0.5f), Vector3.one);
             }
-/*
-            //GetFlowField Direction + display yellow Arrow
-            Vector3 GetFlowDirection()
-            {
-                if (directionsGrid != null && directionsGrid.Length > 0)
-                {
-                    Gizmos.color = Color.yellow;
-                    DrawArrow.ForGizmo(MainFlockDebugTsm.position, directionsGrid[cellIndex]);
-                    return directionsGrid[cellIndex];
-                }
-                return Vector3.zero;
-            }
-            */
         }
         
         
@@ -190,14 +180,14 @@ namespace TowerDefense
             for (int i = 0; i < totalChunk; i++)
             {
                 Handles.DrawWireCube(chunksPosition[i], cubeBounds);
-                Handles.Label(chunksPosition[i] + new Vector3(-(ChunkSize/4f),0,ChunkSize), i.GetXY2(numChunkXY.x).ToString(), style);
+                Handles.Label(chunksPosition[i] + new Vector3(-(ChunkSize/4f),0,ChunkSize), i.GetXY2(NumChunkXY().x).ToString(), style);
             }
         }
 
         private void DisplayDestination()
         {
             if (destinationGridCell == -1) return;
-            int2 xy = destinationGridCell.GetXY2(gridSize.x);
+            int2 xy = destinationGridCell.GetXY2(TerrainDataProvider.Instance.TerrainWidthHeight.x);
             Vector3 destPos = new Vector3(xy.x + 0.5f, 0, xy.y + 0.5f);
             Handles.DrawWireCube(destPos, Vector3.one);
         }
@@ -208,7 +198,7 @@ namespace TowerDefense
             
             for (int i = 0; i < totalChunk; i++)
             {
-                int2 chunkCoord = i.GetXY2(numChunkXY.x);
+                int2 chunkCoord = i.GetXY2(NumChunkXY().x);
                 
                 float chunkX = (chunkCoord.x * ChunkSize) + halfChunk;
                 float chunkY = (chunkCoord.y * ChunkSize) + halfChunk;

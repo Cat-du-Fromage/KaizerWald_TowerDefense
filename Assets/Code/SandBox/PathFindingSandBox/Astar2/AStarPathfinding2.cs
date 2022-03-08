@@ -18,7 +18,7 @@ using static KWUtils.InputSystemExtension;
 
 namespace TowerDefense
 {
-    public partial class AStarPathfinding2 : MonoBehaviour, IGridHandler<Node>
+    public partial class AStarPathfinding2 : MonoBehaviour, IGridHandler<SimpleGrid<Node>, Node>
     {
         [SerializeField] private Transform DestinationGate;
         [SerializeField] private Transform agentStart;
@@ -51,14 +51,6 @@ namespace TowerDefense
             Grid = new SimpleGrid<Node>(mapBounds, CellSize, (coord) => new Node(coord));
             destination = DestinationGate.position;
             endIndex = Grid.IndexFromPosition(destination);
-        }
-
-        private void Start()
-        {
-            //startPosition = agentStart.position;
-            //startIndex = Grid.GetIndexFromPosition(startPosition);
-            
-            
         }
         
         private void Update() 
@@ -139,7 +131,7 @@ namespace TowerDefense
         {
             // TODO : Get Cost Field 1 if free 255 if Obstacle => get from BuildManager?
             
-            using NativeArray<bool> obstacles = GridSystem.RequestGrid<bool>(GridType.Turret).GetGridArray.ToNativeArray();
+            using NativeArray<bool> obstacles = GridSystem.RequestGrid<bool>(GridType.Turret).GridArray.ToNativeArray();
             using NativeArray<Node> nodes = Grid.GetGridArray.ToNativeArray();
 
             using NativeList<int> pathList = new NativeList<int>(16, Allocator.TempJob);

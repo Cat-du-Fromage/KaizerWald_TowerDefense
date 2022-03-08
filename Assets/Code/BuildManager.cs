@@ -19,7 +19,7 @@ using static Unity.Mathematics.math;
 
 namespace TowerDefense
 {
-    public class BuildManager : MonoBehaviour, IGridHandler<bool>
+    public class BuildManager : MonoBehaviour, IGridHandler<SimpleGrid<bool>, bool>
     {
         public IGridSystem GridSystem { get; set; }
         public SimpleGrid<bool> Grid { get; private set; }

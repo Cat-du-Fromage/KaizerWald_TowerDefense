@@ -133,7 +133,7 @@ namespace TowerDefense
             //Debug.Log($"num transformAcces = {enemiesTransforms.Count}; num enemyPosition = {numEnemies}");
             JEntityFlowFieldDirection directionsJob = new JEntityFlowFieldDirection
             {
-                GridSize = PathfindingGrid.GridSize,
+                GridSize = TerrainDataProvider.Instance.TerrainWidthHeight,
                 EntitiesPosition = nativeEnemiesPosition,
                 FlowField = nativeFlowField,
                 EntityFlowFieldDirection = nativeEnemiesDirection,

@@ -17,6 +17,7 @@ namespace TowerDefense
             }
         }
         
+        //LAYERS
         public static readonly LayerMask TerrainLayerMask = 1 << 8;
         public static readonly LayerMask UnitLayer = 1 << 9;
         public static readonly LayerMask EnemyLayer = 1 << 10;

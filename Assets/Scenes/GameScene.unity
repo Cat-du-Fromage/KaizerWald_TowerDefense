@@ -38,7 +38,7 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 0}
-  m_IndirectSpecularColor: {r: 0.11613611, g: 0.42406112, b: 0.73004746, a: 1}
+  m_IndirectSpecularColor: {r: 0.11614481, g: 0.4237638, b: 0.72999835, a: 1}
   m_UseRadianceAmbientProbe: 0
 --- !u!157 &3
 LightmapSettings:
@@ -184,7 +184,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 40941c739ee9a2c46b5a2d831a30b503, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  buildManager: {fileID: 1892634612}
+  TurretGrid: {fileID: 0}
+  FlowFieldGrid: {fileID: 0}
+  EnemyGrid: {fileID: 0}
   Astar: {fileID: 1942334959}
 --- !u!1 &52219512
 GameObject:
@@ -221,7 +223,7 @@ MonoBehaviour:
   - {fileID: 220933037}
   EnableDebugger: 0
   SpawnArea: {fileID: 394186010}
-  ShowSpawnChunk: 1
+  ShowSpawnChunk: 0
   chunksPosition:
   - {x: 16, y: 0, z: 16}
   - {x: 48, y: 0, z: 16}
@@ -288,7 +290,6 @@ MonoBehaviour:
   - {x: 208, y: 0, z: 240}
   - {x: 240, y: 0, z: 240}
   SpawningChunkIndex: 1
-  terrainData: {fileID: 15600000, guid: ad21e10ffa3addb409999fe16fbf0a62, type: 2}
   ChunkSize: 32
   walkableChunkPrefab: {fileID: 341127143433970674, guid: de3b70522e20291459d3f20a685796e2,
     type: 3}
@@ -1876,6 +1877,7 @@ GameObject:
   - component: {fileID: 792069534}
   - component: {fileID: 792069533}
   - component: {fileID: 792069532}
+  - component: {fileID: 792069535}
   m_Layer: 8
   m_Name: Terrain
   m_TagString: Untagged
@@ -1943,6 +1945,19 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 4
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &792069535
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 792069531}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c646fe93337db634f85e992ac1d7a320, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  terrain: {fileID: 792069533}
 --- !u!1 &819803111
 GameObject:
   m_ObjectHideFlags: 0
@@ -4188,7 +4203,7 @@ PrefabInstance:
     - target: {fileID: 1618318693724473067, guid: 4989f7ad2d6412c4bbf701ecd73562ef,
         type: 3}
       propertyPath: m_Enabled
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 1618318693724473069, guid: 4989f7ad2d6412c4bbf701ecd73562ef,
         type: 3}

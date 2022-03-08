@@ -10,11 +10,13 @@ using static KWUtils.GameObjectExtension;
 
 namespace TowerDefense
 {
-    public interface IGridHandler<T>
+    public interface IGridHandler<T1, T2>
+    where T1 : class, IGenericGrid<T2>
+    where T2 : struct
     {
         public IGridSystem GridSystem { get; set; }
         
-        public SimpleGrid<T> Grid { get;}
+        public T1 Grid{ get;}
 
         public void SetGridSystem(IGridSystem gridSystem)
         {
@@ -28,7 +30,7 @@ namespace TowerDefense
 
         public T[] RequestArray<T>(GridType grid);
         
-        public SimpleGrid<T> RequestGrid<T>(GridType grid);
+        public IGenericGrid<T> RequestGrid<T>(GridType grid) where T : struct;
 
         public void OnGridChange(GridType grid, int index);
     }
@@ -46,6 +48,7 @@ namespace TowerDefense
     public class GridSystem : MonoBehaviour, IGridSystem
     {
         [SerializeField] private BuildManager TurretGrid;
+        [SerializeField] private PathfindingGrid FlowFieldGrid;
         [SerializeField] private EnemyManager EnemyGrid;
         
         [SerializeField] private AStarPathfinding2 Astar;
@@ -53,10 +56,13 @@ namespace TowerDefense
         private void Awake()
         {
             TurretGrid ??= FindObjectOfType<BuildManager>();
-            TurretGrid.GetInterfaceComponent<IGridHandler<bool>>().SetGridSystem(this);
+            TurretGrid.GetInterfaceComponent<IGridHandler<SimpleGrid<bool>, bool>>().SetGridSystem(this);
+            
+            FlowFieldGrid ??= FindObjectOfType<PathfindingGrid>();
+            FlowFieldGrid.GetInterfaceComponent<IGridHandler<ChunkedGrid<Vector3>, Vector3>>().SetGridSystem(this);
             
             Astar ??= FindObjectOfType<AStarPathfinding2>();
-            Astar.GetInterfaceComponent<IGridHandler<Node>>().SetGridSystem(this);
+            Astar.GetInterfaceComponent<IGridHandler<SimpleGrid<Node>, Node>>().SetGridSystem(this);
         }
         
 
@@ -78,14 +84,21 @@ namespace TowerDefense
             return null;
         }
 
-        public SimpleGrid<T> RequestGrid<T>(GridType grid)
+        public IGenericGrid<T> RequestGrid<T>(GridType grid)
+        where T : struct
         {
             if (grid == GridType.Turret)
             {
-                return TurretGrid.Grid as SimpleGrid<T>;
+                return TurretGrid.Grid as IGenericGrid<T>;
             }
-
-            return null;
+            else if (grid == GridType.FlowField)
+            {
+                return FlowFieldGrid.Grid as IGenericGrid<T>;
+            }
+            else
+            {
+                return null;
+            }
         }
         
         public void OnGridChange(GridType grid, int index)
