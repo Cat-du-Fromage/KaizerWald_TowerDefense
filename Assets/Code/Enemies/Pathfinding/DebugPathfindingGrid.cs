@@ -15,7 +15,7 @@ namespace TowerDefense
 #if UNITY_EDITOR
     public partial class PathfindingGrid : MonoBehaviour
     {
-        private int2 gridSize = TerrainDataProvider.Instance.TerrainWidthHeight;
+        private int2 gridSize;
         
         [SerializeField] private MainFlock MainFlockDebug;
         [SerializeField] private NeighborFlock[] NeighborFlockDebug;
@@ -23,7 +23,7 @@ namespace TowerDefense
         private Transform[] NeighborFlockDebugTsm;
         
         public bool EnableDebugger;
-        int totalChunk => NumChunkXY().x * NumChunkXY().y;
+        int totalChunk => NumChunkXY.x * NumChunkXY.y;
         
         private Dictionary<int, int[]> grid;//DEBUG ONLY
         private Dictionary<int, byte[]> costGrid; //DEBUG ONLY
@@ -32,7 +32,7 @@ namespace TowerDefense
         
         private byte[] CostField; 
         
-        private int2 NumChunkXY() => (TerrainDataProvider.Instance.TerrainWidthHeight / new int2(ChunkSize));
+        private int2 NumChunkXY;
 
         //SPAWNING POINT
         [SerializeField] private GameObject SpawnArea;
@@ -43,7 +43,7 @@ namespace TowerDefense
 
         private void OnValidate()
         {
-            /*
+            
             InitializeFields();
             if (chunksPosition.Length == 0 || chunksPosition.Length != totalChunk)
             {
@@ -53,7 +53,6 @@ namespace TowerDefense
             SpawningChunkIndex = Mathf.Clamp(SpawningChunkIndex, 0, totalChunk - 1);
             MoveSpawnArea();
             ShowHideSpawnArea(ShowSpawnChunk);
-            */
         }
 
         
@@ -61,7 +60,7 @@ namespace TowerDefense
         /// <summary>
         /// Move the spawning area (Green Square)
         /// </summary>
-        private void MoveSpawnArea() => SpawnArea.transform.position = GetPosition(SpawningChunkIndex.GetXY2(NumChunkXY().x));
+        private void MoveSpawnArea() => SpawnArea.transform.position = GetPosition(SpawningChunkIndex.GetXY2(NumChunkXY.x));
         private void ShowHideSpawnArea(bool state) => SpawnArea.GetComponent<MeshRenderer>().enabled = state;
 
 
@@ -180,7 +179,7 @@ namespace TowerDefense
             for (int i = 0; i < totalChunk; i++)
             {
                 Handles.DrawWireCube(chunksPosition[i], cubeBounds);
-                Handles.Label(chunksPosition[i] + new Vector3(-(ChunkSize/4f),0,ChunkSize), i.GetXY2(NumChunkXY().x).ToString(), style);
+                Handles.Label(chunksPosition[i] + new Vector3(-(ChunkSize/4f),0,ChunkSize), i.GetXY2(NumChunkXY.x).ToString(), style);
             }
         }
 
@@ -198,7 +197,7 @@ namespace TowerDefense
             
             for (int i = 0; i < totalChunk; i++)
             {
-                int2 chunkCoord = i.GetXY2(NumChunkXY().x);
+                int2 chunkCoord = i.GetXY2(NumChunkXY.x);
                 
                 float chunkX = (chunkCoord.x * ChunkSize) + halfChunk;
                 float chunkY = (chunkCoord.y * ChunkSize) + halfChunk;

@@ -1,5 +1,5 @@
 #define EnableBurst
-
+using System.Buffers;
 using System.Collections.Generic;
 using UnityEngine;
 using System.Runtime.CompilerServices;
@@ -145,7 +145,7 @@ namespace KWUtils
         
         public static Dictionary<int, byte[]> GetArrayOrderedByChunk(byte[] unorderedIndices, in GridData gridData)
         {
-            int totalChunk = cmul(gridData.NumChunkXY);
+            int totalChunk = gridData.NumChunkXY.x * gridData.NumChunkXY.y;
             
             using NativeArray<byte> unOrderedIndices = unorderedIndices.ToNativeArray(); 
             using NativeArray<byte> orderedIndices = new (unorderedIndices.Length, Allocator.TempJob, NativeArrayOptions.UninitializedMemory);
@@ -172,7 +172,7 @@ namespace KWUtils
         public static Dictionary<int, T[]> GetGridValueOrderedByChunk<T>(this T[] unorderedIndices, in GridData gridData)
         where T : struct
         {
-            int totalChunk = cmul(gridData.NumChunkXY); //gridData.NumChunkXY.x * gridData.NumChunkXY.y;
+            int totalChunk = gridData.NumChunkXY.x * gridData.NumChunkXY.y;
             
             using NativeArray<T> nativeUnOrderedIndices = unorderedIndices.ToNativeArray();
             using NativeArray<T> nativeOrderedIndices = new (unorderedIndices.Length, Allocator.TempJob, NativeArrayOptions.UninitializedMemory);
@@ -189,10 +189,15 @@ namespace KWUtils
             
             Dictionary<int, T[]> chunkCells = new Dictionary<int, T[]>(totalChunk);
             int totalChunkCell = Sq(gridData.ChunkSize);
+            //ArrayPool<T> pool = ArrayPool<T>.Shared;
+            //T[] buffer = pool.Rent(totalChunkCell);
             for (int i = 0; i < totalChunk; i++)
             {
-                chunkCells.Add(i, nativeOrderedIndices.GetSubArray(i * totalChunkCell, totalChunkCell).ToArray());
+                //nativeOrderedIndices.Slice(i * totalChunkCell, totalChunkCell).CopyTo(buffer);
+                //chunkCells.Add(i, buffer);
+                chunkCells.Add(i, nativeOrderedIndices.Slice(i * totalChunkCell, totalChunkCell).ToArray());
             }
+            //pool.Return(buffer, true);
             return chunkCells;
         }
     }

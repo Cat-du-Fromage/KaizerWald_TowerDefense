@@ -18,12 +18,18 @@ using static KWUtils.InputSystemExtension;
 
 namespace TowerDefense
 {
-    public partial class AStarPathfinding2 : MonoBehaviour, IGridHandler<SimpleGrid<Node>, Node>
+    public partial class AStarPathfinding2 : MonoBehaviour, IGridHandler<Node, SimpleGrid<Node>>
     {
         [SerializeField] private Transform DestinationGate;
         [SerializeField] private Transform agentStart;
         //Interfaces
         public IGridSystem GridSystem { get; set; }
+
+        public void InitGrid(int2 mapSize, int chunkSize, int cellSize = 1, Func<int2, SimpleGrid<Node>> providerFunction = null)
+        {
+            
+        }
+
         public SimpleGrid<Node> Grid { get; private set; }
 
         [SerializeField] private Terrain terrain;
@@ -43,6 +49,7 @@ namespace TowerDefense
         private RaycastHit[] hits = new RaycastHit[1];
         
         private int[] path;
+        private Node grid;
 
         private void Awake()
         {

@@ -4,17 +4,10 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using KWUtils;
 using KWUtils.KWGenericGrid;
-using Unity.Collections;
-using Unity.Jobs;
-using Unity.Jobs.LowLevel.Unsafe;
 using Unity.Mathematics;
 using UnityEngine;
 
 using static Unity.Mathematics.math;
-using float2 = Unity.Mathematics.float2;
-using static Unity.Jobs.LowLevel.Unsafe.JobsUtility;
-using static KWUtils.NativeCollectionExt;
-using static KWUtils.KWmath;
 using Debug = UnityEngine.Debug;
 
 #if UNITY_EDITOR
@@ -24,14 +17,18 @@ using System.Diagnostics;
 
 namespace TowerDefense
 {
-    public partial class PathfindingGrid : MonoBehaviour, IGridHandler<ChunkedGrid<Vector3>, Vector3>
+    public partial class PathfindingGrid : MonoBehaviour, IGridHandler<Vector3, ChunkedGrid<Vector3>>
     {
         //Interface
         public IGridSystem GridSystem { get; set; }
         public ChunkedGrid<Vector3> Grid { get; }
+        public void InitGrid(int2 mapSize, int chunkSize, int cellSize = 1, Func<int2, ChunkedGrid<Vector3>> providerFunction = null)
+        {
+            throw new NotImplementedException();
+        }
 
         [SerializeField] private int SpawningChunkIndex;
-        //[SerializeField] private TerrainData terrainData;
+        [SerializeField] private TerrainData terrainData;
         [SerializeField] private int ChunkSize = 16;
 
         [SerializeField] private GameObject walkableChunkPrefab;
@@ -79,15 +76,16 @@ namespace TowerDefense
             GetFlowField();
 #if UNITY_EDITOR
             sw.Stop();
-            UnityEngine.Debug.Log($"Path found: {sw.Elapsed} ms");          
+            Debug.Log($"Path found: {sw.Elapsed} ms");          
 #endif
         }
 
         private void InitializeFields()
         {
-            //gridSize = (int2)terrainData.size.XZ();
+            terrainData ??= Terrain.activeTerrain.terrainData;
+            gridSize = (int2)terrainData.size.XZ();
             ChunkSize = ceilpow2(ChunkSize);
-            //numChunkXY = (int2)(terrainData.size.XZ() / new int2(ChunkSize));
+            NumChunkXY = (int2)(terrainData.size.XZ() / new int2(ChunkSize));
         }
         
         //Spawn Point

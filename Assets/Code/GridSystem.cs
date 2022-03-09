@@ -2,6 +2,7 @@ using System;
 using KWUtils;
 using System.Collections;
 using System.Collections.Generic;
+using JetBrains.Annotations;
 using KWUtils.KWGenericGrid;
 using Unity.Mathematics;
 using UnityEngine;
@@ -11,17 +12,19 @@ using static KWUtils.GameObjectExtension;
 namespace TowerDefense
 {
     public interface IGridHandler<T1, T2>
-    where T1 : class, IGenericGrid<T2>
-    where T2 : struct
+    where T1 : struct
+    where T2 : class, IGenericGrid<T1>
     {
         public IGridSystem GridSystem { get; set; }
         
-        public T1 Grid{ get;}
+        public T2 Grid{ get;}
 
         public void SetGridSystem(IGridSystem gridSystem)
         {
             GridSystem = gridSystem;
         }
+
+        public void InitGrid(int2 mapSize, int chunkSize, int cellSize = 1, [CanBeNull] Func<int2, T2> providerFunction = null);
     }
 
     public interface IGridSystem
@@ -47,6 +50,8 @@ namespace TowerDefense
     /// </summary>
     public class GridSystem : MonoBehaviour, IGridSystem
     {
+        [SerializeField] private Terrain terrain;
+        
         [SerializeField] private BuildManager TurretGrid;
         [SerializeField] private PathfindingGrid FlowFieldGrid;
         [SerializeField] private EnemyManager EnemyGrid;
@@ -55,14 +60,16 @@ namespace TowerDefense
 
         private void Awake()
         {
+            terrain = FindObjectOfType<Terrain>();
+            
             TurretGrid ??= FindObjectOfType<BuildManager>();
-            TurretGrid.GetInterfaceComponent<IGridHandler<SimpleGrid<bool>, bool>>().SetGridSystem(this);
+            TurretGrid.GetInterfaceComponent<IGridHandler<bool, SimpleGrid<bool>>>().SetGridSystem(this);
             
             FlowFieldGrid ??= FindObjectOfType<PathfindingGrid>();
-            FlowFieldGrid.GetInterfaceComponent<IGridHandler<ChunkedGrid<Vector3>, Vector3>>().SetGridSystem(this);
+            FlowFieldGrid.GetInterfaceComponent<IGridHandler<Vector3, ChunkedGrid<Vector3>>>().SetGridSystem(this);
             
             Astar ??= FindObjectOfType<AStarPathfinding2>();
-            Astar.GetInterfaceComponent<IGridHandler<SimpleGrid<Node>, Node>>().SetGridSystem(this);
+            Astar.GetInterfaceComponent<IGridHandler<Node, SimpleGrid<Node>>>().SetGridSystem(this);
         }
         
 

@@ -19,11 +19,15 @@ using static Unity.Mathematics.math;
 
 namespace TowerDefense
 {
-    public class BuildManager : MonoBehaviour, IGridHandler<SimpleGrid<bool>, bool>
+    public class BuildManager : MonoBehaviour, IGridHandler<bool, SimpleGrid<bool>>
     {
         public IGridSystem GridSystem { get; set; }
         public SimpleGrid<bool> Grid { get; private set; }
-        
+        public void InitGrid(int2 mapSize, int chunkSize, int cellSize = 1, Func<int2, SimpleGrid<bool>> providerFunction = null)
+        {
+            throw new NotImplementedException();
+        }
+
         public bool IsBuilding;
 
         [SerializeField] private TurretManager TurretManager;
