@@ -2,8 +2,10 @@ using System;
 using KWUtils;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using JetBrains.Annotations;
 using KWUtils.KWGenericGrid;
+using NUnit.Framework.Internal;
 using Unity.Mathematics;
 using UnityEngine;
 
@@ -13,7 +15,7 @@ namespace TowerDefense
 {
     public interface IGridHandler<T1, T2>
     where T1 : struct
-    where T2 : class, IGenericGrid<T1>
+    where T2 : IGenericGrid<T1>
     {
         public IGridSystem GridSystem { get; set; }
         
@@ -57,7 +59,7 @@ namespace TowerDefense
         [SerializeField] private EnemyManager EnemyGrid;
         
         [SerializeField] private AStarPathfinding2 Astar;
-
+        
         private void Awake()
         {
             terrain = FindObjectOfType<Terrain>();

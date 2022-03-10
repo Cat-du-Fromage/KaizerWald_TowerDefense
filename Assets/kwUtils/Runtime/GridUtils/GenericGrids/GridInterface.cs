@@ -5,7 +5,7 @@ using UnityEngine;
 
 namespace KWUtils
 {
-    public interface IGenericGrid<T>
+    public interface IGenericGrid<out T>
     where T : struct
     {
         public int CellSize        { get; }

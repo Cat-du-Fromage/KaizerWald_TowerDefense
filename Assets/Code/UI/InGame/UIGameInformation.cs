@@ -22,6 +22,9 @@ namespace TowerDefense
         [SerializeField] private int BaseResources = 100;
         [SerializeField] private TextMeshProUGUI ResourcesText;
         
+        //Events
+        public event Action OnHealthIsZero;
+        
         private void Awake()
         {
             PlayerHealth  ??= gameObject.GetWithTagComponentInChildren<UITagHealthBar, Slider>();
@@ -72,6 +75,13 @@ namespace TowerDefense
         
         private void OnHealthChange(float healthValue) => HealthBarText.text = $"{(int)healthValue} / {MaxHealth}";
 
-        public void TakeDamage() => PlayerHealth.value -= PlayerHealth.value > 0 ? 1 : 0;
+        public void TakeDamage()
+        {
+            PlayerHealth.value -= PlayerHealth.value > 0 ? 1 : 0;
+            if (PlayerHealth.value == 0)
+            {
+                OnHealthIsZero?.Invoke();
+            }
+        }
     }
 }

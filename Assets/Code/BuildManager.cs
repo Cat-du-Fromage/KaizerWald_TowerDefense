@@ -5,7 +5,6 @@ using KWUtils;
 using KWUtils.KWGenericGrid;
 using Unity.Collections;
 using Unity.Mathematics;
-using UnityEditor;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
@@ -25,7 +24,7 @@ namespace TowerDefense
         public SimpleGrid<bool> Grid { get; private set; }
         public void InitGrid(int2 mapSize, int chunkSize, int cellSize = 1, Func<int2, SimpleGrid<bool>> providerFunction = null)
         {
-            throw new NotImplementedException();
+            Debug.Log("Init DONE");
         }
 
         public bool IsBuilding;

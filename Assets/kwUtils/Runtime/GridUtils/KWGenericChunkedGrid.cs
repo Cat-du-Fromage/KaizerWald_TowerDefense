@@ -44,8 +44,8 @@ namespace KWUtils.KWGenericGrid
 
         private void BaseConstructor(int mapWidth, int mapHeight, int chunksSize, int cellsSize)
         {
-            this.ChunkSize = chunksSize;
-            this.CellSize = cellsSize;
+            ChunkSize = chunksSize;
+            CellSize = cellsSize;
             MapWidthHeight = new int2(mapWidth, mapHeight);
             ChunkWidthHeight = MapWidthHeight / ChunkSize;
             CellWidthHeight = CellSize is 1 ? MapWidthHeight : MapWidthHeight / CellSize ;

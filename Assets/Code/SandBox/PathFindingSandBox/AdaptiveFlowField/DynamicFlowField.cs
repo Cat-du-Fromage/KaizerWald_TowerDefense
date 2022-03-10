@@ -23,7 +23,6 @@ namespace TowerDefense
             int2 terrainBounds = TerrainDataProvider.Instance.TerrainWidthHeight;
             ChunkSize = ceilpow2(ChunkSize);
             numChunkXY = (terrainBounds / new int2(ChunkSize));
-            
         }
         
         public void InitGrid(int2 mapSize, int chunkSize, int cellSize = 1, Func<int2, ChunkedGrid<Vector3>> providerFunction = null)

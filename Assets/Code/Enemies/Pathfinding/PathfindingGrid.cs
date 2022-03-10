@@ -19,14 +19,17 @@ namespace TowerDefense
 {
     public partial class PathfindingGrid : MonoBehaviour, IGridHandler<Vector3, ChunkedGrid<Vector3>>
     {
+        //==============================================================================================================
         //Interface
+        //==============================================================================================================
         public IGridSystem GridSystem { get; set; }
-        public ChunkedGrid<Vector3> Grid { get; }
+        public ChunkedGrid<Vector3> Grid { get; private set; }
         public void InitGrid(int2 mapSize, int chunkSize, int cellSize = 1, Func<int2, ChunkedGrid<Vector3>> providerFunction = null)
         {
-            throw new NotImplementedException();
+            Grid = new ChunkedGrid<Vector3>(mapSize, chunkSize, 1);
         }
-
+        //==============================================================================================================
+        
         [SerializeField] private int SpawningChunkIndex;
         [SerializeField] private TerrainData terrainData;
         [SerializeField] private int ChunkSize = 16;
