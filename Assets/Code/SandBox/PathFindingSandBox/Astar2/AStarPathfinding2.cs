@@ -1,5 +1,6 @@
 using System;
 using System.Diagnostics;
+using System.Linq;
 using KWUtils;
 using KWUtils.KWGenericGrid;
 using Unity.Burst;
@@ -187,8 +188,8 @@ namespace TowerDefense
                 openSet.Add(StartNodeIndex);
 
                 NativeList<int> neighbors = new NativeList<int>(8,Allocator.Temp);
-                int currentNode = 0;
                 
+                int currentNode = 0;
                 while (!openSet.IsEmpty)
                 {
                     currentNode = GetLowestFCostNodeIndex(openSet);
@@ -204,34 +205,30 @@ namespace TowerDefense
                     closeSet.Add(currentNode);
 
                     //Add Neighbors to OpenSet
-                    GetNeighborCells(currentNode, ref neighbors, closeSet);
+                    GetNeighborCells(currentNode, neighbors, closeSet);
                     if (neighbors.Length > 0)
                     {
                         for (int i = 0; i < neighbors.Length; i++)
                         {
-                            //if (closeSet.Contains(neighbors[i])) continue;
                             openSet.Add(neighbors[i]);
                         }
                     }
                     neighbors.Clear();
                 }
-                
             }
 
             private void CalculatePath()
             {
+                PathList.Add(EndNodeIndex);
                 int currentNode = EndNodeIndex;
-
                 while(currentNode != StartNodeIndex)
                 {
-                    PathList.Add(currentNode);
                     currentNode = Nodes[currentNode].CameFromNodeIndex;
+                    PathList.Add(currentNode);
                 }
-
-                PathList.Add(StartNodeIndex);
             }
             
-            private void GetNeighborCells(int index, ref NativeList<int> curNeighbors, in NativeHashSet<int> closeSet)
+            private void GetNeighborCells(int index, NativeList<int> curNeighbors, NativeHashSet<int> closeSet)
             {
                 int2 coord = index.GetXY2(MapSizeX);
                 for (int i = 0; i < 8; i++)
@@ -251,20 +248,18 @@ namespace TowerDefense
                             index,
                             gCost,
                             hCost,
-                            gCost + hCost,
                             Nodes[neighborId].Coord
                         );
                     }
                 }
             }
 
-            private int GetLowestFCostNodeIndex(in NativeHashSet<int> openSet)
+            private int GetLowestFCostNodeIndex(NativeHashSet<int> openSet)
             {
-                using NativeArray<int> tempOpenSet = openSet.ToNativeArray(Allocator.Temp);
-                int lowest = tempOpenSet[0];
-                for (int i = 1; i < tempOpenSet.Length; i++)
+                int lowest = -1;
+                foreach (int index in openSet)
                 {
-                    int index = tempOpenSet[i];
+                    lowest = lowest == -1 ? index : lowest;
                     lowest = select(lowest, index, Nodes[index].FCost < Nodes[lowest].FCost);
                 }
                 return lowest;
