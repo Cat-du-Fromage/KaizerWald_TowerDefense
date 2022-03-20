@@ -2383,6 +2383,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: da5554bb27d7fe64c86e51e564155790, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  BlueprintColor: {fileID: 0}
   PlayerCamera: {fileID: 330585545}
   GridHandler: {fileID: 0}
   TurretManager: {fileID: 260337685}
@@ -2402,6 +2403,9 @@ MonoBehaviour:
   DefaultColor: {fileID: 2100000, guid: cdb85048613e7894d8c7734899a89d7e, type: 2}
   ValidColor: {fileID: 2100000, guid: 38f3704bfe332494998a8dc756cda125, type: 2}
   BusyColor: {fileID: 2100000, guid: 0ca3686b5f9e3e24ab2d322e59f329a2, type: 2}
+  DefaultFrontColor: {fileID: 2100000, guid: 9f423fd8bce30b54580c233f35ac02a0, type: 2}
+  ValidFrontColor: {fileID: 2100000, guid: 503368c8c0bf6b8469776adf22425739, type: 2}
+  BusyFrontColor: {fileID: 2100000, guid: 798bcf7a92c69f241936a2f58d22f76f, type: 2}
 --- !u!1 &1048691094
 GameObject:
   m_ObjectHideFlags: 0

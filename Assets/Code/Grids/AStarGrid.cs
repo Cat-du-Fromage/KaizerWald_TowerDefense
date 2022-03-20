@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using KWUtils;
 using KWUtils.KWGenericGrid;
 using Unity.Burst;
@@ -100,17 +101,24 @@ namespace TowerDefense
         public bool IsPathAffected(int chunkIndex, in GridData obstaclesGridData)
         {
             GridData fakeChunk = new GridData(Grid.GridData.MapSize, CellSize, obstaclesGridData.CellSize);
-            int[] indices = new int[fakeChunk.TotalCellInChunk];
+            //int[] indices = new int[fakeChunk.TotalCellInChunk];
+            List<int> indices = new List<int>(fakeChunk.TotalCellInChunk);
             //USE LIST
             for (int i = 0; i < fakeChunk.TotalCellInChunk; i++)
             {
-                indices[i] = chunkIndex.GetGridCellIndexFromChunkCellIndex(obstaclesGridData, i);
+                indices.Add(chunkIndex.GetGridCellIndexFromChunkCellIndex(fakeChunk, i));
+                //indices[i] = chunkIndex.GetGridCellIndexFromChunkCellIndex(obstaclesGridData, i);
             }
 
             //multithreadThis?
             for (int i = 0; i < currentPath.Length; i++)
             {
-                for (int j = 0; j < indices.Length; j++)
+                if (indices.Contains(currentPath[i]))
+                {
+                    return true;
+                }
+                /*
+                for (int j = 0; j < indices.Count; j++)
                 {
                     if (currentPath[i].Equals(indices[j]))
                     {
@@ -118,6 +126,7 @@ namespace TowerDefense
                         return true;
                     }
                 }
+                */
             }
             Debug.Log("false");
             return false;
@@ -195,8 +204,6 @@ namespace TowerDefense
         private void OnDrawGizmos()
         {
             if (currentPath.IsNullOrEmpty()) return;
-
-            
             
             Gizmos.color = Color.magenta;
             for (int i = 0; i < currentPath.Length; i++)
