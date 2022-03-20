@@ -12,11 +12,11 @@ namespace TowerDefense
     public class UIBuilding : MonoBehaviour
     {
         [SerializeField] private GameObject[] TurretsBlueprint;
-
         [SerializeField] private Button[] buttons;
-        
         [SerializeField] private BuildManager BuildManager;
 
+        public event Action<GameObject> OnBuildCommand;
+        
         private void Awake()
         {
             buttons = GetComponentsInChildren<Button>();
@@ -37,6 +37,9 @@ namespace TowerDefense
         //MAY WANT TO SWITCH FOR INPUT SYSTEM!
         private void Update()
         {
+            //=======================================
+            //TODO : REPLACE THIS WITH INPUT SYSTEM
+            //=======================================
             if (!BuildManager.IsBuilding) return;
             if (Keyboard.current.escapeKey.wasReleasedThisFrame || Keyboard.current.qKey.wasReleasedThisFrame)
             {
@@ -44,14 +47,10 @@ namespace TowerDefense
                 DisableAllBlueprint();
             }
         }
-
-        private void OnBuildTurretButton(GameObject blueprint)
-        {
-            DisableAllBlueprint();
-            BuildManager.ToggleBuildModeOn(blueprint);
-            blueprint.SetActive(true);
-        }
-
+        
+        /// <summary>
+        /// Assign all buttons to a turret's Blueprint (GameObject)
+        /// </summary>
         private void EnableButtons()
         {
             for (int i = 0; i < buttons.Length; i++)
@@ -60,15 +59,30 @@ namespace TowerDefense
                 buttons[i].onClick.AddListener(new UnityAction(() => OnBuildTurretButton(blueprint)));
             }
         }
-
+        
+        /// <summary>
+        /// Remove All Listeners on Buttons
+        /// </summary>
         private void DisableButtons()
         {
             for (int i = 0; i < buttons.Length; i++)
-            {
                 buttons[i].onClick.RemoveAllListeners();
-            }
         }
-
+        
+        /// <summary>
+        /// Assign all buttons to a turret's Blueprint (GameObject)
+        /// </summary>
+        private void OnBuildTurretButton(GameObject blueprint)
+        {
+            DisableAllBlueprint();
+            OnBuildCommand?.Invoke(blueprint);
+            //BuildManager.ToggleBuildModeOn(blueprint);
+            blueprint.SetActive(true);
+        }
+        
+        /// <summary>
+        /// Assign all buttons to a turret's Blueprint (GameObject)
+        /// </summary>
         private void InitializeBlueprints()
         {
             if (buttons.Length == 0)
@@ -88,6 +102,9 @@ namespace TowerDefense
             }
         }
 
+        /// <summary>
+        /// Disable all Blueprint
+        /// </summary>
         private void DisableAllBlueprint()
         {
             for (int i = 0; i < TurretsBlueprint.Length; i++)

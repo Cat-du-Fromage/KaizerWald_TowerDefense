@@ -4,6 +4,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using KWUtils;
+using KWUtils.KWGenericGrid;
 using Unity.Burst;
 using Unity.Collections;
 using Unity.Jobs;
@@ -24,14 +25,13 @@ namespace TowerDefense
     public class EnemyManager : MonoBehaviour
     {
         //References to Grids
-        [SerializeField] private PathfindingGrid PathfindingGrid;
+        [SerializeField] private FlowFieldGrid PathfindingGrid;
 
         //Prefabs
         [SerializeField] private GameObject EnemyPrefab;
         
         private Dictionary<int, Transform> enemiesTransforms;
         private HashSet<int> enemiesToRemove;
-        //private List<float3> enemiesPositions;
 
         private Dictionary<int, float3> enemiesPosition;
         //JOB SYSTEM
@@ -54,16 +54,16 @@ namespace TowerDefense
 
         private void DisposeAll()
         {
-            if (nativeEnemiesID.IsCreated) nativeEnemiesID.Dispose();
-            if (nativeFlowField.IsCreated) nativeFlowField.Dispose();
-            if (nativeEnemiesDirection.IsCreated) nativeEnemiesDirection.Dispose();
-            if (nativeEnemiesPosition.IsCreated) nativeEnemiesPosition.Dispose();
+            if (nativeEnemiesID.IsCreated)         nativeEnemiesID.Dispose();
+            if (nativeFlowField.IsCreated)         nativeFlowField.Dispose();
+            if (nativeEnemiesDirection.IsCreated)  nativeEnemiesDirection.Dispose();
+            if (nativeEnemiesPosition.IsCreated)   nativeEnemiesPosition.Dispose();
             if (nativeEnemiesInGridCell.IsCreated) nativeEnemiesInGridCell.Dispose();
         }
 
         private void Awake()
         {
-            PathfindingGrid ??= FindObjectOfType<PathfindingGrid>();
+            //PathfindingGrid ??= FindObjectOfType<PathfindingGrid>();
             
             enemiesTransforms = new Dictionary<int, Transform>(16);
             
@@ -88,7 +88,7 @@ namespace TowerDefense
         {
             if (Keyboard.current.spaceKey.wasPressedThisFrame)
             {
-                CreateWave(8);
+                //CreateWave(8);
             }
             if (enemiesTransforms.Count == 0) return;
             MoveAllEnemies();
@@ -122,7 +122,7 @@ namespace TowerDefense
             int numEnemies = enemiesPosition.Count;
             
             nativeEnemiesPosition = enemiesPosition.GetValuesArray().ToNativeArray();
-            nativeFlowField = PathfindingGrid.DirectionsGrid.ToNativeArray().Reinterpret<float3>();
+            //nativeFlowField = PathfindingGrid.DirectionsGrid.ToNativeArray().Reinterpret<float3>();
             nativeEnemiesDirection = AllocNtvAry<float3>(numEnemies);
             
             //CAREFULL MULTI HASH MAP SEEMS to be ... special
@@ -150,7 +150,7 @@ namespace TowerDefense
             JobHandle.ScheduleBatchedJobs();
             EnemiesMoved = true;
         }
-
+/*
         public void CreateWave(int numToSpawn) //temporary public
         {
             Vector3[] spawnPoints = PathfindingGrid.GetSpawnPointsForEntities(numToSpawn, 2);
@@ -163,7 +163,7 @@ namespace TowerDefense
                 transformAccessArray.Add(enemy.transform);
             }
         }
-
+*/
         //ITS A MESS NEED A SERIOUS CONCEPTION NOW!
 
         private void ClearEnemiesGone()

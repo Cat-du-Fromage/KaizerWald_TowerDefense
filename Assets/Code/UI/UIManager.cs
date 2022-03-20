@@ -9,10 +9,8 @@ namespace TowerDefense
     public class UIManager : MonoBehaviour
     {
         [SerializeField] private UIGameInformation InGameInformation;
-        
         [SerializeField] private GameObject InGameMenu;
         [SerializeField] private GameObject GameOverScreen;
-
         private void Awake()
         {
             InGameInformation ??= FindObjectOfType<UIGameInformation>();
@@ -32,6 +30,9 @@ namespace TowerDefense
 
         private void Update()
         {
+            //=======================================
+            //TODO : REPLACE THIS WITH INPUT SYSTEM
+            //=======================================
             if (GameOverScreen.activeSelf) return;
             if (!Keyboard.current.escapeKey.wasReleasedThisFrame) return;
             ToggleMenu();
