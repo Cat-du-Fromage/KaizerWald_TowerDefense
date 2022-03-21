@@ -38,7 +38,7 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 0}
-  m_IndirectSpecularColor: {r: 0.11613611, g: 0.42406112, b: 0.73004746, a: 1}
+  m_IndirectSpecularColor: {r: 0.11614481, g: 0.4237638, b: 0.72999835, a: 1}
   m_UseRadianceAmbientProbe: 0
 --- !u!157 &3
 LightmapSettings:
@@ -1148,12 +1148,6 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 465007900}
   m_CullTransparentMesh: 1
---- !u!4 &591354748 stripped
-Transform:
-  m_CorrespondingSourceObject: {fileID: 5130269276667740483, guid: 1cebc8099ea5c944094283858382708e,
-    type: 3}
-  m_PrefabInstance: {fileID: 5130269276213302953}
-  m_PrefabAsset: {fileID: 0}
 --- !u!1 &610183000
 GameObject:
   m_ObjectHideFlags: 0
@@ -1488,24 +1482,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   terrain: {fileID: 792069533}
---- !u!1 &800504880 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 1618318693724473069, guid: 4989f7ad2d6412c4bbf701ecd73562ef,
-    type: 3}
-  m_PrefabInstance: {fileID: 1618318693571005431}
-  m_PrefabAsset: {fileID: 0}
---- !u!114 &800504884
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 800504880}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: fcaf871fbcc4cd144a7159cce647f940, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!1 &819803111
 GameObject:
   m_ObjectHideFlags: 0
@@ -2090,8 +2066,8 @@ GameObject:
   - component: {fileID: 988700055}
   - component: {fileID: 988700057}
   - component: {fileID: 988700056}
-  - component: {fileID: 988700058}
   - component: {fileID: 988700059}
+  - component: {fileID: 988700060}
   m_Layer: 0
   m_Name: Grids
   m_TagString: Untagged
@@ -2138,23 +2114,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 858434a4b518edc4ca5d7f6adcebeda9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  DestinationPath: {fileID: 0}
+  StartSpawnPath: {fileID: 0}
   AStarGrid: {fileID: 0}
   FlowFieldGrid: {fileID: 0}
   StaticEntitiesGrid: {fileID: 0}
---- !u!114 &988700058
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 988700054}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f24d317f0bd0451d94337732d3aa30cf, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  DebugEnable: 0
-  DestinationGate: {fileID: 591354748}
 --- !u!114 &988700059
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2170,6 +2134,19 @@ MonoBehaviour:
   DebugAstar: 0
   DestinationCell: {fileID: 0}
   StartCell: {fileID: 0}
+--- !u!114 &988700060
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 988700054}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f24d317f0bd0451d94337732d3aa30cf, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  DebugEnable: 0
 --- !u!1 &1025232330
 GameObject:
   m_ObjectHideFlags: 0
@@ -3315,7 +3292,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b91f1880c25d022469433815b20c8291, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  PathfindingGrid: {fileID: 0}
+  FlowfieldGrid: {fileID: 0}
   EnemyPrefab: {fileID: 6534436768689163358, guid: 100e88b41c1e12842bfad4e65fcd427a,
     type: 3}
 --- !u!4 &2017869859
@@ -3693,16 +3670,6 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1618318693724473065, guid: 4989f7ad2d6412c4bbf701ecd73562ef,
         type: 3}
-      propertyPath: m_LocalScale.x
-      value: 3.2
-      objectReference: {fileID: 0}
-    - target: {fileID: 1618318693724473065, guid: 4989f7ad2d6412c4bbf701ecd73562ef,
-        type: 3}
-      propertyPath: m_LocalScale.z
-      value: 3.2
-      objectReference: {fileID: 0}
-    - target: {fileID: 1618318693724473065, guid: 4989f7ad2d6412c4bbf701ecd73562ef,
-        type: 3}
       propertyPath: m_LocalPosition.x
       value: 48
       objectReference: {fileID: 0}
@@ -3751,20 +3718,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 1618318693724473067, guid: 4989f7ad2d6412c4bbf701ecd73562ef,
-        type: 3}
-      propertyPath: m_Enabled
-      value: 1
-      objectReference: {fileID: 0}
     - target: {fileID: 1618318693724473069, guid: 4989f7ad2d6412c4bbf701ecd73562ef,
         type: 3}
       propertyPath: m_Name
       value: SpawnChunk
-      objectReference: {fileID: 0}
-    - target: {fileID: 1618318693724473069, guid: 4989f7ad2d6412c4bbf701ecd73562ef,
-        type: 3}
-      propertyPath: m_IsActive
-      value: 1
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 4989f7ad2d6412c4bbf701ecd73562ef, type: 3}

@@ -10,7 +10,7 @@ using static Unity.Mathematics.math;
 using static KWUtils.KWmath;
 using int2 = Unity.Mathematics.int2;
 
-namespace KWUtils.KWGenericGrid
+namespace KWUtils
 {
         
     // The Job will "slice" the array and reorder them
@@ -23,9 +23,9 @@ namespace KWUtils.KWGenericGrid
     // 0️⃣1️⃣2️⃣3️⃣4️⃣5️⃣6️⃣7️⃣ 
     //After Slice
     // ✂ (chunk0): 0️⃣1️⃣4️⃣5️⃣ ✂ (chunk1): 2️⃣3️⃣6️⃣7️⃣ 
-#if EnableBurst
-    [BurstCompile]
-#endif
+    #if EnableBurst
+        [BurstCompile(CompileSynchronously = true)]
+    #endif
     public struct JOrderArrayByChunkIndex<T> : IJobFor
     where T : struct
     {
@@ -106,9 +106,9 @@ namespace KWUtils.KWGenericGrid
         }
     }
     
-#if EnableBurst
-    [BurstCompile]
-#endif
+    #if EnableBurst
+    //[BurstCompile(CompileSynchronously = true)]
+    #endif
     public struct JConvertGridBigToSmall<T> : IJobFor
     where T : struct
     {
@@ -130,14 +130,6 @@ namespace KWUtils.KWGenericGrid
             {
                 int indexSmall = index.GetGridCellIndexFromChunkCellIndex(BiggerGridData, i);
                 GridConverted[indexSmall] = BigGridToConvert[index];
-                
-                //UnityEngine.Debug.Log($"indexSmall {indexSmall}");
-                //UnityEngine.Debug.Log($"at chunk {index} value chunk = {BigGridToConvert[index]}");
-                //int2 coordInChunk = i.GetXY2(BiggerGridData.NumCellInChunkX);
-                //int indexInChunk = coordInChunk.GetIndex(BiggerGridData.NumCellInChunkX);
-                //int gridIndex = index.GetGridCellIndexFromChunkCellIndex(BiggerGridData, indexInChunk);
-
-                //GridConverted[gridIndex] = BigGridToConvert[index];
             }
         }
     }

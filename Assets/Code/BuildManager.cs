@@ -1,16 +1,10 @@
-using System;
-using System.Collections;
-using System.Collections.Generic;
 using KWUtils;
-using KWUtils.KWGenericGrid;
-using Unity.Collections;
 using Unity.Mathematics;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
 
 using static TowerDefense.TowerDefenseUtils;
-using static KWUtils.KWGrid;
 using static KWUtils.InputSystemExtension;
 using static KWUtils.KWmath;
 using static UnityEngine.Physics;
@@ -43,18 +37,19 @@ namespace TowerDefense
         //Use to avoid unnecessary calculation
         private int currentGridIndex = -1;
         private int previousGridIndex = -1;
+
+        private bool currentCellValidation;
         
         //Use to Toggle(On/Off) Build Mode
         public bool IsBuilding { get; private set; }
 
         private void Awake()
         {
-            BlueprintColor = FindObjectOfType<BlueprintColorChange>();
-            
-            uiBuilding = FindObjectOfType<UIBuilding>();
-            GridHandler = FindObjectOfType<StaticEntitiesGrid>();
-            TurretManager ??= FindObjectOfType<TurretManager>();
-            AStarGrid = FindObjectOfType<AStarGrid>();
+            BlueprintColor = BlueprintColor.GetCheckNullComponent();
+            uiBuilding = uiBuilding.GetCheckNullComponent();
+            GridHandler = GridHandler.GetCheckNullComponent();
+            TurretManager = TurretManager.GetCheckNullComponent();
+            AStarGrid = AStarGrid.GetCheckNullComponent();
             PlayerCamera = PlayerCamera == null ? Camera.main : PlayerCamera;
         }
 
@@ -93,6 +88,9 @@ namespace TowerDefense
             }
         }
 
+        //==============================================================================================================
+        // TOGGLE ON/OFF BUILD MODE
+        
         /// <summary>
         /// Will activate "construction mode"
         /// Must deactivate all blueprint except the one selected
@@ -109,15 +107,17 @@ namespace TowerDefense
             IsBuilding = false;
             currentGridIndex = -1;
         }
+        //==============================================================================================================
 
-        private void OnBlueprintRotation() => currentBlueprint.rotation *= Quaternion.Euler(0, 90, 0);
-
+        //==============================================================================================================
+        // ACTION ON CREATE TURRET
+        
         /// <summary>
         /// CALLBACK TO OTHER SYSTEMS
         /// </summary>
         private void OnCreateTurret()
         {
-            if (GridHandler.Grid[currentGridIndex] == false)
+            if (currentCellValidation)
             {
                 BlueprintColor.OnBusyTile();
                 //Move this to Register Notification
@@ -125,17 +125,31 @@ namespace TowerDefense
                 GridHandler.Grid[currentGridIndex] = true;
             }
         }
+        //==============================================================================================================
+
+        //==============================================================================================================
+        // TILE / CELL VALIDATION
+        private bool IsValidTile()
+        {
+            if (GridHandler.Grid[currentGridIndex]) return false;
+            return AStarGrid.OnBuildCursorMove(currentGridIndex, GridHandler.Grid.GridData);
+        }
 
         private void UpdateBluePrintColor()
         {
-            if (GridHandler.Grid[currentGridIndex] == false)
+            currentCellValidation = IsValidTile();
+            if (currentCellValidation)
             {
                 BlueprintColor.OnFreeTile();
                 return;
             }
             BlueprintColor.OnBusyTile();
         }
+        //==============================================================================================================
         
+        //==============================================================================================================
+        // Move Blueprint On Grid
+        private void OnBlueprintRotation() => currentBlueprint.rotation *= Quaternion.Euler(0, 90, 0);
         private void SnapBlueprintToGrid()
         {
             previousGridIndex = currentGridIndex;//Avoid unnecessary computation
@@ -145,17 +159,9 @@ namespace TowerDefense
                 currentGridIndex = hits[0].point.GetIndexFromPosition(MapXY, CellSize);
                 if (currentGridIndex == previousGridIndex) return;//though it comes late in the process...
                 SetBlueprintPosition();
-                UpdateBluePrintColor();
                 
                 //Check if cell don't block
-                if (AStarGrid.IsPathAffected(currentGridIndex, GridHandler.Grid.GridData))
-                {
-                    BlueprintColor.OnBusyTile();
-                }
-                
-                //Notify Astar (index in the Grid + in GridData)
-                //1) Need to get Array corresponding to "fakeChunk"
-                //AStarGrid.OnBuildCursorMove(currentGridIndex, GridHandler.Grid.GridData);
+                UpdateBluePrintColor();
             }
             
             void SetBlueprintPosition()
@@ -165,7 +171,7 @@ namespace TowerDefense
                 currentBlueprint.position = blueprintPosition.FlatMove(positionInGrid);
             }
         }
-
+        //==============================================================================================================
         
         private void OnDrawGizmos()
         {

@@ -2,7 +2,6 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
 using KWUtils;
 using KWUtils.KWGenericGrid;
 using Unity.Burst;
@@ -25,7 +24,7 @@ namespace TowerDefense
     public class EnemyManager : MonoBehaviour
     {
         //References to Grids
-        [SerializeField] private FlowFieldGrid PathfindingGrid;
+        [SerializeField] private FlowfieldGrid FlowfieldGrid;
 
         //Prefabs
         [SerializeField] private GameObject EnemyPrefab;
@@ -42,7 +41,6 @@ namespace TowerDefense
         //Use later for FlockSystem
         //===========================================================
         private NativeArray<int> nativeEnemiesID;
-        private NativeMultiHashMap<int, int> nativeEnemiesInGridCell;
         //===========================================================
         
         private TransformAccessArray transformAccessArray;
@@ -51,6 +49,7 @@ namespace TowerDefense
         private JobHandle moveEnemiesJobHandle;
 
         private bool EnemiesMoved;
+        private Vector3[] spawnPoints;
 
         private void DisposeAll()
         {
@@ -58,13 +57,11 @@ namespace TowerDefense
             if (nativeFlowField.IsCreated)         nativeFlowField.Dispose();
             if (nativeEnemiesDirection.IsCreated)  nativeEnemiesDirection.Dispose();
             if (nativeEnemiesPosition.IsCreated)   nativeEnemiesPosition.Dispose();
-            if (nativeEnemiesInGridCell.IsCreated) nativeEnemiesInGridCell.Dispose();
         }
 
         private void Awake()
         {
-            //PathfindingGrid ??= FindObjectOfType<PathfindingGrid>();
-            
+            FlowfieldGrid = FlowfieldGrid.GetCheckNullComponent();
             enemiesTransforms = new Dictionary<int, Transform>(16);
             
             enemiesToRemove = new HashSet<int>(16);
@@ -75,6 +72,11 @@ namespace TowerDefense
             
             //TEST
             enemiesPosition = new Dictionary<int, float3>(16);
+        }
+
+        private void Start()
+        {
+            spawnPoints = FlowfieldGrid.GetSpawnPointsForEntities();
         }
 
         private void OnDestroy()
@@ -88,7 +90,7 @@ namespace TowerDefense
         {
             if (Keyboard.current.spaceKey.wasPressedThisFrame)
             {
-                //CreateWave(8);
+                CreateWave(8);
             }
             if (enemiesTransforms.Count == 0) return;
             MoveAllEnemies();
@@ -122,7 +124,7 @@ namespace TowerDefense
             int numEnemies = enemiesPosition.Count;
             
             nativeEnemiesPosition = enemiesPosition.GetValuesArray().ToNativeArray();
-            //nativeFlowField = PathfindingGrid.DirectionsGrid.ToNativeArray().Reinterpret<float3>();
+            nativeFlowField = new NativeArray<Vector3>(FlowfieldGrid.Grid.GridArray, Allocator.TempJob).Reinterpret<float3>();
             nativeEnemiesDirection = AllocNtvAry<float3>(numEnemies);
             
             //CAREFULL MULTI HASH MAP SEEMS to be ... special
@@ -133,7 +135,7 @@ namespace TowerDefense
             //Debug.Log($"num transformAcces = {enemiesTransforms.Count}; num enemyPosition = {numEnemies}");
             JEntityFlowFieldDirection directionsJob = new JEntityFlowFieldDirection
             {
-                GridSize = TerrainDataProvider.Instance.TerrainWidthHeight,
+                GridSize = FlowfieldGrid.Grid.GridData.NumCellXY,
                 EntitiesPosition = nativeEnemiesPosition,
                 FlowField = nativeFlowField,
                 EntityFlowFieldDirection = nativeEnemiesDirection,
@@ -150,11 +152,11 @@ namespace TowerDefense
             JobHandle.ScheduleBatchedJobs();
             EnemiesMoved = true;
         }
-/*
+
         public void CreateWave(int numToSpawn) //temporary public
         {
-            Vector3[] spawnPoints = PathfindingGrid.GetSpawnPointsForEntities(numToSpawn, 2);
-            for (int i = 0; i < numToSpawn; i++)
+            int batchToSpawn = min(numToSpawn, spawnPoints.Length);
+            for (int i = 0; i < batchToSpawn; i++)
             {
                 EnemyComponent enemy = Instantiate(EnemyPrefab, spawnPoints[i], Quaternion.identity).GetComponent<EnemyComponent>();
                 enemy.name = ($"Agent_{i}");
@@ -163,7 +165,7 @@ namespace TowerDefense
                 transformAccessArray.Add(enemy.transform);
             }
         }
-*/
+        
         //ITS A MESS NEED A SERIOUS CONCEPTION NOW!
 
         private void ClearEnemiesGone()
@@ -217,7 +219,7 @@ namespace TowerDefense
     }
     */
 #if EnableBurst
-    [BurstCompile]
+    [BurstCompile(CompileSynchronously = true)]
 #endif
     public struct JEntityFlowFieldDirection : IJobFor
     {
@@ -264,7 +266,7 @@ namespace TowerDefense
         */
     }
 #if EnableBurst
-    [BurstCompile]
+    [BurstCompile(CompileSynchronously = true)]
 #endif
     public struct JMoveEnemies : IJobParallelForTransform
     {

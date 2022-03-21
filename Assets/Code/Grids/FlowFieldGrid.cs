@@ -22,8 +22,9 @@ namespace TowerDefense
         private const int ChunkSize = 16;
         private const int CellSize = 1;
         
-        [SerializeField] private Transform DestinationGate;
         private int destinationCellIndex;
+        private int startCellIndex;
+        private Vector3 startPosition;
         
         //CostField
         private NativeArray<bool> nativeObstacles;
@@ -49,7 +50,7 @@ namespace TowerDefense
 
         private void Start()
         {
-            InitializeDestination();
+            InitializeWaypoints();
             GridSystem.SubscribeToGrid(GridType.Obstacles, OnNewObstacles);
             CalculateFlowField(GridSystem.RequestGrid<bool, GenericGrid<bool>>(GridType.Obstacles));
         }
@@ -67,12 +68,27 @@ namespace TowerDefense
             CompleteJob();
         }
 
-        private void InitializeDestination()
+        private void InitializeWaypoints()
         {
-            if (DestinationGate == null) 
-                DestinationGate = FindObjectOfType<EndGateComponent>().transform;
-            int destinationChunkIndex = DestinationGate.position.GetIndexFromPosition(Grid.GridData.MapSize, ChunkSize);
+            Transform destinationPath = FindObjectOfType<EndGateComponent>().transform;
+            int destinationChunkIndex = destinationPath.position.GetIndexFromPosition(Grid.GridData.MapSize, ChunkSize);
             destinationCellIndex = destinationChunkIndex.GetCellIndexFromChunkEnterPoint(ChunkEnterPoint.Top, Grid.GridData);
+            
+            Vector3 startSpawnPosition = FindObjectOfType<StartSpawnComponent>().transform.position;
+            Debug.Log($"startSpawnPosition = {startSpawnPosition}");
+            startCellIndex = startSpawnPosition.XZ().GetIndexFromPositionOffset(Grid.GridData.MapSize, ChunkSize, new int2(ChunkSize/2));
+            //startCellIndex = Grid.IndexFromPosition(Grid.GridData.MapSize, ChunkSize);
+            //startPosition = Grid.GetChunkCenter(startCellIndex);
+        }
+
+        public Vector3[] GetSpawnPointsForEntities()
+        {
+            Debug.Log($"ChunkSpawn = {startCellIndex}");
+            for (int i = 0; i < Grid.ChunkDictionary[2].Length; i++)
+            {
+                Debug.Log(Grid.ChunkDictionary[2][i]);
+            }
+            return Grid.ChunkDictionary[startCellIndex];
         }
         
         private void OnNewObstacles()

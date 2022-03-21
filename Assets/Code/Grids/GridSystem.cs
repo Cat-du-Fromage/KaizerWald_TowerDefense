@@ -11,6 +11,9 @@ namespace TowerDefense
 
     public sealed class GridSystem : MonoBehaviour, IGridSystem<GridType>
     {
+        [SerializeField] private EndGateComponent DestinationPath;
+        [SerializeField] private StartSpawnComponent StartSpawnPath;
+        
         [SerializeField] private AStarGrid AStarGrid;
         [SerializeField] private FlowfieldGrid FlowFieldGrid;
         [SerializeField] private StaticEntitiesGrid StaticEntitiesGrid;
@@ -18,10 +21,13 @@ namespace TowerDefense
         public TerrainData MapData { get; set; }
         public int2 MapBounds { get; set; }
 
-        public AStarGrid GetAStarGrid => AStarGrid;
+        public Transform Destination => DestinationPath.transform;
         
         private void Awake()
         {
+            DestinationPath = DestinationPath.GetCheckNullComponent();
+            StartSpawnPath = StartSpawnPath.GetCheckNullComponent();
+            
             StaticEntitiesGrid = GetComponent<StaticEntitiesGrid>();
             FlowFieldGrid = GetComponent<FlowfieldGrid>();
             AStarGrid = GetComponent<AStarGrid>();

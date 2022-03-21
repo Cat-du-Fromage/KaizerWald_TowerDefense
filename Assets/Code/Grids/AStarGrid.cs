@@ -33,8 +33,10 @@ namespace TowerDefense
         private NativeArray<Node> nativeNodes;
         private NativeList<int> nativePathList;
 
-        private bool jobSchedule;
+        //private bool jobSchedule;
         private JobHandle lastJobScheduled;
+
+        private List<int> indices;
         
         //==============================================================================================================
         /// Grid Interface
@@ -58,9 +60,10 @@ namespace TowerDefense
         private void Start()
         {
             currentPath = new int[1];
+            indices = new List<int>(16);
             startIndex = Grid.IndexFromPosition(StartCell.position);
             endIndex = Grid.IndexFromPosition(DestinationCell.position);
-            AStarProcess(GridSystem.RequestGrid<bool, GenericGrid<bool>>(GridType.Obstacles));
+            CheckValidPath(GridSystem.RequestGrid<bool, GenericGrid<bool>>(GridType.Obstacles));
         }
 
         private void OnDestroy()
@@ -68,113 +71,46 @@ namespace TowerDefense
             DisposeAll();
         }
 
-        private void Update()
-        {
-            if (!jobSchedule) return;
-            if (!lastJobScheduled.IsCompleted) return;
-            jobSchedule = CompleteJob();
-        }
-
-        private bool CompleteJob()
-        {
-            lastJobScheduled.Complete();
-            
-            // Path Is Valid
-            if (!nativePathList.IsEmpty) 
-            {
-                if (currentPath.Length != nativePathList.Length)
-                {
-                    Array.Resize(ref currentPath, nativePathList.Length);
-                }
-                nativePathList.ToArray().Reverse().CopyTo((Span<int>)currentPath);
-
-                //currentPath = nativePathList.ToArray().Reverse();
-                
-                DisposeAll();
-                return false;
-            }
-            DisposeAll();
-            //NOTIFY BUILD MANAGER IT'S NOT VALID
-            return false;
-        }
-
         public bool IsPathAffected(int chunkIndex, in GridData obstaclesGridData)
         {
             GridData fakeChunk = new GridData(Grid.GridData.MapSize, CellSize, obstaclesGridData.CellSize);
-            //int[] indices = new int[fakeChunk.TotalCellInChunk];
-            List<int> indices = new List<int>(fakeChunk.TotalCellInChunk);
-            //USE LIST
+            indices.Clear();
             for (int i = 0; i < fakeChunk.TotalCellInChunk; i++)
             {
                 indices.Add(chunkIndex.GetGridCellIndexFromChunkCellIndex(fakeChunk, i));
-                //indices[i] = chunkIndex.GetGridCellIndexFromChunkCellIndex(obstaclesGridData, i);
             }
-
-            //multithreadThis?
+            
             for (int i = 0; i < currentPath.Length; i++)
             {
-                if (indices.Contains(currentPath[i]))
-                {
-                    return true;
-                }
-                /*
-                for (int j = 0; j < indices.Count; j++)
-                {
-                    if (currentPath[i].Equals(indices[j]))
-                    {
-                        Debug.Log("TRUE");
-                        return true;
-                    }
-                }
-                */
+                if (!indices.Contains(currentPath[i])) continue;
+                return true;
             }
-            Debug.Log("false");
             return false;
         }
         
         /// <summary>
         /// EVENT : From BuildManager.cs
         /// </summary>
-        public void OnBuildCursorMove(int chunkIndex, in GridData obstaclesGrid)
+        public bool OnBuildCursorMove(int chunkIndex, in GridData obstaclesGrid)
         {
-            if (!IsPathAffected(chunkIndex, obstaclesGrid))
-            {
-                Debug.Log("FALSE");
-                return;
-            }
-            Debug.Log("TRUE");
-            AStarProcess(GridSystem.RequestGrid<bool, GenericGrid<bool>>(GridType.Obstacles));
+            if (!IsPathAffected(chunkIndex, obstaclesGrid)) return true;
+            return CheckValidPath(GridSystem.RequestGrid<bool, GenericGrid<bool>>(GridType.Obstacles), chunkIndex);
         }
         
-/*
-        public void OnObstacleAdded(int index, in GridData gridData)
+        private bool CheckValidPath(GenericGrid<bool> obstaclesGrid, int simulateAtIndex = -1)
         {
-            //We didn't calculate anyPath
-            if (currentPath.IsNullOrEmpty()) return;
+            nativeObstacles = new(obstaclesGrid.AdaptGrid(Grid), Allocator.TempJob);
             
-            for (int pathIndex = 0; pathIndex < currentPath.Length; pathIndex++)
+            if (simulateAtIndex != -1)
             {
-                if (currentPath[pathIndex] == index)
+                GridData fakeChunk = new GridData(Grid.GridData.MapSize, CellSize, obstaclesGrid.GridData.CellSize);
+                for (int i = 0; i < fakeChunk.TotalCellInChunk; i++)
                 {
-                    startIndex = currentPath[pathIndex-1];
-                    int[] segment = AStarProcess(gridData);
-                
-                    if (segment.IsNullOrEmpty()) return; // CAREFUL IT MEANS THERE IS NOS PATH!
-
-                    currentPath.Resize(pathIndex + segment.Length);
-                    segment.CopyTo(currentPath, pathIndex);
-                    startIndex = Grid.IndexFromPosition(startPosition);
-                    break;
+                    int index = simulateAtIndex.GetGridCellIndexFromChunkCellIndex(fakeChunk, i);
+                    nativeObstacles[index] = true;
                 }
             }
-        }
-*/
-        private void AStarProcess(GenericGrid<bool> obstaclesGrid)
-        {
-            //Safety if player move cursor too fast
-            if (!lastJobScheduled.IsCompleted) jobSchedule = CompleteJob();
             
-            nativeObstacles = new(obstaclesGrid.AdaptGrid(Grid), Allocator.TempJob);
             nativeNodes = new NativeArray<Node>(Grid.GridArray, Allocator.TempJob);
             nativePathList = new NativeList<int>(16, Allocator.TempJob);
 
@@ -190,8 +126,27 @@ namespace TowerDefense
             };
             lastJobScheduled = job.Schedule();
             JobHandle.ScheduleBatchedJobs();
-
-            jobSchedule = true;
+            return CompleteJob();
+        }
+        
+        private bool CompleteJob()
+        {
+            lastJobScheduled.Complete();
+            
+            // Path Is Valid
+            if (!nativePathList.IsEmpty) 
+            {
+                if (currentPath.Length != nativePathList.Length)
+                {
+                    Array.Resize(ref currentPath, nativePathList.Length);
+                }
+                nativePathList.ToArray().Reverse().CopyTo((Span<int>)currentPath);
+                DisposeAll();
+                return true;
+            }
+            DisposeAll();
+            //NOTIFY BUILD MANAGER IT'S NOT VALID
+            return false;
         }
 
         private void DisposeAll()
