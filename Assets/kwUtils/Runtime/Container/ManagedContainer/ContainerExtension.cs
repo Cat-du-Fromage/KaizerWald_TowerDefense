@@ -57,12 +57,19 @@ namespace KWUtils
             return x;
         }
         
+        /*
         public static NativeArray<T> ToNativeArray<T>(this T[] array, Allocator a = Allocator.TempJob , NativeArrayOptions nao = NativeArrayOptions.UninitializedMemory) 
-        where T : struct
+            where T : struct
         {
-            NativeArray<T> nA = new NativeArray<T>(array.Length, a, nao);
+            NativeArray<T> nA = new NativeArray<T>(array, a);
             nA.CopyFrom(array);
             return nA;
+        }
+        */
+        public static NativeArray<T> ToNativeArray<T>(this T[] array, Allocator a = Allocator.TempJob) 
+        where T : struct
+        {
+            return new NativeArray<T>(array, a);
         }
         
         public static unsafe NativeArray<T> ToNativeArray<T>(T* ptr, int length) where T : unmanaged

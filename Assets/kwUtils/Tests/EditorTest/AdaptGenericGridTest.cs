@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Net.Http;
 using KWUtils.KWGenericGrid;
 using NUnit.Framework;
+using Unity.Collections;
 using UnityEngine;
 using UnityEngine.TestTools;
 using Unity.Mathematics;
@@ -87,7 +88,7 @@ namespace KWUtils.Tests
                 2, 2, 3, 3,
                 2, 2, 3, 3
             };
-
+            //using NativeArray<int> adaptedGrid = AdaptGridTest_Big.NativeAdaptGrid(AdaptGridTest_Small);
             int[] adaptedGrid = AdaptGridTest_Big.AdaptGrid(AdaptGridTest_Small);
             Assert.That(expectedGrid, Is.EqualTo(adaptedGrid));
         }
@@ -112,7 +113,7 @@ namespace KWUtils.Tests
                 2, 2, 2, 2, 3, 3, 3, 3,
                 2, 2, 2, 2, 3, 3, 3, 3,
             };
-
+            //using NativeArray<int> adaptedGrid = AdaptGridTest_Big.NativeAdaptGrid(AdaptGridTest_Small);
             int[] adaptedGrid = AdaptGridTest_Big.AdaptGrid(AdaptGridTest_Small);
             Assert.That(expectedGrid, Is.EqualTo(adaptedGrid));
         }

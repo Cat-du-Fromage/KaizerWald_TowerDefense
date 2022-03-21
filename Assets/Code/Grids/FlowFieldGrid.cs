@@ -1,4 +1,5 @@
 using System;
+using System.Buffers;
 using System.Collections;
 using System.Collections.Generic;
 using KWUtils;
@@ -77,17 +78,11 @@ namespace TowerDefense
             Vector3 startSpawnPosition = FindObjectOfType<StartSpawnComponent>().transform.position;
             Debug.Log($"startSpawnPosition = {startSpawnPosition}");
             startCellIndex = startSpawnPosition.XZ().GetIndexFromPositionOffset(Grid.GridData.MapSize, ChunkSize, new int2(ChunkSize/2));
-            //startCellIndex = Grid.IndexFromPosition(Grid.GridData.MapSize, ChunkSize);
-            //startPosition = Grid.GetChunkCenter(startCellIndex);
         }
 
         public Vector3[] GetSpawnPointsForEntities()
         {
-            Debug.Log($"ChunkSpawn = {startCellIndex}");
-            for (int i = 0; i < Grid.ChunkDictionary[2].Length; i++)
-            {
-                Debug.Log(Grid.ChunkDictionary[2][i]);
-            }
+            ArrayPool<Vector3> test = ArrayPool<Vector3>.Shared;
             return Grid.ChunkDictionary[startCellIndex];
         }
         
@@ -104,8 +99,7 @@ namespace TowerDefense
             {
                 Grid.SetValues(i, nativeOrderedBestDirection
                     .Slice(i * totalChunkCell, totalChunkCell)
-                    .SliceConvert<Vector3>()
-                    .ToArray());
+                    .SliceConvert<Vector3>());
             }
             DisposeAll();
             jobSchedule = false;
@@ -113,7 +107,9 @@ namespace TowerDefense
 
         private void CalculateFlowField(GenericGrid<bool> obstacles)
         {
-            nativeObstacles = new NativeArray<bool>(obstacles.AdaptGrid(Grid), Allocator.TempJob);
+            //nativeObstacles = new NativeArray<bool>(obstacles.AdaptGrid(Grid), Allocator.TempJob);
+            nativeObstacles = obstacles.NativeAdaptGrid(Grid);//.ToNativeArray();
+            
             int totalCells = Grid.GridData.TotalCells;
             
             //Cost Field
@@ -182,6 +178,7 @@ namespace TowerDefense
                 }
             }
             */
+            
             for (int i = 0; i < Grid.GridArray.Length/8; i++)
             {
                 Gizmos.color = Color.green;
@@ -189,6 +186,7 @@ namespace TowerDefense
                 Gizmos.DrawWireCube(cellPos, (Vector3.one * CellSize).Flat());
                 DrawArrow.ForGizmo(cellPos, Grid.GridArray[i]*0.5f);
             }
+            
         }
     }
 }

@@ -32,7 +32,7 @@ namespace TowerDefense
         
         //Use to get turret Position by raycast
         private Ray ray;
-        private RaycastHit[] hits = new RaycastHit[1];
+        private readonly RaycastHit[] hits = new RaycastHit[1];
         
         //Use to avoid unnecessary calculation
         private int currentGridIndex = -1;

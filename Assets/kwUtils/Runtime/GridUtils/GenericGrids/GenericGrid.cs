@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using Unity.Collections;
 using Unity.Mathematics;
 using UnityEditor;
 using UnityEngine;
@@ -27,8 +28,7 @@ namespace KWUtils.KWGenericGrid
         {
             CellSize = cellSize;
             MapXY = ceilpow2(mapSize);
-
-            NumCellXY = mapSize / cellSize;
+            NumCellXY = mapSize >> floorlog2(cellSize);
             GridArray = new T[NumCellXY.x * NumCellXY.y];
             
             //Init Grid
@@ -43,10 +43,8 @@ namespace KWUtils.KWGenericGrid
         public GenericGrid(in int2 mapSize, int cellSize)
         {
             CellSize = cellSize;
-
             MapXY = ceilpow2(mapSize);
-            
-            NumCellXY = mapSize / cellSize;
+            NumCellXY = mapSize >> floorlog2(cellSize);
             GridArray = new T[NumCellXY.x * NumCellXY.y];
         }
         
@@ -125,6 +123,7 @@ namespace KWUtils.KWGenericGrid
         /// <summary>
         /// CAREFULL WITH FAKE CHUNK! CHUNKSIZE == 1!!!
         /// </summary>
+        
         public T[] AdaptGrid<T1>(GenericGrid<T1> otherGrid)
         where T1 : struct
         {
@@ -145,6 +144,29 @@ namespace KWUtils.KWGenericGrid
             else
             {
                 return GridArray;
+            }
+        }
+        
+        public NativeArray<T> NativeAdaptGrid<T1>(GenericGrid<T1> otherGrid)
+            where T1 : struct
+        {
+            if (CellSize < otherGrid.CellSize)
+            {
+                //We Receive Grid With bigger Cells!
+                //TO MUCH REFLECTION! if V3 => moyenne des vecteurs? si int moyenne de valeur?
+                //GridData fakeChunk = new GridData(MapXY, CellSize, otherGrid.CellSize);
+                //return GridArray.AdaptBigToSmallGrid(GridData, fakeChunk);
+                return GridArray.ToNativeArray();
+            }
+            else if (CellSize > otherGrid.CellSize)
+            {
+                //We Receive Grid With smaller Cells!
+                GridData fakeChunk = new GridData(MapXY, otherGrid.CellSize, CellSize);
+                return GridArray.NativeAdaptToSmallerGrid(otherGrid.GridData, fakeChunk);
+            }
+            else
+            {
+                return GridArray.ToNativeArray();
             }
         }
     }

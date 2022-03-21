@@ -36,18 +36,15 @@ namespace KWUtils.KWGenericGrid
             while (!openSet.IsEmpty)
             {
                 int currentNode = GetLowestFCostNodeIndex(openSet);
-                
                 //Check if we already arrived
                 if (currentNode == EndNodeIndex)
                 {
                     CalculatePath();
                     return;
                 }
-
                 //Add "already check" Node AND remove from "To check"
                 openSet.Remove(currentNode);
                 closeSet.Add(currentNode);
-
                 //Add Neighbors to OpenSet
                 GetNeighborCells(currentNode, neighbors, closeSet);
                 if (neighbors.Length > 0)

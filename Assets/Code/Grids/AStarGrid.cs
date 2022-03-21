@@ -26,18 +26,15 @@ namespace TowerDefense
         private Vector3 startPosition;
         private Vector3 destination;
         
-        private readonly RaycastHit[] hits = new RaycastHit[1];
         private int[] currentPath;
 
         private NativeArray<bool> nativeObstacles;
-        private NativeArray<Node> nativeNodes;
         private NativeList<int> nativePathList;
+        private NativeArray<Node> nativeNodes;
 
         //private bool jobSchedule;
         private JobHandle lastJobScheduled;
 
-        private List<int> indices;
-        
         //==============================================================================================================
         /// Grid Interface
         public IGridSystem<GridType> GridSystem { get; set; }
@@ -60,9 +57,10 @@ namespace TowerDefense
         private void Start()
         {
             currentPath = new int[1];
-            indices = new List<int>(16);
+            
             startIndex = Grid.IndexFromPosition(StartCell.position);
             endIndex = Grid.IndexFromPosition(DestinationCell.position);
+            
             CheckValidPath(GridSystem.RequestGrid<bool, GenericGrid<bool>>(GridType.Obstacles));
         }
 
@@ -74,18 +72,21 @@ namespace TowerDefense
         public bool IsPathAffected(int chunkIndex, in GridData obstaclesGridData)
         {
             GridData fakeChunk = new GridData(Grid.GridData.MapSize, CellSize, obstaclesGridData.CellSize);
-            indices.Clear();
-            for (int i = 0; i < fakeChunk.TotalCellInChunk; i++)
-            {
-                indices.Add(chunkIndex.GetGridCellIndexFromChunkCellIndex(fakeChunk, i));
-            }
             
-            for (int i = 0; i < currentPath.Length; i++)
+            using (NativeList<int> indices = new (fakeChunk.TotalCellInChunk, Allocator.Temp))
             {
-                if (!indices.Contains(currentPath[i])) continue;
-                return true;
-            }
-            return false;
+                for (int i = 0; i < fakeChunk.TotalCellInChunk; i++)
+                {
+                    indices.AddNoResize(chunkIndex.GetGridCellIndexFromChunkCellIndex(fakeChunk, i));
+                }
+            
+                for (int i = 0; i < currentPath.Length; i++)
+                {
+                    if (!indices.Contains(currentPath[i])) continue;
+                    return true;
+                }
+                return false;
+            };
         }
         
         /// <summary>
@@ -99,8 +100,7 @@ namespace TowerDefense
         
         private bool CheckValidPath(GenericGrid<bool> obstaclesGrid, int simulateAtIndex = -1)
         {
-            nativeObstacles = new(obstaclesGrid.AdaptGrid(Grid), Allocator.TempJob);
-            
+            nativeObstacles = obstaclesGrid.NativeAdaptGrid(Grid);//.ToNativeArray();
             if (simulateAtIndex != -1)
             {
                 GridData fakeChunk = new GridData(Grid.GridData.MapSize, CellSize, obstaclesGrid.GridData.CellSize);
@@ -110,8 +110,7 @@ namespace TowerDefense
                     nativeObstacles[index] = true;
                 }
             }
-            
-            nativeNodes = new NativeArray<Node>(Grid.GridArray, Allocator.TempJob);
+            nativeNodes = Grid.GridArray.ToNativeArray();
             nativePathList = new NativeList<int>(16, Allocator.TempJob);
 
             //Get Path from Start -> End
@@ -132,7 +131,6 @@ namespace TowerDefense
         private bool CompleteJob()
         {
             lastJobScheduled.Complete();
-            
             // Path Is Valid
             if (!nativePathList.IsEmpty) 
             {
@@ -140,12 +138,11 @@ namespace TowerDefense
                 {
                     Array.Resize(ref currentPath, nativePathList.Length);
                 }
-                nativePathList.ToArray().Reverse().CopyTo((Span<int>)currentPath);
+                nativePathList.ToArray().CopyTo((Span<int>)currentPath);
                 DisposeAll();
                 return true;
             }
             DisposeAll();
-            //NOTIFY BUILD MANAGER IT'S NOT VALID
             return false;
         }
 

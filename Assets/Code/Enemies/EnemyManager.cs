@@ -8,6 +8,7 @@ using Unity.Burst;
 using Unity.Collections;
 using Unity.Jobs;
 using Unity.Mathematics;
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.Jobs;
@@ -124,15 +125,10 @@ namespace TowerDefense
             int numEnemies = enemiesPosition.Count;
             
             nativeEnemiesPosition = enemiesPosition.GetValuesArray().ToNativeArray();
-            nativeFlowField = new NativeArray<Vector3>(FlowfieldGrid.Grid.GridArray, Allocator.TempJob).Reinterpret<float3>();
+            //nativeFlowField = new NativeArray<Vector3>(FlowfieldGrid.Grid.GridArray, Allocator.TempJob).Reinterpret<float3>();
+            nativeFlowField = FlowfieldGrid.Grid.GridArray.ToNativeArray().Reinterpret<float3>();
             nativeEnemiesDirection = AllocNtvAry<float3>(numEnemies);
             
-            //CAREFULL MULTI HASH MAP SEEMS to be ... special
-            //null reference during a job?! like you a field in a job can be modified during runtime?
-            //Gather Datas
-            //nativeEnemiesID = enemiesTransforms.GetKeysArray().ToNativeArray();
-            //nativeEnemiesInGridCell = new NativeMultiHashMap<int, int>(numEnemies, Allocator.TempJob);
-            //Debug.Log($"num transformAcces = {enemiesTransforms.Count}; num enemyPosition = {numEnemies}");
             JEntityFlowFieldDirection directionsJob = new JEntityFlowFieldDirection
             {
                 GridSize = FlowfieldGrid.Grid.GridData.NumCellXY,
@@ -196,28 +192,17 @@ namespace TowerDefense
         //EXTERNAL NOTIFICATION
         //==============================================================================================================
         public void EnemyKilled(int enemy) => enemiesToRemove.Add(enemy);
-    }
-/*
-    [BurstCompile]
-    public struct JEntityFlowFieldDirection : IJobFor
-    {
-        [ReadOnly] public int2 GridSize;
-        
-        [NativeDisableParallelForRestriction]
-        [ReadOnly] public NativeArray<float3> EntitiesPosition;
-        
-        [NativeDisableParallelForRestriction]
-        [ReadOnly] public NativeArray<float3> FlowField;
-        
-        [NativeDisableParallelForRestriction]
-        [WriteOnly] public NativeArray<float3> EntityFlowFieldDirection;
-        public void Execute(int index)
+
+        private void OnDrawGizmos()
         {
-            int cellIndex = EntitiesPosition[index].xz.GetIndexFromPosition(GridSize, 1);
-            EntityFlowFieldDirection[index] = FlowField[cellIndex];
+            if (spawnPoints.IsNullOrEmpty()) return;
+            Gizmos.color = Color.cyan;
+            for (int i = 0; i < spawnPoints.Length; i++)
+            {
+                Gizmos.DrawWireCube(spawnPoints[i], Vector3.one);
+            }
         }
     }
-    */
 #if EnableBurst
     [BurstCompile(CompileSynchronously = true)]
 #endif
@@ -238,32 +223,6 @@ namespace TowerDefense
             int cellIndex = EntitiesPosition[index].xz.GetIndexFromPosition(GridSize, 1);
             EntityFlowFieldDirection[index] = FlowField[cellIndex];
         }
-        /*
-        private float3 GetDirection(int index)
-        {
-            //Get AllEnemies
-            float distanceCheck = 4f * 4f;
-            NativeList<int> distances = new NativeList<int>(EntitiesPosition.Length, Allocator.Temp);
-            for (int i = 0; i < EntitiesPosition.Length; i++)
-            {
-                if (i == index) continue;
-                if (dot(EntitiesPosition[index].xz, EntitiesPosition[i].xz) < 0) continue;
-                if (distancesq(EntitiesPosition[index].xz, EntitiesPosition[i].xz) <= distanceCheck)
-                {
-                    distances.AddNoResize(i);
-                }
-            }
-            float3 directionSeparation = float3.zero;
-            if (distances.Length > 0)
-            {
-                for (int i = 0; i < distances.Length; i++)
-                {
-                    directionSeparation.xz += EntitiesPosition[index].xz - EntitiesPosition[distances[i]].xz;
-                }
-            }
-            return normalizesafe(directionSeparation);
-        }
-        */
     }
 #if EnableBurst
     [BurstCompile(CompileSynchronously = true)]
@@ -292,6 +251,8 @@ namespace TowerDefense
             transform.position = newPosition;
             EntitiesPosition[index] = newPosition;
         }
+    }
+}
 /*
         private float3 GetDirection(int index)
         {
@@ -319,5 +280,3 @@ namespace TowerDefense
             return normalizesafe(directionSeparation);
         }
         */
-    }
-}

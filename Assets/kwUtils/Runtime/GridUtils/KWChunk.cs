@@ -125,10 +125,27 @@ namespace KWUtils.KWGenericGrid
             return chunkCells;
         }
         
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void PopulateChunkedGrid<T>(this Dictionary<int, T[]> chunkedGrid, T[] unorderedIndices, in GridData gridData)
+        where T : struct
+        {
+            using NativeArray<T> nativeUnOrderedIndices = unorderedIndices.ToNativeArray();
+            using NativeArray<T> nativeOrderedIndices = new (unorderedIndices.Length, Allocator.TempJob, NativeArrayOptions.UninitializedMemory);
+
+            JGenericOrderArrayByChunkIndex<T> job = new(gridData, nativeUnOrderedIndices, nativeOrderedIndices);
+            JobHandle jobHandle = job.ScheduleParallel(unorderedIndices.Length, JobWorkerCount - 1, default);
+            JobHandle.ScheduleBatchedJobs();
+            
+            jobHandle.Complete();
+            for (int i = 0; i < gridData.TotalChunk; i++)
+            {
+                nativeOrderedIndices.Slice(i * gridData.TotalCellInChunk, gridData.TotalCellInChunk).CopyTo(chunkedGrid[i]);
+            }
+        }
+        
         //==============================================================================================================
         // ADAPT GRID WITH BIGGER CELLS
-        //==============================================================================================================
-
+        //=============================
         public static T[] AdaptToSmallerGrid<T>(this T[] bigGridToAdapt, in GridData smallGrid, in GridData bigGrid)
         where T : struct
         {
@@ -140,6 +157,19 @@ namespace KWUtils.KWGenericGrid
 
             return nativeAdaptedGrid.ToArray();
         }
+        
+        public static NativeArray<T> NativeAdaptToSmallerGrid<T>(this T[] bigGridToAdapt, in GridData smallGrid, in GridData bigGrid)
+        where T : struct
+        {
+            using NativeArray<T> nativeGridToAdapt = bigGridToAdapt.ToNativeArray();
+            NativeArray<T> nativeAdaptedGrid = new(smallGrid.TotalCells, Allocator.TempJob, NativeArrayOptions.UninitializedMemory);
+
+            JConvertGridBigToSmall<T> job = new(bigGrid, nativeGridToAdapt, nativeAdaptedGrid);
+            job.ScheduleParallel(bigGridToAdapt.Length, JobWorkerCount-1, default).Complete();
+
+            return nativeAdaptedGrid;
+        }
+        //==============================================================================================================
     }
 
 }
