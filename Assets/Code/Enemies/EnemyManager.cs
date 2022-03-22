@@ -50,6 +50,7 @@ namespace TowerDefense
         private JobHandle moveEnemiesJobHandle;
 
         private bool EnemiesMoved;
+        private int spawnChunkIndex;
         private Vector3[] spawnPoints;
 
         private void DisposeAll()
@@ -77,7 +78,13 @@ namespace TowerDefense
 
         private void Start()
         {
-            spawnPoints = FlowfieldGrid.GetSpawnPointsForEntities();
+            spawnChunkIndex = FlowfieldGrid.GetChunkSpawn();
+            spawnPoints = new Vector3[FlowfieldGrid.Grid.GridData.TotalCellInChunk];
+            for (int i = 0; i < FlowfieldGrid.Grid.GridData.TotalCellInChunk; i++)
+            {
+                spawnPoints[i] = FlowfieldGrid.Grid.GetChunkCellCenter(spawnChunkIndex, i);
+            }
+            
         }
 
         private void OnDestroy()
@@ -123,7 +130,6 @@ namespace TowerDefense
         private void MoveAllEnemies()
         {
             int numEnemies = enemiesPosition.Count;
-            
             nativeEnemiesPosition = enemiesPosition.GetValuesArray().ToNativeArray();
             //nativeFlowField = new NativeArray<Vector3>(FlowfieldGrid.Grid.GridArray, Allocator.TempJob).Reinterpret<float3>();
             nativeFlowField = FlowfieldGrid.Grid.GridArray.ToNativeArray().Reinterpret<float3>();

@@ -80,10 +80,10 @@ namespace TowerDefense
             startCellIndex = startSpawnPosition.XZ().GetIndexFromPositionOffset(Grid.GridData.MapSize, ChunkSize, new int2(ChunkSize/2));
         }
 
-        public Vector3[] GetSpawnPointsForEntities()
+        public int GetChunkSpawn()
         {
             ArrayPool<Vector3> test = ArrayPool<Vector3>.Shared;
-            return Grid.ChunkDictionary[startCellIndex];
+            return startCellIndex;
         }
         
         private void OnNewObstacles()
