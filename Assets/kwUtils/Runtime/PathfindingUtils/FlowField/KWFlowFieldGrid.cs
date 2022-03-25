@@ -14,7 +14,7 @@ using static KWUtils.NativeCollectionExt;
 
 namespace KWUtils.KWGenericGrid
 {
-    public class FlowFieldGrid : MonoBehaviour, IGridHandler<GridType, Vector3, GenericChunkedGrid<Vector3>>
+    public class KWFlowFieldGrid : MonoBehaviour, IGridHandler<GridType, Vector3, GenericChunkedGrid<Vector3>>
     {
         public bool DebugEnable;
         

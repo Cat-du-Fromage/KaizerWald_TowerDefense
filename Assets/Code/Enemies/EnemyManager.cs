@@ -25,7 +25,7 @@ namespace TowerDefense
     public class EnemyManager : MonoBehaviour
     {
         //References to Grids
-        [SerializeField] private FlowfieldGrid FlowfieldGrid;
+        [SerializeField] private FlowFieldGrid flowFieldGrid;
 
         //Prefabs
         [SerializeField] private GameObject EnemyPrefab;
@@ -33,17 +33,12 @@ namespace TowerDefense
         private Dictionary<int, Transform> enemiesTransforms;
         private HashSet<int> enemiesToRemove;
 
-        private Dictionary<int, float3> enemiesPosition;
+        //private Dictionary<int, float3> enemiesPosition;
         //JOB SYSTEM
         private NativeArray<float3> nativeFlowField;
         private NativeArray<float3> nativeEnemiesDirection;
         private NativeArray<float3> nativeEnemiesPosition;
-        
-        //Use later for FlockSystem
-        //===========================================================
-        private NativeArray<int> nativeEnemiesID;
-        //===========================================================
-        
+
         private TransformAccessArray transformAccessArray;
 
         private JobHandle directionJobHandle;
@@ -55,7 +50,6 @@ namespace TowerDefense
 
         private void DisposeAll()
         {
-            if (nativeEnemiesID.IsCreated)         nativeEnemiesID.Dispose();
             if (nativeFlowField.IsCreated)         nativeFlowField.Dispose();
             if (nativeEnemiesDirection.IsCreated)  nativeEnemiesDirection.Dispose();
             if (nativeEnemiesPosition.IsCreated)   nativeEnemiesPosition.Dispose();
@@ -63,28 +57,23 @@ namespace TowerDefense
 
         private void Awake()
         {
-            FlowfieldGrid = FlowfieldGrid.GetCheckNullComponent();
+            flowFieldGrid = flowFieldGrid.GetCheckNullComponent();
             enemiesTransforms = new Dictionary<int, Transform>(16);
-            
             enemiesToRemove = new HashSet<int>(16);
 
-            //enemiesPositions = new List<float3>(16);
-            
             transformAccessArray = new TransformAccessArray(16);
-            
             //TEST
-            enemiesPosition = new Dictionary<int, float3>(16);
+            //enemiesPosition = new Dictionary<int, float3>(16);
         }
 
         private void Start()
         {
-            spawnChunkIndex = FlowfieldGrid.GetChunkSpawn();
-            spawnPoints = new Vector3[FlowfieldGrid.Grid.GridData.TotalCellInChunk];
-            for (int i = 0; i < FlowfieldGrid.Grid.GridData.TotalCellInChunk; i++)
+            spawnChunkIndex = flowFieldGrid.GetChunkSpawn();
+            spawnPoints = new Vector3[flowFieldGrid.Grid.GridData.TotalCellInChunk];
+            for (int i = 0; i < flowFieldGrid.Grid.GridData.TotalCellInChunk; i++)
             {
-                spawnPoints[i] = FlowfieldGrid.Grid.GetChunkCellCenter(spawnChunkIndex, i);
+                spawnPoints[i] = flowFieldGrid.Grid.GetChunkCellCenter(spawnChunkIndex, i);
             }
-            
         }
 
         private void OnDestroy()
@@ -109,7 +98,7 @@ namespace TowerDefense
             if (moveEnemiesJobHandle.IsCompleted && EnemiesMoved)
             {
                 moveEnemiesJobHandle.Complete();
-                ResetEnemyPositionCache();
+                //ResetEnemyPositionCache();
                 DisposeAll();
 
                 EnemiesMoved = false;
@@ -118,31 +107,35 @@ namespace TowerDefense
             if (enemiesToRemove.Count == 0) return;
             ClearEnemiesGone();
         }
-
+/*
         private void ResetEnemyPositionCache()
         {
             foreach ((int id, Transform position) in enemiesTransforms)
             {
-                enemiesPosition[id] = position.position;
+                //enemiesPosition[id] = position.position;
             }
         }
-
+*/
         private void MoveAllEnemies()
         {
-            int numEnemies = enemiesPosition.Count;
-            nativeEnemiesPosition = enemiesPosition.GetValuesArray().ToNativeArray();
-            //nativeFlowField = new NativeArray<Vector3>(FlowfieldGrid.Grid.GridArray, Allocator.TempJob).Reinterpret<float3>();
-            nativeFlowField = FlowfieldGrid.Grid.GridArray.ToNativeArray().Reinterpret<float3>();
+            int numEnemies = enemiesTransforms.Count;
+            //nativeEnemiesPosition = enemiesPosition.GetValuesArray().ToNativeArray();
+            nativeEnemiesPosition = AllocNtvAry<float3>(numEnemies);
+            nativeFlowField = flowFieldGrid.Grid.GridArray.ToNativeArray().Reinterpret<float3>();
             nativeEnemiesDirection = AllocNtvAry<float3>(numEnemies);
+
+            //JGetPositions gatherPositions = new JGetPositions(nativeEnemiesPosition);
+            JobHandle positionsJobHandle = new JGetPositions(nativeEnemiesPosition)
+                .ScheduleReadOnly(transformAccessArray, JobWorkerCount - 1);
             
             JEntityFlowFieldDirection directionsJob = new JEntityFlowFieldDirection
             {
-                GridSize = FlowfieldGrid.Grid.GridData.NumCellXY,
+                GridSize = flowFieldGrid.Grid.GridData.NumCellXY,
                 EntitiesPosition = nativeEnemiesPosition,
                 FlowField = nativeFlowField,
                 EntityFlowFieldDirection = nativeEnemiesDirection,
             };
-            directionJobHandle = directionsJob.ScheduleParallel(numEnemies, JobWorkerCount - 1,default);
+            directionJobHandle = directionsJob.ScheduleParallel(numEnemies, JobWorkerCount - 1,positionsJobHandle);
 
             JMoveEnemies moveJob = new JMoveEnemies
             {
@@ -161,7 +154,7 @@ namespace TowerDefense
             for (int i = 0; i < batchToSpawn; i++)
             {
                 EnemyComponent enemy = Instantiate(EnemyPrefab, spawnPoints[i], Quaternion.identity).GetComponent<EnemyComponent>();
-                enemy.name = ($"Agent_{i}");
+                enemy.name = $"Agent_{i}";
 
                 RegisterEnemy(enemy);
                 transformAccessArray.Add(enemy.transform);
@@ -177,21 +170,24 @@ namespace TowerDefense
                 Destroy(enemiesTransforms[enemyIndex].gameObject);
                 UnregisterEnemy(enemyIndex);
             }
-            transformAccessArray.Dispose();
-            transformAccessArray = new TransformAccessArray(enemiesTransforms.GetValuesArray());
+            transformAccessArray.SetTransforms(enemiesTransforms.GetValuesArray());
+            
+            //CAREFUL MAY COME BACK TO THIS!
+            //transformAccessArray.Dispose();
+            //transformAccessArray = new TransformAccessArray(enemiesTransforms.GetValuesArray());
             enemiesToRemove.Clear();
         }
 
         private void RegisterEnemy(EnemyComponent enemy)
         {
             enemiesTransforms.Add(enemy.UniqueID, enemy.transform);
-            enemiesPosition.Add(enemy.UniqueID,enemy.transform.position);
+            //enemiesPosition.Add(enemy.UniqueID,enemy.transform.position);
         }
 
         private void UnregisterEnemy(int uniqueId)
         {
             enemiesTransforms.Remove(uniqueId);
-            enemiesPosition.Remove(uniqueId);
+            //enemiesPosition.Remove(uniqueId);
         }
         
         //==============================================================================================================
@@ -209,6 +205,26 @@ namespace TowerDefense
             }
         }
     }
+    
+#if EnableBurst
+    [BurstCompile(CompileSynchronously = true)]
+#endif
+    public struct JGetPositions : IJobParallelForTransform
+    {
+        [NativeDisableParallelForRestriction]
+        [WriteOnly]private NativeArray<float3> EntitiesPosition;
+
+        public JGetPositions(NativeArray<float3> entitiesPosition)
+        {
+            EntitiesPosition = entitiesPosition;
+        }
+        
+        public void Execute(int index, TransformAccess transform)
+        {
+            EntitiesPosition[index] = transform.position;
+        }
+    }
+    
 #if EnableBurst
     [BurstCompile(CompileSynchronously = true)]
 #endif

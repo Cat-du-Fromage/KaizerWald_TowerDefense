@@ -12,7 +12,7 @@ namespace KWUtils.KWGenericGrid
         FlowField,
     }
     
-    [RequireComponent(typeof(FlowFieldGrid))]
+    [RequireComponent(typeof(KWFlowFieldGrid))]
     [RequireComponent(typeof(ObstaclesGrid))]
     public class FlowFieldGridSystem : MonoBehaviour, IGridSystem<GridType>
     {
@@ -25,7 +25,7 @@ namespace KWUtils.KWGenericGrid
         public TerrainData MapData { get; set; }
         public int2 MapBounds { get; set; }
         
-        [SerializeField] private FlowFieldGrid  FlowFieldGrid;
+        [SerializeField] private KWFlowFieldGrid  kwFlowFieldGrid;
         [SerializeField] private ObstaclesGrid  ObstaclesGrid;
         
         private void Awake()
@@ -37,7 +37,7 @@ namespace KWUtils.KWGenericGrid
             
             //Implement GridType?
             ObstaclesGrid = GetComponent<ObstaclesGrid>();
-            FlowFieldGrid = GetComponent<FlowFieldGrid>();
+            kwFlowFieldGrid = GetComponent<KWFlowFieldGrid>();
 
             this.AsInterface<IGridSystem<GridType>>().InitializeAllGrids();
         }
@@ -45,7 +45,7 @@ namespace KWUtils.KWGenericGrid
         private void OnDestroy()
         {
             ObstaclesGrid.Grid.ClearEvents();
-            FlowFieldGrid.Grid.ClearEvents();
+            kwFlowFieldGrid.Grid.ClearEvents();
         }
 
         public void SubscribeToGrid(GridType gridType, Action action)
@@ -53,7 +53,7 @@ namespace KWUtils.KWGenericGrid
             switch (gridType)
             {
                 case GridType.FlowField:
-                    FlowFieldGrid.Grid.OnGridChange += action;
+                    kwFlowFieldGrid.Grid.OnGridChange += action;
                     return;
                 case GridType.Obstacles:
                     ObstaclesGrid.Grid.OnGridChange += action;
@@ -68,7 +68,7 @@ namespace KWUtils.KWGenericGrid
             return gridType switch
             {
                 GridType.Obstacles => ObstaclesGrid.Grid as T2,
-                GridType.FlowField => FlowFieldGrid.Grid as T2,
+                GridType.FlowField => kwFlowFieldGrid.Grid as T2,
                 _ => throw new ArgumentOutOfRangeException(nameof(gridType), gridType, null)
             };
         }
@@ -79,7 +79,7 @@ namespace KWUtils.KWGenericGrid
             return gridType switch
             {
                 GridType.Obstacles => ObstaclesGrid.Grid.GridArray as T1[],
-                GridType.FlowField => FlowFieldGrid.Grid.GridArray as T1[],
+                GridType.FlowField => kwFlowFieldGrid.Grid.GridArray as T1[],
                 _ => throw new ArgumentOutOfRangeException(nameof(gridType), gridType, null)
             };
         }

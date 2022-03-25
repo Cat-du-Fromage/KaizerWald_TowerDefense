@@ -15,7 +15,7 @@ using static KWUtils.NativeCollectionExt;
 
 namespace TowerDefense
 {
-    public class FlowfieldGrid : MonoBehaviour, IGridHandler<GridType, Vector3, GenericChunkedGrid<Vector3>>
+    public class FlowFieldGrid : MonoBehaviour, IGridHandler<GridType, Vector3, GenericChunkedGrid<Vector3>>
     {
 #if UNITY_EDITOR
         public bool DebugEnable;

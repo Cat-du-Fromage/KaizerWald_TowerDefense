@@ -15,7 +15,7 @@ namespace TowerDefense
         [SerializeField] private StartSpawnComponent StartSpawnPath;
         
         [SerializeField] private AStarGrid AStarGrid;
-        [SerializeField] private FlowfieldGrid FlowFieldGrid;
+        [SerializeField] private FlowFieldGrid FlowFieldGrid;
         [SerializeField] private StaticEntitiesGrid StaticEntitiesGrid;
 
         public TerrainData MapData { get; set; }
@@ -29,7 +29,7 @@ namespace TowerDefense
             StartSpawnPath = StartSpawnPath.GetCheckNullComponent();
             
             StaticEntitiesGrid = GetComponent<StaticEntitiesGrid>();
-            FlowFieldGrid = GetComponent<FlowfieldGrid>();
+            FlowFieldGrid = GetComponent<FlowFieldGrid>();
             AStarGrid = GetComponent<AStarGrid>();
             
             this.AsInterface<IGridSystem<GridType>>().Initialize();
