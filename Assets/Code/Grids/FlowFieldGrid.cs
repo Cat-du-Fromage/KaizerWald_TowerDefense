@@ -159,7 +159,7 @@ namespace TowerDefense
             if (nativeBestDirection.IsCreated)        nativeBestDirection.Dispose();
             if (nativeOrderedBestDirection.IsCreated) nativeOrderedBestDirection.Dispose();
         }
-        
+        #if UNITY_EDITOR
         private void OnDrawGizmos()
         {
             if (!DebugEnable || Grid.GridArray.IsNullOrEmpty() || Grid.ChunkDictionary is null) return;
@@ -188,5 +188,6 @@ namespace TowerDefense
             }
             
         }
+        #endif
     }
 }
