@@ -45,11 +45,11 @@ namespace TowerDefense
 
         private void Awake()
         {
-            BlueprintColor = BlueprintColor.GetCheckNullComponent();
-            uiBuilding = uiBuilding.GetCheckNullComponent();
-            GridHandler = GridHandler.GetCheckNullComponent();
-            TurretManager = TurretManager.GetCheckNullComponent();
-            AStarGrid = AStarGrid.GetCheckNullComponent();
+            BlueprintColor = BlueprintColor.FindCheckNullComponent();
+            uiBuilding = uiBuilding.FindCheckNullComponent();
+            GridHandler = GridHandler.FindCheckNullComponent();
+            TurretManager = TurretManager.FindCheckNullComponent();
+            AStarGrid = AStarGrid.FindCheckNullComponent();
             PlayerCamera = PlayerCamera == null ? Camera.main : PlayerCamera;
         }
 
@@ -172,20 +172,5 @@ namespace TowerDefense
             }
         }
         //==============================================================================================================
-        
-        private void OnDrawGizmos()
-        {
-            /*
-            if (!IsBuilding) return;
-            
-            Gizmos.color = Color.green;
-            int numCellIteration = cmul(MapXY / CellSize);
-            Vector3 cellBounds = new Vector3(CellSize, 0.05f, CellSize);
-            for (int i = 0; i < numCellIteration; i++)
-            {
-                Gizmos.DrawWireCube(i.GetCellCenterFromIndex(MapXY, CellSize), cellBounds);
-            }
-            */
-        }
     }
 }

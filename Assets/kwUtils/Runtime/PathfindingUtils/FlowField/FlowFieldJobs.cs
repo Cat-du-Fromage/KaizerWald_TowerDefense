@@ -12,7 +12,7 @@ using static Unity.Mathematics.math;
 using float2 = Unity.Mathematics.float2;
 using float3 = Unity.Mathematics.float3;
 
-namespace KWUtils.KWGenericGrid
+namespace KWUtils
 {
     /// <summary>
     /// CAREFUL FOR BLENDING

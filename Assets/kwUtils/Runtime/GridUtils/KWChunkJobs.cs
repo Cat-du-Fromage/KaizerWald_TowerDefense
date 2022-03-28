@@ -1,6 +1,5 @@
 #define EnableBurst
 
-using KWUtils.KWGenericGrid;
 using Unity.Burst;
 using Unity.Collections;
 using Unity.Jobs;

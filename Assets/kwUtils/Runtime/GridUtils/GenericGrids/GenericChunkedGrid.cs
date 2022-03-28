@@ -9,7 +9,7 @@ using UnityEngine;
 using static Unity.Mathematics.math;
 using static KWUtils.KWmath;
 
-namespace KWUtils.KWGenericGrid
+namespace KWUtils
 {
     public sealed class GenericChunkedGrid<T> : GenericGrid<T>
     where T : struct

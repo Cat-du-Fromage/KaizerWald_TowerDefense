@@ -2,17 +2,15 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
-using KWUtils.KWGenericGrid;
 using Unity.Collections;
 using Unity.Jobs;
 using Unity.Mathematics;
-using UnityEditor;
 using UnityEngine;
 
 using static Unity.Jobs.LowLevel.Unsafe.JobsUtility;
 using static KWUtils.NativeCollectionExt;
 
-namespace KWUtils.KWGenericGrid
+namespace KWUtils
 {
     public class KWFlowFieldGrid : MonoBehaviour, IGridHandler<GridType, Vector3, GenericChunkedGrid<Vector3>>
     {

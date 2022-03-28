@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using KWUtils;
-using KWUtils.KWGenericGrid;
 using Unity.Mathematics;
 using UnityEngine;
 
@@ -17,7 +16,7 @@ namespace TowerDefense
         public GenericGrid<bool> Grid { get; private set; }
         public void InitializeGrid(int2 terrainBounds) => Grid = new GenericGrid<bool>(terrainBounds, CellSize);
         //==============================================================================================================
-        
+#if UNITY_EDITOR
         private void OnDrawGizmos()
         {
             if(Grid == null) return;
@@ -29,5 +28,6 @@ namespace TowerDefense
                 Gizmos.DrawCube(Grid.GetCellCenter(i), cubeBounds);
             }
         }
+#endif
     }
 }

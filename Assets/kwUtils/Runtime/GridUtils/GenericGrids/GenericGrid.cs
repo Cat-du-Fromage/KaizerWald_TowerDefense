@@ -3,13 +3,12 @@ using System.Collections;
 using System.Collections.Generic;
 using Unity.Collections;
 using Unity.Mathematics;
-using UnityEditor;
 using UnityEngine;
 
 using static Unity.Mathematics.math;
 using static KWUtils.KWmath;
 
-namespace KWUtils.KWGenericGrid
+namespace KWUtils
 {
     public class GenericGrid<T>
     where T : struct

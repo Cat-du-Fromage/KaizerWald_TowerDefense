@@ -2,7 +2,6 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using KWUtils;
-using KWUtils.KWGenericGrid;
 using Unity.Mathematics;
 using UnityEngine;
 
@@ -18,6 +17,8 @@ namespace TowerDefense
         [SerializeField] private FlowFieldGrid FlowFieldGrid;
         [SerializeField] private StaticEntitiesGrid StaticEntitiesGrid;
 
+        [SerializeField] private Terrain terrain;
+        
         public TerrainData MapData { get; set; }
         public int2 MapBounds { get; set; }
 
@@ -25,13 +26,13 @@ namespace TowerDefense
         
         private void Awake()
         {
-            DestinationPath = DestinationPath.GetCheckNullComponent();
-            StartSpawnPath = StartSpawnPath.GetCheckNullComponent();
-            
-            StaticEntitiesGrid = GetComponent<StaticEntitiesGrid>();
-            FlowFieldGrid = GetComponent<FlowFieldGrid>();
-            AStarGrid = GetComponent<AStarGrid>();
-            
+            DestinationPath    = DestinationPath.FindCheckNullComponent();
+            StartSpawnPath     = StartSpawnPath.FindCheckNullComponent();
+
+            StaticEntitiesGrid = this.GetCheckNullComponent(StaticEntitiesGrid);// GetComponent<StaticEntitiesGrid>();
+            FlowFieldGrid      = this.GetCheckNullComponent(FlowFieldGrid);
+            AStarGrid          = this.GetCheckNullComponent(AStarGrid);// GetComponent<AStarGrid>();
+
             this.AsInterface<IGridSystem<GridType>>().Initialize();
         }
 
@@ -47,6 +48,17 @@ namespace TowerDefense
                     return;
             }
         }
+/*
+        public T RequestBoolGrid<T>(GridType gridType) 
+        where T : GenericGrid<bool>
+        {
+            return StaticEntitiesGrid.Grid as T;
+        }
+*/
+        public GenericGrid<bool> RequestObstacle()
+        {
+            return StaticEntitiesGrid.Grid;
+        }
 
         public T2 RequestGrid<T1, T2>(GridType gridType) 
         where T1 : struct
@@ -54,7 +66,7 @@ namespace TowerDefense
         {
             return gridType switch
             {
-                GridType.Obstacles => StaticEntitiesGrid.Grid as T2,
+                GridType.Obstacles => RequestObstacle() as T2,
                 GridType.FlowField => FlowFieldGrid.Grid as T2,
                 _ => throw new ArgumentOutOfRangeException(nameof(gridType), gridType, null)
             };

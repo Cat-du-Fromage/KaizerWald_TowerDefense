@@ -1,18 +1,13 @@
 using System;
-using KWUtils;
-using KWUtils.KWGenericGrid;
 using Unity.Burst;
 using Unity.Collections;
 using Unity.Jobs;
 using Unity.Mathematics;
 using UnityEngine;
-using UnityEngine.InputSystem;
 
-using static KWUtils.KWmath;
 using static Unity.Mathematics.math;
-using static KWUtils.InputSystemExtension;
 
-namespace KWUtils.KWGenericGrid
+namespace KWUtils
 {
     public class AStarPathfinding : MonoBehaviour, IGridHandler<GridType, Node, GenericGrid<Node>>
     {

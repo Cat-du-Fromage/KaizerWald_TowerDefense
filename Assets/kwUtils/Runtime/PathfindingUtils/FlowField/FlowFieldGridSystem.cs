@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using Unity.Mathematics;
 using UnityEngine;
 
-namespace KWUtils.KWGenericGrid
+namespace KWUtils
 {
     public enum GridType : int
     {

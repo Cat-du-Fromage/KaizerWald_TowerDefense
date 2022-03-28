@@ -9,7 +9,7 @@ using static KWUtils.KWmath;
 using static Unity.Mathematics.math;
 using static KWUtils.InputSystemExtension;
 
-namespace KWUtils.KWGenericGrid
+namespace KWUtils
 {
     [BurstCompile(CompileSynchronously = true)]
     public struct JaStar : IJob

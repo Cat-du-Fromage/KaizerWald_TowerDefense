@@ -9,7 +9,7 @@ namespace KWUtils
         {
             if (component is I component1)
             {
-                return component1;
+                return (I)component1;
             }
             return null;
         }

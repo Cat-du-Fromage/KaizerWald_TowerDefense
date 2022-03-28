@@ -8,14 +8,21 @@ namespace KWUtils
         public static Transform GetTransformWithComponent<T>(this Transform transf) 
         where T : Component
         {
-            if (transf == null) transf = GameObject.FindObjectOfType<T>().transform;
+            if (transf == null) transf = Object.FindObjectOfType<T>().transform;
             return transf;
         }
     
-        public static T GetCheckNullComponent<T>(this T component) 
+        public static T FindCheckNullComponent<T>(this T component) 
         where T : Component
         {
-            if (component == null) component = GameObject.FindObjectOfType<T>();
+            if (component == null) component = Object.FindObjectOfType<T>();
+            return component;
+        }
+        
+        public static T GetCheckNullComponent<T>(this MonoBehaviour script, T component) 
+        where T : Component
+        {
+            if (component == null) component = script.GetComponent<T>();
             return component;
         }
         
@@ -41,13 +48,6 @@ namespace KWUtils
                 I[] components = behaviour.GetComponents<I>();
                 if (components.IsNullOrEmpty()) continue;
                 list.AddRange(components);
-                /*
-                for (int i = 0; i < components.Length; i++)
-                {
-                    if (components[i] == null) continue;
-                    list.Add(components[i]);
-                }
-                */
             }
             return list;
         }

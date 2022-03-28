@@ -1,14 +1,12 @@
-using System;
-using System.Buffers;
-using System.Collections;
-using System.Collections.Generic;
 using KWUtils;
-using KWUtils.Debug;
-using KWUtils.KWGenericGrid;
 using Unity.Collections;
 using Unity.Jobs;
 using Unity.Mathematics;
 using UnityEngine;
+
+#if UNITY_EDITOR
+using KWUtils.Debug;
+#endif
 
 using static Unity.Jobs.LowLevel.Unsafe.JobsUtility;
 using static KWUtils.NativeCollectionExt;
@@ -17,14 +15,13 @@ namespace TowerDefense
 {
     public class FlowFieldGrid : MonoBehaviour, IGridHandler<GridType, Vector3, GenericChunkedGrid<Vector3>>
     {
-#if UNITY_EDITOR
         public bool DebugEnable;
-#endif
+
         private const int ChunkSize = 16;
         private const int CellSize = 1;
         
-        private int destinationCellIndex;
-        private int startCellIndex;
+        public int destinationCellIndex = -1;
+        public int startCellIndex = -1;
         private Vector3 startPosition;
         
         //CostField
@@ -54,6 +51,7 @@ namespace TowerDefense
             InitializeWaypoints();
             GridSystem.SubscribeToGrid(GridType.Obstacles, OnNewObstacles);
             CalculateFlowField(GridSystem.RequestGrid<bool, GenericGrid<bool>>(GridType.Obstacles));
+            //CalculateFlowField(GridSystem.RequestBoolGrid<GenericGrid<bool>>(GridType.Obstacles));
         }
 
         private void OnDestroy()
@@ -76,19 +74,19 @@ namespace TowerDefense
             destinationCellIndex = destinationChunkIndex.GetCellIndexFromChunkEnterPoint(ChunkEnterPoint.Top, Grid.GridData);
             
             Vector3 startSpawnPosition = FindObjectOfType<StartSpawnComponent>().transform.position;
-            Debug.Log($"startSpawnPosition = {startSpawnPosition}");
             startCellIndex = startSpawnPosition.XZ().GetIndexFromPositionOffset(Grid.GridData.MapSize, ChunkSize, new int2(ChunkSize/2));
         }
 
         public int GetChunkSpawn()
         {
-            ArrayPool<Vector3> test = ArrayPool<Vector3>.Shared;
             return startCellIndex;
         }
         
         private void OnNewObstacles()
         {
             CalculateFlowField(GridSystem.RequestGrid<bool, GenericGrid<bool>>(GridType.Obstacles));
+            
+            //CalculateFlowField(GetComponent<GridSystem>().RequestObstacle());
         }
         
         private void CompleteJob()
@@ -107,9 +105,8 @@ namespace TowerDefense
 
         private void CalculateFlowField(GenericGrid<bool> obstacles)
         {
-            //nativeObstacles = new NativeArray<bool>(obstacles.AdaptGrid(Grid), Allocator.TempJob);
-            nativeObstacles = obstacles.NativeAdaptGrid(Grid);//.ToNativeArray();
-            
+            nativeObstacles = obstacles.NativeAdaptGrid(Grid);
+
             int totalCells = Grid.GridData.TotalCells;
             
             //Cost Field
@@ -159,7 +156,8 @@ namespace TowerDefense
             if (nativeBestDirection.IsCreated)        nativeBestDirection.Dispose();
             if (nativeOrderedBestDirection.IsCreated) nativeOrderedBestDirection.Dispose();
         }
-        #if UNITY_EDITOR
+        
+#if UNITY_EDITOR
         private void OnDrawGizmos()
         {
             if (!DebugEnable || Grid.GridArray.IsNullOrEmpty() || Grid.ChunkDictionary is null) return;
@@ -178,7 +176,6 @@ namespace TowerDefense
                 }
             }
             */
-            
             for (int i = 0; i < Grid.GridArray.Length/8; i++)
             {
                 Gizmos.color = Color.green;
@@ -188,6 +185,6 @@ namespace TowerDefense
             }
             
         }
-        #endif
+#endif
     }
 }

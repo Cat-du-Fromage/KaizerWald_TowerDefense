@@ -7,7 +7,7 @@ using UnityEngine.InputSystem;
 
 using static KWUtils.InputSystemExtension;
 
-namespace KWUtils.KWGenericGrid
+namespace KWUtils
 {
     public class ObstaclesGrid : MonoBehaviour, IGridHandler<GridType, bool, GenericGrid<bool>>
     {
