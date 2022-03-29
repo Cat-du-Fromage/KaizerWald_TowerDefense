@@ -1,3 +1,4 @@
+using System;
 using KWUtils;
 using Unity.Collections;
 using Unity.Jobs;
@@ -102,7 +103,7 @@ namespace TowerDefense
             DisposeAll();
             jobSchedule = false;
         }
-
+        
         private void CalculateFlowField(GenericGrid<bool> obstacles)
         {
             nativeObstacles = obstacles.NativeAdaptGrid(Grid);

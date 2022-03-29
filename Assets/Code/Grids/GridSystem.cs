@@ -28,7 +28,7 @@ namespace TowerDefense
             StaticEntitiesGrid = this.GetCheckNullComponent(StaticEntitiesGrid);
             FlowFieldGrid      = this.GetCheckNullComponent(FlowFieldGrid);
             AStarGrid          = this.GetCheckNullComponent(AStarGrid);
-
+            
             this.AsInterface<IGridSystem<GridType>>().Initialize();
         }
 
@@ -44,23 +44,32 @@ namespace TowerDefense
                     return;
             }
         }
-        
-        public GenericGrid<bool> RequestObstacle()
-        {
-            return StaticEntitiesGrid.Grid;
-        }
 
+        //===============================================================================================================================
+        /// <summary>
+        /// IMPORTANT : Need a explicit implementation or AOT will not be generated on build!
+        /// </summary>
+        /// <exception cref="InvalidOperationException"></exception>
+        public void UsedOnlyForAOTCodeGeneration()
+        {
+            RequestGrid<bool, GenericGrid<bool>>(GridType.Obstacles);
+            RequestGrid<Vector3, GenericChunkedGrid<Vector3>>(GridType.FlowField);
+            throw new InvalidOperationException("This method is used for AOT code generation only. Do not call it at runtime.");
+        }
+        //===============================================================================================================================
+        
         public T2 RequestGrid<T1, T2>(GridType gridType) 
         where T1 : struct
         where T2 : GenericGrid<T1>
         {
             return gridType switch
             {
-                GridType.Obstacles => RequestObstacle() as T2,
+                GridType.Obstacles => StaticEntitiesGrid.Grid as T2,
                 GridType.FlowField => FlowFieldGrid.Grid as T2,
                 _ => throw new ArgumentOutOfRangeException(nameof(gridType), gridType, null)
             };
         }
+        
 
         public T1[] RequestGridArray<T1>(GridType gridType) 
         where T1 : struct
