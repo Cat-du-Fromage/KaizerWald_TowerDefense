@@ -17,21 +17,17 @@ namespace TowerDefense
         [SerializeField] private FlowFieldGrid FlowFieldGrid;
         [SerializeField] private StaticEntitiesGrid StaticEntitiesGrid;
 
-        [SerializeField] private Terrain terrain;
-        
         public TerrainData MapData { get; set; }
         public int2 MapBounds { get; set; }
 
-        public Transform Destination => DestinationPath.transform;
-        
         private void Awake()
         {
             DestinationPath    = DestinationPath.FindCheckNullComponent();
             StartSpawnPath     = StartSpawnPath.FindCheckNullComponent();
 
-            StaticEntitiesGrid = this.GetCheckNullComponent(StaticEntitiesGrid);// GetComponent<StaticEntitiesGrid>();
+            StaticEntitiesGrid = this.GetCheckNullComponent(StaticEntitiesGrid);
             FlowFieldGrid      = this.GetCheckNullComponent(FlowFieldGrid);
-            AStarGrid          = this.GetCheckNullComponent(AStarGrid);// GetComponent<AStarGrid>();
+            AStarGrid          = this.GetCheckNullComponent(AStarGrid);
 
             this.AsInterface<IGridSystem<GridType>>().Initialize();
         }
@@ -48,13 +44,7 @@ namespace TowerDefense
                     return;
             }
         }
-/*
-        public T RequestBoolGrid<T>(GridType gridType) 
-        where T : GenericGrid<bool>
-        {
-            return StaticEntitiesGrid.Grid as T;
-        }
-*/
+        
         public GenericGrid<bool> RequestObstacle()
         {
             return StaticEntitiesGrid.Grid;

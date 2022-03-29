@@ -145,8 +145,6 @@ namespace TowerDefense
             }
         }
         
-        //ITS A MESS NEED A SERIOUS CONCEPTION NOW!
-
         private void ClearEnemiesGone()
         {
             foreach (int enemyIndex in enemiesToRemove)
