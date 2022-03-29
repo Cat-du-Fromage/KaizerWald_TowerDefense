@@ -93,10 +93,8 @@ namespace TowerDefense
             {
                 moveEnemiesJobHandle.Complete();
                 DisposeAll();
-
                 EnemiesMoved = false;
             }
-            
             if (enemiesToRemove.Count == 0) return;
             ClearEnemiesGone();
         }
