@@ -39,6 +39,7 @@ namespace TowerDefense
         private JobHandle directionJobHandle;
         private JobHandle moveEnemiesJobHandle;
 
+        //Round Management
         private bool EnemiesMoved;
         private int spawnChunkIndex;
         private Vector3[] spawnPoints;
@@ -62,11 +63,7 @@ namespace TowerDefense
         private void Start()
         {
             spawnChunkIndex = flowFieldGrid.GetChunkSpawn();
-            spawnPoints = new Vector3[flowFieldGrid.Grid.GridData.TotalCellInChunk];
-            for (int i = 0; i < flowFieldGrid.Grid.GridData.TotalCellInChunk; i++)
-            {
-                spawnPoints[i] = flowFieldGrid.Grid.GetChunkCellCenter(spawnChunkIndex, i);
-            }
+            spawnPoints = flowFieldGrid.Grid.GetChunkCellsCenter(spawnChunkIndex);
         }
 
         private void OnDestroy()
@@ -118,14 +115,10 @@ namespace TowerDefense
                 EntityFlowFieldDirection = nativeEnemiesDirection,
             };
             directionJobHandle = directionsJob.ScheduleParallel(numEnemies, JobWorkerCount - 1,positionsJobHandle);
-
-            JMoveEnemies moveJob = new JMoveEnemies
-            {
-                DeltaTime = Time.deltaTime,
-                EntityFlowFieldDirection = nativeEnemiesDirection,
-                EntitiesPosition = nativeEnemiesPosition
-            };
+            
+            JMoveEnemies moveJob = new (Time.deltaTime, nativeEnemiesDirection, nativeEnemiesPosition);
             moveEnemiesJobHandle = moveJob.Schedule(transformAccessArray, directionJobHandle);
+            
             JobHandle.ScheduleBatchedJobs();
             EnemiesMoved = true;
         }
@@ -154,16 +147,9 @@ namespace TowerDefense
             enemiesToRemove.Clear();
         }
 
-        private void RegisterEnemy(EnemyComponent enemy)
-        {
-            enemiesTransforms.Add(enemy.UniqueID, enemy.transform);
-        }
+        private void RegisterEnemy(EnemyComponent enemy) => enemiesTransforms.Add(enemy.UniqueID, enemy.transform);
+        private void UnregisterEnemy(int uniqueId) => enemiesTransforms.Remove(uniqueId);
 
-        private void UnregisterEnemy(int uniqueId)
-        {
-            enemiesTransforms.Remove(uniqueId);
-        }
-        
         //==============================================================================================================
         //EXTERNAL NOTIFICATION
         //==============================================================================================================
@@ -211,13 +197,21 @@ namespace TowerDefense
     [BurstCompile(CompileSynchronously = true)]
     public struct JMoveEnemies : IJobParallelForTransform
     {
-        [ReadOnly] public float DeltaTime;
+        [ReadOnly] private readonly float DeltaTime;
 
         [NativeDisableParallelForRestriction]
-        [ReadOnly] public NativeArray<float3> EntityFlowFieldDirection;
+        [ReadOnly] private NativeArray<float3> EntityFlowFieldDirection;
         
         [NativeDisableParallelForRestriction]
-        [WriteOnly] public NativeArray<float3> EntitiesPosition;
+        [WriteOnly] private NativeArray<float3> EntitiesPosition;
+
+        public JMoveEnemies(float delta, NativeArray<float3> direction, NativeArray<float3> positions)
+        {
+            DeltaTime = delta;
+            EntityFlowFieldDirection = direction;
+            EntitiesPosition = positions;
+        }
+        
         public void Execute(int index, TransformAccess transform)
         {
             //Rotation
@@ -226,8 +220,7 @@ namespace TowerDefense
             
             //Position
             float2 direction = EntityFlowFieldDirection[index].xz;
-
-            Vector3 newPosition = transform.position + new Vector3(direction.x, 0.0f, direction.y) * DeltaTime * 5;
+            Vector3 newPosition = transform.position + (DeltaTime * 5) * new Vector3(direction.x, 0.0f, direction.y);
 
             //Apply Changes to GameObject's Transform
             transform.position = newPosition;

@@ -20,8 +20,7 @@ namespace TowerDefense
         
         [SerializeField] private float muzzleVelocity = 10f;
         private float velocity = 5f;
-        
-        
+
         public bool Hit;
         
         //Stored Values
@@ -31,8 +30,6 @@ namespace TowerDefense
         private TrailRenderer trail;
 
         public EnemyComponent enemyHit;
-
-        
 
         private void Awake()
         {

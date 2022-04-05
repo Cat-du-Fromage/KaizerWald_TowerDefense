@@ -74,6 +74,17 @@ namespace KWUtils
             int indexInGrid = chunkIndex.GetGridCellIndexFromChunkCellIndex(GridData, cellIndexInChunk);
             return GetCellCenter(indexInGrid);
         }
+
+        public Vector3[] GetChunkCellsCenter(int chunkIndex)
+        {
+            int totalCells = cmul(NumCellXY);
+            Vector3[] centers = new Vector3[totalCells];
+            for (int i = 0; i < totalCells; i++)
+            {
+                centers[i] = GetChunkCellCenter(chunkIndex, i);
+            }
+            return centers;
+        }
         //==============================================================================================================
         
         //==============================================================================================================

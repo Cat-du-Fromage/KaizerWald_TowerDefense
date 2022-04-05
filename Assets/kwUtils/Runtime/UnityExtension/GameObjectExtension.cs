@@ -26,6 +26,14 @@ namespace KWUtils
             return component;
         }
         
+        public static T? GetComponentNullable<T>(this GameObject gameObject) 
+        where T : Component
+        {
+            T comp = gameObject.GetComponent<T>();
+            return comp == null ? null : comp;
+        }
+
+        
         public static I GetInterfaceComponent<I>(this GameObject gameObject) 
         where I : class
         {
