@@ -81,3 +81,11 @@ The following packages were updated:
   com.unity.render-pipelines.universal from version 12.1.5 to 12.1.6
   com.unity.shadergraph from version 12.1.5 to 12.1.6
   com.unity.visualeffectgraph from version 12.1.5 to 12.1.6
+
+=== Thu Jun  2 13:24:56 2022
+
+Packages were changed.
+Update Mode: updateDependencies
+
+The following packages were updated:
+  com.unity.ide.visualstudio from version 2.0.14 to 2.0.15
